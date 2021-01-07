@@ -1,7 +1,9 @@
 import { assert } from 'console';
 import { TouchBarOtherItemsProxy } from 'electron';
 import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
-
+import Config from './config.json';
+const fs = require('fs');
+const path = require('path');
 // var http = require('http');
 // var https = require('https');
 var superagent = require('superagent');
@@ -12,7 +14,7 @@ class GetTags {
   tags: string[] = [];
   downloadLink: string | undefined;
   fileName: string | undefined;
-  path: string | undefined;
+  filePath: string | undefined;
 
   constructor(path: string, urlString: string) {
     var patternBooru = new RegExp(
@@ -45,14 +47,17 @@ class GetTags {
     var tags: string[] = [];
     var downloadLink: string = '';
     var fileName: string = '';
+    var filePath: string = '';
     getAllThings().then(
       (ret) => {
         this.tags = tags;
         this.downloadLink = downloadLink;
         this.fileName = fileName;
+        this.filePath = filePath;
         console.log(this.tags);
         console.log(this.downloadLink);
         console.log(this.fileName);
+        console.log(this.filePath);
       },
       (err) => {
         console.log(err);
@@ -94,7 +99,7 @@ class GetTags {
         downloaded = downloaded.substr(0, downloaded.indexOf('?download=1'));
         downloadLink = downloaded;
       }
-      setFileName();
+      // setFileName();
       //   // } catch(err){console.log(err)}
       // }
     }
@@ -123,8 +128,10 @@ class GetTags {
           }
         }
       }
+      generatePath();
+
       return new Promise((resolve, reject) => {
-        if (tags.length > 0) {
+        if (tags.length > 0 && filePath.length > 0) {
           resolve('OK');
         } else {
           reject('ERROR');
@@ -147,9 +154,44 @@ class GetTags {
       }
       return items;
     }
+    function generatePath() {
+      setFileName();
+      var folder = generateFolderName();
+      filePath = path.join(Config.workingPath, folder, fileName);
+    }
     function setFileName() {
       var split = downloadLink.split('/');
       fileName = split[split.length - 1];
+    }
+
+    function generateFolderName(): string {
+      // console.log(Config.tags[0].fromSite);
+      for (let i = 0; i < tags.length; i++) {
+        for (let j = 0; j < Config.tags.length; j++) {
+          if (tags[i].includes(Config.tags[j].fromSite)) {
+            return Config.tags[j].folder;
+
+            // console.log('YEPPERS' + tags[i]);
+            // console.log(fs.access(Config.workingPath));
+            // fs.appendFile(
+            //   path.join(Config.workingPath, 'test.txt'),
+            //   'contentasdsad',
+            //   (err) => {
+            //     if (err) {
+            //       console.error(err);
+            //       return;
+            //     }
+            //     //file written successfully
+            //   }
+            // );
+            // fs.writeFile(
+            //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
+            //   'asdasdasd'
+            // );
+          }
+        }
+      }
+      return 'other';
     }
   }
 }

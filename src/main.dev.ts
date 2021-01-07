@@ -94,9 +94,13 @@ const createWindow = async () => {
   var lastClip = '';
   clipboardListener.on('change', () => {
     // if (lastClip != clipboardy.readSync() && mainWindow != null) { //UNCOMMENT THIS!!!!
-    if (mainWindow != null) {
-      mainWindow.webContents.send('clipboard', clipboardy.readSync());
-      lastClip = clipboardy.readSync();
+    try {
+      if (mainWindow != null && typeof clipboardy.readSync() == 'string') {
+        mainWindow.webContents.send('clipboard', clipboardy.readSync());
+        lastClip = clipboardy.readSync();
+      }
+    } catch (err) {
+      console.log(err);
     }
   });
 
