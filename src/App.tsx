@@ -4,13 +4,16 @@ import icon from '../assets/icon.svg';
 import GetTags from './GetTags';
 import Download from './Download';
 const { ipcRenderer } = window.require('electron');
+
+
+
 var gettags;
 ipcRenderer.on('clipboard', async (event, arg) => {
   console.log(arg); // prints "pong"
   // gettags = await new GetTags('', arg);
   // console.log(await new GetTags('', arg));
   var tags = new GetTags('', arg);
-  console.log(tags.getTags());
+  // console.log(tags.getTags());
   // var test = gettags.getTest();
 
   // console.log(gettags.getTest());

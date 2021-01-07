@@ -30,7 +30,7 @@
     ]
   },
   "build": {
-    "asar":"false",
+    "asar": "false",
     "productName": "ElectronReact",
     "appId": "org.erb.ElectronReact",
     "files": [
@@ -261,7 +261,8 @@
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "regenerator-runtime": "^0.13.5",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "superagent": "^6.1.0"
   },
   "devEngines": {
     "node": ">=10.x",
