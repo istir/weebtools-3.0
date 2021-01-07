@@ -2,8 +2,10 @@ import { assert } from 'console';
 import { TouchBarOtherItemsProxy } from 'electron';
 import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
 import Config from './config.json';
-const fs = require('fs');
+import Downloader from './Downloader';
+// const fs = require('fs');
 const path = require('path');
+const mysql = require('mysql2/promise');
 // var http = require('http');
 // var https = require('https');
 var superagent = require('superagent');
@@ -15,8 +17,10 @@ class GetTags {
   downloadLink: string | undefined;
   fileName: string | undefined;
   filePath: string | undefined;
-
-  constructor(path: string, urlString: string) {
+  folderName: string | undefined;
+  sqlConnection: any | undefined;
+  constructor(database, urlString: string) {
+    this.sqlConnection = database;
     var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
     );
@@ -30,7 +34,7 @@ class GetTags {
     if (patternBooru.exec(urlString)) {
       this.site = 'Danbooru';
       // console.log('Danbooru');
-
+      // this.handeDatabaseConnection();
       this.readBooruTags(urlString);
     } else if (patternTwitter.exec(urlString)) {
       console.log('Twitter');
@@ -48,16 +52,20 @@ class GetTags {
     var downloadLink: string = '';
     var fileName: string = '';
     var filePath: string = '';
+    var folderName: string = '';
     getAllThings().then(
-      (ret) => {
+      () => {
         this.tags = tags;
         this.downloadLink = downloadLink;
         this.fileName = fileName;
         this.filePath = filePath;
+        this.folderName = folderName;
         console.log(this.tags);
         console.log(this.downloadLink);
         console.log(this.fileName);
         console.log(this.filePath);
+        this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+        new Downloader(this.downloadLink, this.filePath);
       },
       (err) => {
         console.log(err);
@@ -139,7 +147,7 @@ class GetTags {
       });
     }
 
-    function normalizeString(input) {
+    function normalizeString(input: string) {
       var items = [];
       // console.log(input);
       var strings = input.split('?');
@@ -156,8 +164,8 @@ class GetTags {
     }
     function generatePath() {
       setFileName();
-      var folder = generateFolderName();
-      filePath = path.join(Config.workingPath, folder, fileName);
+      folderName = generateFolderName();
+      filePath = path.join(Config.workingPath, folderName, fileName);
     }
     function setFileName() {
       var split = downloadLink.split('/');
@@ -168,30 +176,95 @@ class GetTags {
       // console.log(Config.tags[0].fromSite);
       for (let i = 0; i < tags.length; i++) {
         for (let j = 0; j < Config.tags.length; j++) {
-          if (tags[i].includes(Config.tags[j].fromSite)) {
-            return Config.tags[j].folder;
+          if (!Config.tags[j].checkFolder) {
+            continue;
+          }
+          for (let k = 0; k < Config.tags[j].fromSite.length; k++) {
+            if (tags[i].includes(Config.tags[j].fromSite[k])) {
+              return Config.tags[j].folder;
 
-            // console.log('YEPPERS' + tags[i]);
-            // console.log(fs.access(Config.workingPath));
-            // fs.appendFile(
-            //   path.join(Config.workingPath, 'test.txt'),
-            //   'contentasdsad',
-            //   (err) => {
-            //     if (err) {
-            //       console.error(err);
-            //       return;
-            //     }
-            //     //file written successfully
-            //   }
-            // );
-            // fs.writeFile(
-            //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
-            //   'asdasdasd'
-            // );
+              // console.log('YEPPERS' + tags[i]);
+              // console.log(fs.access(Config.workingPath));
+              // fs.appendFile(
+              //   path.join(Config.workingPath, 'test.txt'),
+              //   'contentasdsad',
+              //   (err) => {
+              //     if (err) {
+              //       console.error(err);
+              //       return;
+              //     }
+              //     //file written successfully
+              //   }
+              // );
+              // fs.writeFile(
+              //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
+              //   'asdasdasd'
+              // );
+            }
           }
         }
       }
       return 'other';
+    }
+  }
+
+  // async handeDatabaseConnection() {
+  //   this.sqlConnection = await mysql.createConnection({
+  //     host: 'localhost',
+  //     user: 'istir',
+  //     password: 'weebtoolspasswd',
+  //     database: 'weebtools',
+  //   });
+  //   this.sqlConnection.connect(function (err: any) {
+  //     if (err) {
+  //       console.log("Couldn't connect to database.");
+  //       throw err;
+  //     }
+  //     console.log('Connected to database');
+  //   });
+  // }
+  async insertIntoDatabase(folder: string, file: string, tags: string[]) {
+    var sqlConnection = this.sqlConnection;
+
+    var duplicate: boolean =
+      (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
+    if (!duplicate) {
+      insert();
+    }
+    // console.log(test);
+    async function checkIfExists(keyFile: string, keyFolder: string) {
+      var query =
+        'SELECT COUNT(*) as solution FROM files WHERE ' +
+        keyFile +
+        '="' +
+        file +
+        '" and ' +
+        keyFolder +
+        '="' +
+        folder +
+        '"';
+
+      var [rows] = await sqlConnection.execute(query);
+      // var asd = await sqlConnection.query(query);
+
+      // length = asd;
+      // console.log(sqlConnection.solution);
+      return rows[0].solution;
+    }
+
+    async function insert() {
+      var query =
+        'INSERT INTO files(folder, fileName, tags) VALUES("' +
+        folder +
+        '","' +
+        file +
+        '","' +
+        normalizeTags(tags) +
+        '")';
+      await sqlConnection.query(query);
+    }
+    function normalizeTags(tagArr: string[]) {
+      return tagArr.join(', ');
     }
   }
 }
