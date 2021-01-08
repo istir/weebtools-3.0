@@ -3,22 +3,128 @@
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap');
-
+@-webkit-keyframes gradient-anim {
+  0% {
+    background-position: 83% 0%;
+  }
+  50% {
+    background-position: 18% 100%;
+  }
+  100% {
+    background-position: 83% 0%;
+  }
+}
+@-moz-keyframes gradient-anim {
+  0% {
+    background-position: 83% 0%;
+  }
+  50% {
+    background-position: 18% 100%;
+  }
+  100% {
+    background-position: 83% 0%;
+  }
+}
+@keyframes gradient-anim {
+  0% {
+    background-position: 83% 0%;
+  }
+  50% {
+    background-position: 18% 100%;
+  }
+  100% {
+    background-position: 83% 0%;
+  }
+}
 body {
-  position: relative;
+  /* position: relative; */
   color: white;
   height: 100vh;
-  background: linear-gradient(
+  /* background: linear-gradient(
     200.96deg,
     #fedc2a -29.09%,
     #dd5789 51.77%,
     #7a2c9e 129.35%
-  );
-  font-family: 'Noto Sans JP', sans-serif;
-  overflow-y: hidden;
+  ); */
+  background: linear-gradient(321deg, #c9ae22, #a74268, #511c69);
+  background-size: 600% 600%;
+
+  -webkit-animation: gradient-anim 23s ease infinite;
+  -moz-animation: gradient-anim 23s ease infinite;
+  animation: gradient-anim 23s ease infinite;
+  font-family: 'Google Sans', sans-serif;
+  /* overflow-y: hidden; */
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+}
+
+.fileName {
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.folderName {
+  opacity: 0.8;
+  font-size: 0.8em;
+}
+.tagName {
+  opacity: 0.9;
+  font-weight: 500;
+  font-size: 0.8em;
+}
+/* .tagName .tableDiv {
+  display: table;
+  max-width: calc(100% - 180px);
+} */
+.tableCell {
+  /* display: block; */
+}
+.globalTable {
+  border-collapse: collapse;
+  max-width: calc(100% - 180px);
+}
+td:nth-of-type(1) {
+  border-color: #000;
+  border-width: 1px;
+  border-style: solid;
+}
+td:nth-of-type(2) {
+  border-color: #000;
+  border-width: 1px;
+  border-style: solid solid solid none;
+  padding: 10px;
+  vertical-align: top;
+}
+.tableCell > * {
+  overflow-wrap: anywhere;
+}
+.tableImg {
+  max-height: 200px;
+  max-width: 200px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: auto;
+  padding: 5px;
+}
+.listItems {
+  top: 0;
+  right: 0;
+  width: 180px;
+  position: absolute;
+  display: block;
+}
+.listItems > * {
+  display: flex;
+}
+.sidenav {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  width: 160px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black */
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px;
 }
 
 h2 {

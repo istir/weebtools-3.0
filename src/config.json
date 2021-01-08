@@ -1,5 +1,6 @@
 {
   "workingPath": "E:\\istir\\react-git\\git\\weebtools-3.0-react\\working-dir",
+  "style": { "colorName": "#aaa", "colorFolder": "#bbb", "colorTag": "#ccc" },
   "tags": [
     {
       "toReturn": "wallpaper",
@@ -12,7 +13,7 @@
       "toReturn": "turbosexy",
       "fromSite": ["turbosexy"],
       "folder": "",
-      "visible": true,
+      "visible": false,
       "checkFolder": false
     },
     {
@@ -54,14 +55,14 @@
         "cum in pussy"
       ],
       "folder": "r18",
-      "visible": true,
+      "visible": false,
       "checkFolder": true
     },
     {
       "toReturn": "pantyhose",
       "fromSite": ["pantyhose"],
       "folder": "abandon all hope ye who enter here",
-      "visible": true,
+      "visible": false,
       "checkFolder": true
     },
     {

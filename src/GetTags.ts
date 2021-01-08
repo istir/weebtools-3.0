@@ -3,7 +3,8 @@ import { TouchBarOtherItemsProxy } from 'electron';
 import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
 import Config from './config.json';
 import Downloader from './Downloader';
-// const fs = require('fs');
+const fs = require('fs');
+const download = require('download');
 const path = require('path');
 const mysql = require('mysql2/promise');
 // var http = require('http');
@@ -19,7 +20,10 @@ class GetTags {
   filePath: string | undefined;
   folderName: string | undefined;
   sqlConnection: any | undefined;
-  constructor(database, urlString: string) {
+  dl: any | undefined;
+  urlString: string = '';
+  eventFinished: any | undefined;
+  async init(database: any, urlString: string) {
     this.sqlConnection = database;
     var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
@@ -35,7 +39,9 @@ class GetTags {
       this.site = 'Danbooru';
       // console.log('Danbooru');
       // this.handeDatabaseConnection();
-      this.readBooruTags(urlString);
+      var test = await this.readBooruTags(urlString);
+      // this.urlString = urlString;
+      return 'true';
     } else if (patternTwitter.exec(urlString)) {
       console.log('Twitter');
       this.site = 'Twitter';
@@ -43,10 +49,77 @@ class GetTags {
       console.log('Pixiv');
       this.site = 'Pixiv';
     }
-    // this.test = undefined;
-    // this.doc = 'asd';
   }
 
+  // constructor(database, urlString: string) {
+  //   this.sqlConnection = database;
+  //   var patternBooru = new RegExp(
+  //     '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
+  //   );
+  //   var patternTwitter = new RegExp(
+  //     '^(ht|f)tp(s?)\\:\\/\\/twitter\\.com\\/[0-z]+\\/status\\/[0-9]+\\/photo.+'
+  //   );
+  //   var patternPixiv = new RegExp(
+  //     '^(ht|f)tp(s?)\\:\\/\\/(www?).pixiv.net\\/.+artworks\\/[0-9]+'
+  //   );
+
+  //   if (patternBooru.exec(urlString)) {
+  //     this.site = 'Danbooru';
+  //     // console.log('Danbooru');
+  //     // this.handeDatabaseConnection();
+  //     this.readBooruTags(urlString);
+  //     // this.urlString = urlString;
+  //   } else if (patternTwitter.exec(urlString)) {
+  //     console.log('Twitter');
+  //     this.site = 'Twitter';
+  //   } else if (patternPixiv.exec(urlString)) {
+  //     console.log('Pixiv');
+  //     this.site = 'Pixiv';
+  //   }
+
+  //   // return{dl:this.dl,_document:this._document,site:this.site,tags:this.tags,fileName:this.fileName,filePath:this.filePath,folderName:this.folderName,sqlConnection:this.sqlConnection,downloadLink:this.downloadLink}
+  //   // this.test = undefined;
+  //   // this.doc = 'asd';
+  //   // return{dl:this.dl};
+  // }
+
+  async getDownloadInfo() {
+    var result = await this.readBooruTags(this.urlString).then(
+      (res) => {
+        console.log(res);
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+    return new Promise((resolve, reject) => {
+      // if (this.dl != undefined) {
+      //   resolve(result);
+      // } else {
+      //   reject('ERR');
+      // }
+      resolve(result);
+    });
+  }
+
+  async downloadAsync(url, filePath, callback) {
+    // var dl = await download(url).pipe(fs.createWriteStream(filePath));
+    // var dl = fs.writeFileSync(filePath, await download(url));
+    fs.writeFile(filePath, await download(url), (callback) => {
+      this.dl = true;
+    });
+    // this.dl = dl;
+    // this.eventFinished = new CustomEvent('SpecialMessage', {
+    //   detail: {
+    //     message: 'Hello There',
+    //     time: new Date(),
+    //   },
+    //   bubbles: true,
+    //   cancelable: true,
+    // });
+    // dispatchEvent(this.eventFinished);
+    // return dl;
+  }
   async readBooruTags(urlString: string) {
     var tags: string[] = [];
     var downloadLink: string = '';
@@ -54,7 +127,7 @@ class GetTags {
     var filePath: string = '';
     var folderName: string = '';
     getAllThings().then(
-      () => {
+      async () => {
         this.tags = tags;
         this.downloadLink = downloadLink;
         this.fileName = fileName;
@@ -65,12 +138,16 @@ class GetTags {
         console.log(this.fileName);
         console.log(this.filePath);
         this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-        new Downloader(this.downloadLink, this.filePath);
+        // console.log(new Downloader(this.downloadLink, this.filePath));
+        await this.downloadAsync(this.downloadLink, this.filePath);
+        // console.log(test);
+        return this.dl;
       },
       (err) => {
         console.log(err);
       }
     );
+
     async function getAllThings() {
       // console.log('XD');
 
@@ -180,7 +257,7 @@ class GetTags {
             continue;
           }
           for (let k = 0; k < Config.tags[j].fromSite.length; k++) {
-            if (tags[i].includes(Config.tags[j].fromSite[k])) {
+            if (tags[i] == Config.tags[j].fromSite[k]) {
               return Config.tags[j].folder;
 
               // console.log('YEPPERS' + tags[i]);
@@ -206,6 +283,9 @@ class GetTags {
       }
       return 'other';
     }
+    
+    
+    
   }
 
   // async handeDatabaseConnection() {
