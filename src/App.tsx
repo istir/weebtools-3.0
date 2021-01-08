@@ -7,24 +7,36 @@ import Database from './Database';
 import { url } from 'inspector';
 import Config from './config.json';
 import Sidebar from 'react-sidebar';
+import LoadLocalFiles from './LoadLocalFiles';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+// import { Table } from '@material-ui/core';
 const fileUrl = require('file-url');
 const fs = require('fs');
 const { ipcRenderer } = window.require('electron');
+const path = require('path');
 var listA: any = ['a'];
 // var gettags;
 var connected: boolean = false;
 var tables = [];
+var tablesLoaded = [];
+var filesToLoad: string[] = [];
 Database().then(
   (ful) => {
     console.log('Connected successfully');
-    // connected = true;
-    // console.log(ful);
+
     var database = ful;
+    loadLastQueries(database, 1000).then(
+      () => {
+        // console.log(filesToLoad);
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+    // new LoadLocalFiles(database);
     ipcRenderer.on('clipboard', async (event, arg) => {
       console.log(arg); // prints "pong"
-      // gettags = await new GetTags('', a/rg);
-      // console.log(await new GetTags('', arg));
-      // console.log(testObjects);
+
       var getTags = await new GetTags();
 
       var test;
@@ -37,6 +49,7 @@ Database().then(
           var path = getTags.filePath;
           // listA.push('zzz');
           // console.log(path);
+          // console.log('UNSHIFT');
           tables.push(
             <TableRow
               pathName={path}
@@ -47,32 +60,39 @@ Database().then(
           );
         }
       }, 500);
-      // setTimeout(async () => {
-      //   //this is a piece of shit, change it immediately!!!!!!!
-      //   // console.log(getTags.filePath);
-
-      //   var path = getTags.filePath;
-      //   // listA.push('zzz');
-      //   // console.log(path);
-      //   tables.push(<TableRow pathName={path} />);
-      // }, 5000);
-      /////////////////////////////////////////////////////////////////////////////////
-      // getTags.on
-      // getTags.getDownloadInfo().then(
-      //   (fulfilled) => {
-      //     console.log(fulfilled);
-      //   },
-      //   (err) => {
-      //     console.log(err);
-      //   }
-      // );
-      // console.log(getTags);
-      // console.log(tags.getTags());
-      // var test = gettags.getTest();
-
-      // console.log(gettags.getTest());
-      // console.log(clipboardy.readSync());
     });
+    async function loadLastQueries(database: any, limit: number) {
+      var query = 'SELECT * FROM files ORDER BY ID DESC LIMIT ' + limit;
+
+      var [rows] = await database.execute(query);
+      // for (let i = 0; i < rows.length; i++) {
+      //   filesToLoad.push(rows[i].folder);
+      // }
+      rows.map((item) => {
+        // console.log(item);
+        var filePath = path.join(
+          Config.workingPath,
+          item.folder,
+          item.fileName
+        );
+        fs.access(filePath, fs.constants.R_OK, (err) => {
+          if (!err) {
+            tablesLoaded.push(
+              <TableRow
+                pathName={filePath}
+                fileName={item.fileName}
+                tags={item.Tags.split(', ')}
+                folder={item.folder}
+              />
+            );
+            // filesToLoad.push(filePath);
+          }
+        });
+      });
+      // console.log(filesToLoad);
+      // return rows;
+      // }
+    }
   },
   (rej) => {
     console.log("Couldn't connect to database.");
@@ -83,9 +103,12 @@ Database().then(
 class TableRow extends React.Component {
   url: string = '';
   tags: string = 'other';
+  focused: bool = false;
   constructor(props) {
     super(props);
-    this.url = fileUrl(this.props.pathName);
+    // this.url = fileUrl(this.props.pathName);
+    // console.log('PROP:' + this.props.pathName);
+    // console.log('PROP2' + this.props.fileName);
     var tempTags: string[] = [];
     for (let i = 0; i < Config.tags.length; i++) {
       for (let j = 0; j < Config.tags[i].fromSite.length; j++) {
@@ -101,9 +124,18 @@ class TableRow extends React.Component {
 
     // console.log(this.url);
   }
+  handleClick() {
+    if (this.focused) {
+      this.focused = false;
+    } else {
+      this.focused = true;
+    }
+    console.log(this.focused);
+  }
   render() {
     return (
       <tr
+        onClick={this.handleClick.bind(this)}
         className="tableDiv"
         // style={{
         //   width:
@@ -116,7 +148,10 @@ class TableRow extends React.Component {
         // }}
       >
         <td style={{ width: '200px' }}>
-          <img className="tableImg" src={this.url}></img>
+          <LazyLoadImage
+            className="tableImg"
+            src={fileUrl(this.props.pathName)}
+          />
         </td>
         <td className="tableCell">
           <div className="fileName">{this.props.fileName}</div>
@@ -161,18 +196,34 @@ class Table extends React.Component {
   constructor(props) {
     super(props);
     this.timer;
-    this.tableLocal;
+    this.tableLocal = [];
+    this.tableLength = 0;
   }
   componentDidMount() {
     this.timer = setInterval(() => {
-      this.forceUpdate();
-      this.tableLocal = tables;
+      // console.log(tables.length);
+      // console.log(this.tableLength);
+      if (tablesLoaded.length > this.tableLength) {
+        this.tableLocal.push(tablesLoaded);
+        this.tableLength = tablesLoaded.length;
+        this.forceUpdate();
+      }
+      if (tablesLoaded.length + tables.length > this.tableLength) {
+        this.tableLocal.unshift(tables);
+        this.tableLength = tablesLoaded.length + tables.length;
+        this.forceUpdate();
+      }
     }, 1000);
   }
   componentWillUnmount() {
     clearInterval(this.timer);
     // console.log('unmount');
   }
+
+  componentDidUpdate() {
+    // console.log('updated');
+  }
+
   render() {
     return (
       <div>

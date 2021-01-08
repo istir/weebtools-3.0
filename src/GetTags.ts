@@ -6,7 +6,7 @@ import Downloader from './Downloader';
 const fs = require('fs');
 const download = require('download');
 const path = require('path');
-const mysql = require('mysql2/promise');
+// const mysql = require('mysql2/promise');
 // var http = require('http');
 // var https = require('https');
 var superagent = require('superagent');
@@ -213,6 +213,24 @@ class GetTags {
           }
         }
       }
+
+      var elementRating = _document.getElementById('post-info-rating')
+        ?.innerText;
+      if (elementRating != null) {
+        // console.log(elementRating);
+        tags.push(elementRating);
+      }
+
+      // var elementsInfo = _document.getElementById('post-information')
+      // ?.children as HTMLCollectionOf<HTMLElement>;
+      // if (elementsInfo!=null) {
+      //   for (let i = 0; i < elementsInfo.length; i++) {
+      //   var element = elementsInfo[i];
+      //   if (element.className.includes) {
+
+      //   }
+      //   }
+      // }
       generatePath();
 
       return new Promise((resolve, reject) => {
@@ -251,36 +269,58 @@ class GetTags {
 
     function generateFolderName(): string {
       // console.log(Config.tags[0].fromSite);
-      for (let i = 0; i < tags.length; i++) {
-        for (let j = 0; j < Config.tags.length; j++) {
-          if (!Config.tags[j].checkFolder) {
-            continue;
-          }
-          for (let k = 0; k < Config.tags[j].fromSite.length; k++) {
-            if (tags[i] == Config.tags[j].fromSite[k]) {
-              return Config.tags[j].folder;
+      console.log('generating folder name');
+      console.log(tags);
 
-              // console.log('YEPPERS' + tags[i]);
-              // console.log(fs.access(Config.workingPath));
-              // fs.appendFile(
-              //   path.join(Config.workingPath, 'test.txt'),
-              //   'contentasdsad',
-              //   (err) => {
-              //     if (err) {
-              //       console.error(err);
-              //       return;
-              //     }
-              //     //file written successfully
-              //   }
-              // );
-              // fs.writeFile(
-              //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
-              //   'asdasdasd'
-              // );
+      for (let i = 0; i < Config.tags.length; i++) {
+        if (!Config.tags[i].checkFolder) {
+          continue;
+        }
+        for (let j = 0; j < tags.length; j++) {
+          for (let k = 0; k < Config.tags[i].fromSite.length; k++) {
+            if (tags[j] == Config.tags[i].fromSite[k]) {
+              console.log(Config.tags[i].folder);
+              return Config.tags[i].folder;
             }
           }
         }
       }
+
+      // for (let i = 0; i < tags.length; i++) {
+      //   for (let j = 0; j < Config.tags.length; j++) {
+      //     if (!Config.tags[j].checkFolder) {
+      //       continue;
+      //     }
+      //     console.log('tags[i]');
+      //     console.log(tags[i]);
+      //     console.log('COnfig.tags[j].folder');
+      //     console.log(Config.tags[j].folder);
+      //     for (let k = 0; k < Config.tags[j].fromSite.length; k++) {
+      //       if (tags[i] == Config.tags[j].fromSite[k]) {
+      //         console.log(Config.tags[j].folder);
+      //         return Config.tags[j].folder;
+
+      //         // console.log('YEPPERS' + tags[i]);
+      //         // console.log(fs.access(Config.workingPath));
+      //         // fs.appendFile(
+      //         //   path.join(Config.workingPath, 'test.txt'),
+      //         //   'contentasdsad',
+      //         //   (err) => {
+      //         //     if (err) {
+      //         //       console.error(err);
+      //         //       return;
+      //         //     }
+      //         //     //file written successfully
+      //         //   }
+      //         // );
+      //         // fs.writeFile(
+      //         //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
+      //         //   'asdasdasd'
+      //         // );
+      //       }
+      //     }
+      //   }
+      // }
       return 'other';
     }
   }

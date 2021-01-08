@@ -250,6 +250,7 @@
     "yarn-deduplicate": "^3.1.0"
   },
   "dependencies": {
+    "@material-ui/core": "^4.11.2",
     "clipboard-event": "^1.0.1",
     "clipboardy": "^2.3.0",
     "download": "^8.0.0",
@@ -264,8 +265,10 @@
     "react": "^17.0.1",
     "react-checkbox-list": "^0.0.2",
     "react-dom": "^17.0.1",
+    "react-lazy-load-image-component": "^1.5.1",
     "react-router-dom": "^5.2.0",
     "react-sidebar": "^3.0.2",
+    "react-table": "^7.6.2",
     "regenerator-runtime": "^0.13.5",
     "source-map-support": "^0.5.19",
     "superagent": "^6.1.0"
