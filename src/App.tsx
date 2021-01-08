@@ -24,7 +24,7 @@ Database().then(
       console.log(arg); // prints "pong"
       // gettags = await new GetTags('', a/rg);
       // console.log(await new GetTags('', arg));
-
+      // console.log(testObjects);
       var getTags = await new GetTags();
 
       var test;
@@ -34,7 +34,6 @@ Database().then(
       var interval = setInterval(() => {
         if (getTags.dl != undefined) {
           clearInterval(interval);
-          console.log(getTags.dl);
           var path = getTags.filePath;
           // listA.push('zzz');
           // console.log(path);
@@ -88,7 +87,6 @@ class TableRow extends React.Component {
     super(props);
     this.url = fileUrl(this.props.pathName);
     var tempTags: string[] = [];
-    console.log(this.props.tags);
     for (let i = 0; i < Config.tags.length; i++) {
       for (let j = 0; j < Config.tags[i].fromSite.length; j++) {
         if (
@@ -163,10 +161,12 @@ class Table extends React.Component {
   constructor(props) {
     super(props);
     this.timer;
+    this.tableLocal;
   }
   componentDidMount() {
     this.timer = setInterval(() => {
       this.forceUpdate();
+      this.tableLocal = tables;
     }, 1000);
   }
   componentWillUnmount() {
@@ -174,7 +174,11 @@ class Table extends React.Component {
     // console.log('unmount');
   }
   render() {
-    return <table className="globalTable">{tables}</table>;
+    return (
+      <div>
+        <table className="globalTable">{this.tableLocal}</table>
+      </div>
+    );
   }
 }
 

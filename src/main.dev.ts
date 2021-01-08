@@ -15,9 +15,10 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-const clipboardListener = require('clipboard-event');
+// const clipboardListener = require('clipboard-event');
+// const ClipboardListener = require('clipboard-listener');
 const clipboardy = require('clipboardy');
-
+const clipboard = require('electron-clipboard-extended');
 // const ClipboardListener = require('clipboard-listener');
 
 // const navigator = require("Navigator");
@@ -90,19 +91,36 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
-  clipboardListener.startListening();
+  // const listener = new ClipboardListener();
+  clipboard.startWatching();
+  console.log('startListening');
   var lastClip = '';
-  clipboardListener.on('change', () => {
-    // if (lastClip != clipboardy.readSync() && mainWindow != null) { //UNCOMMENT THIS!!!!
+  clipboard.on('text-changed', () => {
+    console.log('clipboardChanged');
     try {
-      if (mainWindow != null && typeof clipboardy.readSync() == 'string') {
-        mainWindow.webContents.send('clipboard', clipboardy.readSync());
-        lastClip = clipboardy.readSync();
+      if (mainWindow != null && typeof clipboard.readText() == 'string') {
+        mainWindow.webContents.send('clipboard', clipboard.readText());
+        lastClip = clipboard.readText();
       }
     } catch (err) {
       console.log(err);
     }
   });
+  // clipboardListener.startListening();
+  // console.log('startListening');
+
+  // listener.on('change', () => {
+  //   // if (lastClip != clipboardy.readSync() && mainWindow != null) { //UNCOMMENT THIS!!!!
+  //   console.log('clipboardChanged');
+  //   try {
+  //     if (mainWindow != null && typeof clipboardy.readSync() == 'string') {
+  //       mainWindow.webContents.send('clipboard', clipboardy.readSync());
+  //       lastClip = clipboardy.readSync();
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // });
 
   // listener.on('change', (value) => {
   //   if (lastClip != clipboardy.readSync() && mainWindow != null) {

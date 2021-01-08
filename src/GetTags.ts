@@ -133,10 +133,10 @@ class GetTags {
         this.fileName = fileName;
         this.filePath = filePath;
         this.folderName = folderName;
-        console.log(this.tags);
-        console.log(this.downloadLink);
-        console.log(this.fileName);
-        console.log(this.filePath);
+        // console.log(this.tags);
+        // console.log(this.downloadLink);
+        // console.log(this.fileName);
+        // console.log(this.filePath);
         this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
         // console.log(new Downloader(this.downloadLink, this.filePath));
         await this.downloadAsync(this.downloadLink, this.filePath);
@@ -204,7 +204,7 @@ class GetTags {
           ) {
             // var obrobiony = element.innerText;
 
-            console.log(element);
+            // console.log(element);
             var obrobiony = normalizeString(element.innerText);
             for (let j = 0; j < obrobiony.length; j++) {
               tags.push(obrobiony[j]);
@@ -283,9 +283,6 @@ class GetTags {
       }
       return 'other';
     }
-    
-    
-    
   }
 
   // async handeDatabaseConnection() {

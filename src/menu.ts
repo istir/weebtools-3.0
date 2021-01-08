@@ -250,6 +250,12 @@ export default class MenuBuilder {
                     );
                   },
                 },
+                {
+                  label: 'test',
+                  click: () => {
+                    this.mainWindow.webContents.openDevTools();
+                  },
+                },
               ],
       },
       {
