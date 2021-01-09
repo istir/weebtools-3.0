@@ -16,6 +16,9 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "@types/react": "^17.0.0"
+    "@types/react": "^17.0.0",
+    "@types/react-lazy-load-image-component": "^1.5.1",
+    "@types/react-sidebar": "^3.0.0",
+    "@types/react-table": "^7.0.26"
   }
 }

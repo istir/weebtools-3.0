@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 
 async function Database() {
-  var sqlConnection = await mysql.createConnection({
+  var sqlConnection: Object = await mysql.createConnection({
     host: 'localhost',
     user: 'istir',
     password: 'weebtoolspasswd',
@@ -14,7 +14,7 @@ async function Database() {
     }
     console.log('Connected to database');
   });
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: Function, reject) => {
     resolve(sqlConnection);
     reject('NOTOK');
   });

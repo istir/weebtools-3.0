@@ -36,17 +36,23 @@
     background-position: 83% 0%;
   }
 }
+* {
+  user-select: none;
+}
 body {
   /* position: relative; */
   color: white;
   height: 100vh;
-  /* background: linear-gradient(
+  background: linear-gradient(
     200.96deg,
     #fedc2a -29.09%,
     #dd5789 51.77%,
     #7a2c9e 129.35%
-  ); */
+  );
+  /* backdrop-filter: blur(50px) brightness(0.5); */
+  /* backdrop-filter: brightness(0.5); */
   background: linear-gradient(321deg, #c9ae22, #a74268, #511c69);
+  /* background-image: url('file:///E:/istir/Drive/Media/reddit/qt/other/__original_drawn_by_sunako_veera__fb8979e47cdaab863ac74dd0755fd470.png'); */
   background-size: 600% 600%;
 
   -webkit-animation: gradient-anim 23s ease infinite;
@@ -57,6 +63,8 @@ body {
   /* display: flex; */
   /* justify-content: center; */
   /* align-items: center; */
+  margin: 0px;
+  background-attachment: fixed;
 }
 
 .fileName {
@@ -78,12 +86,29 @@ body {
 } */
 .tableCell {
   /* display: block; */
+  padding-right: 5px;
+}
+.selectedRow {
+  background: rgba(24, 39, 75, 0.3) !important;
+}
+tbody {
+  box-shadow: 0px 0px 9px 4px #00000063;
+  border-radius: 5px;
 }
 .globalTable {
-  border-collapse: collapse;
-  max-width: calc(100% - 180px);
+  border-collapse: separate;
+  backdrop-filter: blur(50px);
+  max-width: calc(100% - 200px);
+  margin: 10px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: rgba(24, 39, 75, 0.12);
+  /* background: rgba(24, 39, 75, 0.12); */
+  border-spacing: 0px;
+  /* box-shadow: 0px 0px 7px #000; */
+  padding-bottom: 10px;
 }
-td:nth-of-type(1) {
+/* td:nth-of-type(1) {
   border-color: #000;
   border-width: 1px;
   border-style: solid;
@@ -94,7 +119,44 @@ td:nth-of-type(2) {
   border-style: solid solid solid none;
   padding: 10px;
   vertical-align: top;
+} */
+
+.tableRow {
+  /* backdrop-filter: blur(50px); */
+  /* background: rgba(24, 39, 75, 0.12); */
 }
+tr > td:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border: 1px solid transparent;
+}
+tr > td:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid transparent;
+}
+/* tr:first-child > td:first-child {
+
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border: 1px solid transparent;
+}
+tr:first-child > td:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid transparent;
+}
+tr:last-child > td:first-child {
+
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border: 1px solid transparent;
+}
+tr:last-child > td:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid transparent;
+} */
 .tableCell > * {
   overflow-wrap: anywhere;
 }
@@ -106,11 +168,15 @@ td:nth-of-type(2) {
   padding: 5px;
 }
 .listItems {
-  top: 0;
-  right: 0;
-  width: 180px;
+  top: 10px;
+  right: 10px;
+  width: 150px;
+  padding: 10px;
+  border-radius: 5px;
   position: fixed;
   display: block;
+  background: rgba(24, 39, 75, 0.12);
+  box-shadow: 0px 0px 9px 4px #00000063;
 }
 .listItems > * {
   display: flex;
@@ -171,10 +237,18 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
-
-.Hello {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px 0;
+.checkboxText {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 5px;
+}
+/* overriding material checkbox... */
+.MuiCheckbox-colorSecondary.Mui-checked {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+.PrivateSwitchBase-root-1 {
+  padding: 0px !important;
+}
+.MuiButtonBase-root.MuiIconButton-root.PrivateSwitchBase-root-1.MuiCheckbox-root.MuiCheckbox-colorSecondary {
+  transform: scale(0.9);
 }

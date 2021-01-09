@@ -1,36 +1,40 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import icon from '../assets/icon.svg';
 import GetTags from './GetTags';
 import { useTable } from 'react-table';
 import Database from './Database';
-import { url } from 'inspector';
 import Config from './config.json';
-import Sidebar from 'react-sidebar';
-import LoadLocalFiles from './LoadLocalFiles';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
-// import { Table } from '@material-ui/core';
-const fileUrl = require('file-url');
+import { Checkbox } from '@material-ui/core';
 const fs = require('fs');
 const { ipcRenderer } = window.require('electron');
 const path = require('path');
-var listA: any = ['a'];
 // var gettags;
-var connected: boolean = false;
-var tables = [];
-var tablesLoaded = [];
-var filesToLoad: string[] = [];
-var imageTags = [];
 
-var images = [];
-var database;
+var images: Object[] = [];
+var database: any;
 Database().then(
-  (ful) => {
+  (ful: any) => {
     console.log('Connected successfully');
 
     database = ful;
-    loadLastQueries(database, 5).then(
-      () => {
+    loadLastQueries(database, 50).then(
+      (ful) => {
+        // document.getElementsByTagName('body')[0].ba
+        // console.log
+        // console.log(images.length);
+        // console.log(Math.floor(Math.random() * ful.length));
+        // console.log(ful[Math.floor(Math.random() * ful.length)]);
+        // var filePath = path
+        //   .join(
+        //     Config.workingPath,
+        //     ful[Math.floor(Math.random() * ful.length)].folder,
+        //     ful[Math.floor(Math.random() * ful.length)].fileName
+        //   )
+        //   .replace(/\\/g, '/');
+        // console.log(filePath);
+        // //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
+        // document.body.style.backgroundImage = 'url(' + filePath + ')';
+        // randomBackground(ful);
         // console.log(filesToLoad);
       },
       (err) => {
@@ -38,15 +42,14 @@ Database().then(
       }
     );
     // new LoadLocalFiles(database);
-    ipcRenderer.on('clipboard', async (event, arg) => {
+    ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
       // console.log(arg); // prints "pong"
 
       var getTags = await new GetTags();
 
-      var test;
-      test = await getTags.init(database, arg);
       // tables.push(<TableRow pathName="TEST" />);
       ////////////////////////////////////////////////////////////////////////////////
+      await getTags.init(database, arg);
       var interval = setInterval(() => {
         if (getTags.dl != undefined) {
           clearInterval(interval);
@@ -80,14 +83,14 @@ Database().then(
       // for (let i = 0; i < rows.length; i++) {
       //   filesToLoad.push(rows[i].folder);
       // }
-      rows.map((item) => {
+      await rows.map((item: any) => {
         // console.log(item);
         var filePath = path.join(
           Config.workingPath,
           item.folder,
           item.fileName
         );
-        fs.access(filePath, fs.constants.R_OK, (err) => {
+        fs.access(filePath, fs.constants.R_OK, (err: Error) => {
           if (!err) {
             // tablesLoaded.push(
             //   <TableRow
@@ -111,14 +114,42 @@ Database().then(
       // console.log(filesToLoad);
       // return rows;
       // }
+      return new Promise((resolve, reject) => {
+        resolve(rows);
+      });
     }
   },
   (rej) => {
     console.log("Couldn't connect to database.");
     console.log(rej);
-    connected = false;
   }
 );
+
+function randomBackground(picker: []) {
+  let random = Math.floor(Math.random() * picker.length);
+  var tags = picker[random].Tags.split(', ');
+  if (tags.includes('Rating: Explicit')) {
+    //TODO: change later!
+    randomBackground(picker);
+  } else {
+    // console.log(picker[random]);
+    var filePath = path.join(
+      Config.workingPath,
+      picker[random].folder,
+      picker[random].fileName
+    );
+    filePath = filePath.replace(/\\/g, '/');
+    // console.log(filePath);
+    //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
+    fs.access(filePath, fs.constants.R_OK, (err: Error) => {
+      if (!err) {
+        document.body.style.backgroundImage = 'url(' + filePath + ')';
+      } else {
+        randomBackground(picker);
+      }
+    });
+  }
+}
 
 async function modifyItem(
   oldName: string,
@@ -142,7 +173,7 @@ async function modifyItem(
   }
 }
 
-function Table(props) {
+function Table(props: any) {
   // const [selected, setSelected] = useState(null);
   //initialize columns, probably could just not add it later on
   const columns = React.useMemo(
@@ -159,32 +190,77 @@ function Table(props) {
     []
   );
   //initialize data from imageData from props
-  const data = React.useMemo(() =>
-    props.imageData.map((item) => ({
-      col1: <LazyLoadImage className="tableImg" src={item.pathName} />,
-      col2: item.fileName,
-    }))
+  function normalizeName(arr: string[]) {
+    // console.log(arr);
+    // console.log(props.showableTags);
+    let tempArr = [];
+    for (let i = 0; i < props.showableTags.length; i++) {
+      // console.log(props.showableTags[i]);
+      for (let j = 0; j < props.showableTags[i][1].length; j++) {
+        // console.log(props.showableTags[i][1][j]);
+        if (arr.includes(props.showableTags[i][1][j])) {
+          tempArr.push(props.showableTags[i][1][j]);
+
+          // tempArr.push(arr[arr.indexOf(props.showableTags[i][1][j])]);
+        }
+      }
+    }
+    tempArr.length == 0 ? tempArr.push('other') : '';
+    return tempArr.join(', ');
+  }
+
+  const data = React.useMemo(
+    () =>
+      props.imageData.map(
+        (item: {
+          pathName: any;
+          fileName: React.ReactNode;
+          tags: string[];
+          folder: React.ReactNode;
+        }) => ({
+          col1: <LazyLoadImage className="tableImg" src={item.pathName} />,
+          col2: (
+            <div className="tableCell">
+              {' '}
+              <div className="fileName">{item.fileName}</div>
+              {'  '}
+              <div className="tagName">{normalizeName(item.tags)}</div>
+              <div className="folderName">{item.folder}</div>
+            </div>
+          ),
+        })
+      ),
+    undefined
   );
   //row onclick -> prop callback
-  function handleRowClick(e) {
+  function handleRowClick(e: any) {
+    for (
+      let i = 0;
+      i < document.getElementsByClassName('tableRow').length;
+      i++
+    ) {
+      const element = document.getElementsByClassName('tableRow')[i];
+      element.className = 'tableRow';
+    }
+    // console.log(e);
+    document
+      .getElementsByClassName('tableRow')
+      [e.id].classList.toggle('selectedRow');
     props.handleClick(e);
   }
 
   //initialize table and render it
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({ columns, data });
+  const { getTableProps, getTableBodyProps, rows, prepareRow } = useTable({
+    columns,
+    data,
+  });
 
   // render() {
 
   return (
     // apply the table props
     <div>
-      <table {...getTableProps()}>
+      <table className="globalTable" {...getTableProps()}>
         {/* <thead>
           {
             // Loop over the header rows
@@ -211,85 +287,66 @@ function Table(props) {
         <tbody {...getTableBodyProps()}>
           {
             // Loop over the table rows
-            rows.map((row) => {
-              // Prepare the row for display
-              prepareRow(row);
-              return (
-                // Apply the row props
-                <tr
-                  onClick={() => {
-                    handleRowClick(row);
-                  }}
-                  {...row.getRowProps()}
-                >
-                  {
-                    // Loop over the rows cells
-                    row.cells.map((cell) => {
-                      // Apply the cell props
-                      return (
-                        <td {...cell.getCellProps()}>
-                          {
-                            // Render the cell contents
-                            cell.render('Cell')
-                          }
-                        </td>
-                      );
-                    })
-                  }
-                </tr>
-              );
-            })
+            rows.map(
+              (row: {
+                getRowProps: () => JSX.IntrinsicAttributes &
+                  React.ClassAttributes<HTMLTableRowElement> &
+                  React.HTMLAttributes<HTMLTableRowElement>;
+                cells: any[];
+              }) => {
+                // Prepare the row for display
+                prepareRow(row);
+                return (
+                  // Apply the row props
+                  <tr
+                    className="tableRow"
+                    onClick={() => {
+                      handleRowClick(row);
+                    }}
+                    {...row.getRowProps()}
+                  >
+                    {
+                      // Loop over the rows cells
+                      row.cells.map(
+                        (cell: {
+                          getCellProps: () => JSX.IntrinsicAttributes &
+                            React.ClassAttributes<HTMLTableDataCellElement> &
+                            React.TdHTMLAttributes<HTMLTableDataCellElement>;
+                          render: (arg0: string) => React.ReactNode;
+                        }) => {
+                          // Apply the cell props
+                          return (
+                            <td {...cell.getCellProps()}>
+                              {
+                                // Render the cell contents
+                                cell.render('Cell')
+                              }
+                            </td>
+                          );
+                        }
+                      )
+                    }
+                  </tr>
+                );
+              }
+            )
           }
         </tbody>
       </table>
     </div>
   );
 }
-
-// class Table extends React.Component {
-//   constructor(props) {
-//     super(props);
-//     this.timer;
-//     this.tableLocal = [];
-//     this.tableLength = 0;
-//   }
-//   componentDidMount() {
-//     this.timer = setInterval(() => {
-//       // console.log(tables.length);
-//       // console.log(this.tableLength);
-//       if (tablesLoaded.length > this.tableLength) {
-//         this.tableLocal.push(tablesLoaded);
-//         this.tableLength = tablesLoaded.length;
-//         this.forceUpdate();
-//       }
-//       if (tablesLoaded.length + tables.length > this.tableLength) {
-//         this.tableLocal.unshift(tables);
-//         // this.tableLength = tablesLoaded.length + tables.length;
-//         tables = [];
-//         this.forceUpdate();
-//       }
-//     }, 10);
-//   }
-//   componentWillUnmount() {
-//     clearInterval(this.timer);
-//     // console.log('unmount');
-//   }
-
-//   componentDidUpdate() {
-//     // console.log('updated');
-//   }
-
-//   render() {
-//     return (
-//       <div>
-//         <table className="globalTable">{this.tableLocal}</table>
-//       </div>
-//     );
-//   }
-// }
-
-class TagPicker extends React.Component {
-  constructor(props) {
+interface TagPickerState {
+  checked: string[];
+  row: any;
+}
+interface TagPickerProps {
+  row: any;
+  tags: string[];
+}
+class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
+  checkboxes: JSX.Element[];
+  constructor(props: TagPickerProps) {
     super(props);
     this.state = { checked: [''], row: this.props.row };
     //initialize list of <Checkbox/>
@@ -302,88 +359,73 @@ class TagPicker extends React.Component {
       this.setState({ checked: this.props.row.tags });
     }
   }
-  handleChanging(e) {
-    //WELL WELL WELL
-    //this weird syntax is because <input> gives weird checked boolean (basically NOT)
-    //so !e.target.checked is then the target IS currently checked
-    //then I just set "checked" state to "checked" - currently toggled item
-    // console.log(this.props.row.tags);
-    // console.log(this.state.checked);
-    // console.log(this.props.tags);
-    var currTag = [''];
-    for (let i = 0; i < this.props.tags.length; i++) {
-      if (this.props.tags[i][0] == e.target.value) {
-        // console.log("yeep");
-        // console.log(this.props.tags[i]);
-        for (let j = 0; j < this.props.tags[i].length; j++) {
-          // console.log(this.state.checked);
-          // console.log(this.props.tags[i][j]);
-          for (let k = 0; k < this.props.tags[i][j].length; k++) {
-            // console.log(this.props.tags[i][j][k]);
-            if (this.state.checked.includes(this.props.tags[i][j][k])) {
-              currTag.push(this.props.tags[i][j][k]);
+  handleChanging(e: { target: { value: any; checked: any } }) {
+    // console.log(e);
+    if (this.props.row != null) {
+      // throw e;
+      //WELL WELL WELL
+      //this weird syntax is because <input> gives weird checked boolean (basically NOT)
+      //so !e.target.checked is then the target IS currently checked
+      //then I just set "checked" state to "checked" - currently toggled item
+      // console.log(this.props.row.tags);
+      // console.log(this.state.checked);
+      // console.log(this.props.tags);
+      var currTag = [''];
+      for (let i = 0; i < this.props.tags.length; i++) {
+        if (this.props.tags[i][0] == e.target.value) {
+          // console.log("yeep");
+          // console.log(this.props.tags[i]);
+          for (let j = 0; j < this.props.tags[i].length; j++) {
+            // console.log(this.state.checked);
+            // console.log(this.props.tags[i][j]);
+            for (let k = 0; k < this.props.tags[i][j].length; k++) {
+              // console.log(this.props.tags[i][j][k]);
+              if (this.state.checked.includes(this.props.tags[i][j][k])) {
+                currTag.push(this.props.tags[i][j][k]);
+              }
             }
+            // if (this.state.checked.includes(this.props.tags[i][j])) {
+            //   // console.log(this.props.tags[i][j]);
+            // }
           }
-          // if (this.state.checked.includes(this.props.tags[i][j])) {
-          //   // console.log(this.props.tags[i][j]);
-          // }
         }
       }
-    }
-    if (!e.target.checked) {
-      //TODO: make it so currTag is an array and newState removes that array from itself
-      for (let i = 0; i < currTag.length; i++) {
-        if (this.state.checked.includes(currTag[i])) {
-          let index = this.state.checked.indexOf(currTag[i]);
+      if (!e.target.checked) {
+        //TODO: make it so currTag is an array and newState removes that array from itself
+        for (let i = 0; i < currTag.length; i++) {
+          if (this.state.checked.includes(currTag[i])) {
+            let index = this.state.checked.indexOf(currTag[i]);
+            let newState = this.state.checked;
+            newState.splice(index, 1);
+            // console.log(newState);
+            this.setState({ checked: newState });
+          }
+          //here is almost the same but if item isn't togged I add it to "checked" state
+        }
+      }
+
+      if (e.target.checked) {
+        if (!this.state.checked.includes(e.target.value)) {
           let newState = this.state.checked;
-          newState.splice(index, 1);
-          // console.log(newState);
+          newState.push(e.target.value);
           this.setState({ checked: newState });
         }
-        //here is almost the same but if item isn't togged I add it to "checked" state
       }
+      modifyItem(
+        this.props.row.fileName,
+        this.props.row.folder,
+        this.props.row.folder,
+        this.state.checked
+      );
+      // console.log(this.props.row.fileName);
     }
-    //   if (this.state.checked.includes(currTag)) {
-    //     let index = this.state.checked.indexOf(currTag);
-    //     let newState = this.state.checked;
-    //     newState.splice(index, 1);
-    //     // console.log(newState);
-    //     this.setState({ checked: newState });
-    //   }
-    //   //here is almost the same but if item isn't togged I add it to "checked" state
-    // } else
-    if (e.target.checked) {
-      if (!this.state.checked.includes(e.target.value)) {
-        let newState = this.state.checked;
-        newState.push(e.target.value);
-        this.setState({ checked: newState });
-      }
-    }
-    modifyItem(
-      this.props.row.fileName,
-      this.props.row.folder,
-      this.props.row.folder,
-      this.state.checked
-    );
-    console.log(this.props.row.fileName);
     // modifyItem()
     // console.log(this.state.checked)
   }
 
   render() {
     //fill <Checkbox/> list
-    // this.checkboxes = this.props.tags.map((value) => (
-    //   <Checkbox
-    //     key={value}
-    //     shouldCheck={
-    //       this.state.checked.length > 0
-    //         ? this.state.checked.includes(value)
-    //         : false
-    //     }
-    //     value={value}
-    //     change={this.handleChanging.bind(this)}
-    //   />
-    // ));
+
     this.checkboxes = [];
     for (let i = 0; i < this.props.tags.length; i++) {
       let value = this.props.tags[i];
@@ -397,8 +439,9 @@ class TagPicker extends React.Component {
           }
         }
       }
+      // console.log(value[1][0]);
       this.checkboxes.push(
-        <Checkbox
+        <CheckboxComponent
           key={value[1]}
           // shouldCheck={
           //   this.state.checked.length > 0
@@ -412,104 +455,43 @@ class TagPicker extends React.Component {
         />
       );
     }
-    // this.checkboxes = this.props.tags.map((value) =>(
-    //   // {{if (this.state.checked.length>0) {
-    //   //   for (let i = 0; i < value[1].length; i++) {
-    //   //     console.log(value[1][i])
-    //   //   }
-    //   // }}}
-    //   // ()=>{
-    //   //   console.log(value[1][1])
-    //   // }
 
-    //     <Checkbox
-    //       key={value[1]}
-    //       shouldCheck={
-    //         this.state.checked.length > 0
-    //           ? this.state.checked.includes(value[1][0])
-    //           : false
-    //       }
-    //       value={value[0]}
-    //       text={value[1][0]}
-    //       change={this.handleChanging.bind(this)}
-    //     />
-    //   )
-    // );
     return <div className="listItems">{this.checkboxes}</div>;
   }
 }
 // var tagPicker = <TagPicker />;
-class Checkbox extends React.Component {
-  constructor(props) {
+interface CheckBoxProps {
+  change: any;
+  value: string;
+  text: string;
+  shouldCheck: boolean;
+}
+interface CheckBoxState {}
+class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
+  constructor(props: CheckBoxProps) {
     super(props);
-    // this.state = { checked: false, manual: false };
-    // // if (this.props.test != null) {
-    // //   let temp = this.props.test.includes(this.props.value);
-    // //   this.setState({ checked: temp });
-    // // }
-    // this.setState({ manual: !this.props.initial });
-    // this.setState({ checked: this.props.shouldCheck });
-  }
-  /**
-  componentDidMount() {
-    // console.log("mount");
-    // this.setState({ checked: this.props.shouldCheck });
   }
 
-  componentDidUpdate() {}
-
-  changed(e) {
-    // console.log(this.state.checked);
-    // this.setState({ checked: !this.state.checked });
-    // if (this.props.item != null && this.state.manual) {
-    //   // console.log();
-    //   if (this.state.checked != this.props.shouldCheck) {
-    //     // this.props.change(
-    //     //   this.props.item.pathName,
-    //     //   this.state.checked,
-    //     //   this.props.value
-    //     // );
-    //     console.log("aa");
-    //   }
-    // }
-    // console.log(e);
-    // console.log(this.props.value);
-    // console.log(this.state.checked);
-    // console.log(e.target.checked);
-    // if (!e.target.checked) {
-    // this.setState({ checked: true });
-    // console.log(this.state.checked);
-    // console.log(e.target.checked);
-    // }
-  }
-  
-  */
-  // click() {
-  //   if (this.state.checked != this.props.shouldCheck) {
-  //     console.log("zx");
-  //   }
-  // }
   render() {
     // console.log(this.props.test);
     return (
       <div>
-        <input
+        <Checkbox
           // onChange={this.changed.bind(this)}
           onChange={this.props.change}
           // onClick={this.ch()}
           key="input"
-          type="checkbox"
           value={this.props.value}
           checked={this.props.shouldCheck}
-        ></input>
-        <div>{this.props.value}</div>
+        />
+        <div className="checkboxText">{this.props.value}</div>
       </div>
     );
   }
 }
 
 class App extends React.Component {
-  constructor(props) {
+  constructor(props: {} | Readonly<{}>) {
     super(props);
 
     var tempTags = [];
@@ -526,6 +508,7 @@ class App extends React.Component {
       tags: tempTags,
       currRow: null,
       images: images,
+      imgCount: 0,
     };
     // this.state = {
     //   images: simulateImageData(),
@@ -536,19 +519,31 @@ class App extends React.Component {
   componentDidMount() {
     //probably need to change? but maybe not, not sure how it will work when finished
     this.timerID = setInterval(() => {
-      // if (this.state.images.length != images.length) {
+      if (this.state.images.length != this.state.imgCount) {
+        this.forceUpdate();
+        this.setState({ imgCount: this.state.images.length });
+      }
       //   this.setState({ images: images });
       //TODO: but fix this..., maybe componentshouldupdate?
-      this.forceUpdate();
+      // this.forceUpdate();
+      // this.shouldComponentUpdate();
       // }
       // console.log(this.state.images.length);
       // console.log('upd');
     }, 500);
   }
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   console.log('????');
+  //   return false;
+  //   // return true;
+  // }
+
   componentDidUpdate() {
     // console.log(this.state.images);
   }
-  handleTableClick(e) {
+  handleTableClick(e: { id: React.ReactText }) {
+    console.log(this.state.currRow);
+    console.log(e.id);
     this.setState({ currRow: this.state.images[e.id] });
   }
   render() {
@@ -557,6 +552,7 @@ class App extends React.Component {
         <Table
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}
+          showableTags={this.state.tags}
         />
         <TagPicker tags={this.state.tags} row={this.state.currRow} />
       </div>
