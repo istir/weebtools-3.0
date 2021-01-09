@@ -98,7 +98,11 @@ const createWindow = async () => {
   clipboard.on('text-changed', () => {
     console.log('clipboardChanged');
     try {
-      if (mainWindow != null && typeof clipboard.readText() == 'string') {
+      if (
+        mainWindow != null &&
+        typeof clipboard.readText() == 'string' &&
+        lastClip != clipboard.readText()
+      ) {
         mainWindow.webContents.send('clipboard', clipboard.readText());
         lastClip = clipboard.readText();
       }

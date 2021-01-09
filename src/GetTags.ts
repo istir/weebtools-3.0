@@ -83,24 +83,24 @@ class GetTags {
   //   // return{dl:this.dl};
   // }
 
-  async getDownloadInfo() {
-    var result = await this.readBooruTags(this.urlString).then(
-      (res) => {
-        console.log(res);
-      },
-      (err) => {
-        console.log(err);
-      }
-    );
-    return new Promise((resolve, reject) => {
-      // if (this.dl != undefined) {
-      //   resolve(result);
-      // } else {
-      //   reject('ERR');
-      // }
-      resolve(result);
-    });
-  }
+  // async getDownloadInfo() {
+  //   var result = await this.readBooruTags(this.urlString).then(
+  //     (res) => {
+  //       // console.log(res);
+  //     },
+  //     (err) => {
+  //       console.log(err);
+  //     }
+  //   );
+  //   return new Promise((resolve, reject) => {
+  //     // if (this.dl != undefined) {
+  //     //   resolve(result);
+  //     // } else {
+  //     //   reject('ERR');
+  //     // }
+  //     resolve(result);
+  //   });
+  // }
 
   async downloadAsync(url, filePath, callback) {
     // var dl = await download(url).pipe(fs.createWriteStream(filePath));
@@ -269,8 +269,8 @@ class GetTags {
 
     function generateFolderName(): string {
       // console.log(Config.tags[0].fromSite);
-      console.log('generating folder name');
-      console.log(tags);
+      // console.log('generating folder name');
+      // console.log(tags);
 
       for (let i = 0; i < Config.tags.length; i++) {
         if (!Config.tags[i].checkFolder) {
@@ -279,7 +279,7 @@ class GetTags {
         for (let j = 0; j < tags.length; j++) {
           for (let k = 0; k < Config.tags[i].fromSite.length; k++) {
             if (tags[j] == Config.tags[i].fromSite[k]) {
-              console.log(Config.tags[i].folder);
+              // console.log(Config.tags[i].folder);
               return Config.tags[i].folder;
             }
           }
