@@ -163,9 +163,20 @@ tr:last-child > td:last-child {
 .tableImg {
   max-height: 200px;
   max-width: 200px;
+  /* width: 200px; */
+  /* height: 200px; */
+  /* object-fit: cover; */
   display: flex;
   margin: auto;
   padding: 5px;
+  /* position: absolute; */
+}
+.tableImgBg {
+  float: left;
+  height: 200px;
+  width: 200px;
+  object-fit: cover;
+  filter: blur(50px);
 }
 .listItems {
   top: 10px;
@@ -246,7 +257,8 @@ a:hover {
 .MuiCheckbox-colorSecondary.Mui-checked {
   color: rgba(0, 0, 0, 0.5) !important;
 }
-.PrivateSwitchBase-root-1 {
+.PrivateSwitchBase-root-1,
+.jss1 {
   padding: 0px !important;
 }
 .MuiButtonBase-root.MuiIconButton-root.PrivateSwitchBase-root-1.MuiCheckbox-root.MuiCheckbox-colorSecondary {

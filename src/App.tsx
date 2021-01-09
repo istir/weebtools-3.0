@@ -218,7 +218,12 @@ function Table(props: any) {
           tags: string[];
           folder: React.ReactNode;
         }) => ({
-          col1: <LazyLoadImage className="tableImg" src={item.pathName} />,
+          col1: (
+            <LazyLoadImage className="tableImg" src={item.pathName} />
+            // <div>
+            //   <LazyLoadImage className="tableImgBg" src={item.pathName} />
+            // </div>
+          ),
           col2: (
             <div className="tableCell">
               {' '}
