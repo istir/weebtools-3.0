@@ -281,6 +281,28 @@ a:hover {
   font-weight: 500;
   font-size: 1.2em;
 }
+.fullscreenImg {
+  max-width: 100vw;
+  max-height: 100vh;
+  z-index: 9;
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: auto;
+  margin-top: 30px;
+  pointer-events: none;
+}
+.fullscreenDiv.visible {
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(50px);
+  position: fixed;
+  z-index: 8;
+  margin-top: 30px;
+  cursor: pointer;
+  /* position: relative; */
+}
 /* simplebar because something is not loading???? */
 [data-simplebar] {
   position: relative;

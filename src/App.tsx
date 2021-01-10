@@ -7,12 +7,22 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
 import { refresh } from 'electron-debug';
+import { clipboard } from 'electron';
+// import { BrowserWindow } from 'electron/main';
+// import { shell } from 'electron/common';
+const { remote } = require('electron');
+const { Menu, MenuItem } = remote;
+const { dialog } = require('electron').remote;
+const { BrowserWindow } = require('electron').remote;
+const { shell } = require('electron');
+// import { Menu } from 'electron';
 // import 'simplebar/dist/simplebar.min.css';
 const fs = require('fs');
 const { ipcRenderer } = window.require('electron');
 const path = require('path');
 // var gettags;
-
+// const trash = require('trash');
+var currImage: string = '';
 var images: Object[] = [];
 var database: any;
 Database().then(
@@ -46,7 +56,7 @@ Database().then(
     );
     // new LoadLocalFiles(database);
     ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
-      // console.log(arg); // prints "pong"
+      // console.log(arg);
 
       var getTags = await new GetTags();
 
@@ -103,6 +113,7 @@ Database().then(
             fileName: getTags.fileName,
             tags: getTags.tags,
             folder: getTags.folderName,
+            url: getTags.urlString,
           });
           // images = new Set(images);
           // console.log(images);
@@ -140,6 +151,7 @@ Database().then(
               fileName: item.fileName,
               tags: item.Tags.split(', '),
               folder: item.folder,
+              url: item.url,
             });
             // filesToLoad.push(filePath);
           }
@@ -216,6 +228,27 @@ async function modifyItem(
   }
 }
 
+function deleteItemFromDatabase(fileName: string, folderName: string) {
+  //  async function deleteRecord() {
+  var queryDeleteRow =
+    'DELETE FROM files WHERE fileName = "' +
+    fileName +
+    '" AND folder ="' +
+    folderName +
+    '"';
+  database.execute(queryDeleteRow);
+  // console.log(rows);
+  //   return new Promise((resolved, rejected) => {
+  //     if (rows.affectedRows >= 1) {
+  //       // console.log('YEP');
+  //       resolved(true);
+  //     } else {
+  //       rejected(false);
+  //     }
+  //   });
+  // }
+}
+
 function Table(props: any) {
   // const [selected, setSelected] = useState(null);
   //initialize columns, probably could just not add it later on
@@ -281,6 +314,7 @@ function Table(props: any) {
     undefined
   );
   //row onclick -> prop callback
+
   function handleRowClick(e: any) {
     for (
       let i = 0;
@@ -344,6 +378,98 @@ function Table(props: any) {
                     className="tableRow"
                     onClick={() => {
                       handleRowClick(row);
+                    }}
+                    onDoubleClick={() => {
+                      //TODO
+                      currImage = images[row.id].pathName;
+                      // <FullscreenImage image={images[row.id].pathName} />;
+                    }}
+                    onContextMenu={() => {
+                      handleRowClick(row);
+                      const menu = new Menu();
+                      menu.append(
+                        new MenuItem({
+                          label: 'Show in Explorer',
+                          click: () => {
+                            // clipboard.writeImage(images[row.id].pathName);
+                            shell.showItemInFolder(images[row.id].pathName);
+                          },
+                        })
+                      );
+                      menu.append(
+                        new MenuItem({
+                          label: 'Copy image',
+                          click: () => {
+                            clipboard.writeImage(images[row.id].pathName);
+                          },
+                        })
+                      );
+                      menu.append(
+                        new MenuItem({
+                          label: 'Show all Tags',
+                          click: () => {
+                            // clipboard.writeImage(images[row.id].pathName);
+                            // shell.showItemInFolder(images[row.id].pathName);
+                          },
+                        })
+                      );
+                      menu.append(
+                        new MenuItem({
+                          label: 'Delete',
+                          click: () => {
+                            // console.log(images);
+                            // (async () => {
+                            //   await trash('E:/test.txt');
+                            // })();
+
+                            let response = dialog
+                              .showMessageBox(
+                                BrowserWindow.getFocusedWindow(),
+                                {
+                                  buttons: ['Yes', 'No'],
+                                  message: 'Delete?',
+                                  title: 'Are you sure?',
+                                }
+                              )
+                              .then((result) => {
+                                if (result.response === 0) {
+                                  fs.unlink(images[row.id].pathName, (err) => {
+                                    throw err;
+                                  });
+                                  deleteItemFromDatabase(
+                                    images[row.id].fileName,
+                                    images[row.id].folder
+                                  );
+                                  images.splice(row.id, 1);
+                                }
+                              });
+                            // if (response == 0) {
+                            //   console.log('XD');
+                            // }
+                            // console.log(response);
+
+                            // // fs.rm(images[row.id].pathName, (err) => {
+                            // //   throw err;
+                            // // });
+
+                            // images.splice(row.id, 1);
+                            // console.log(row);
+                          },
+                        })
+                      );
+                      menu.append(
+                        new MenuItem({
+                          label: 'Open site',
+                          click: () => {
+                            if (images[row.id].url != '') {
+                              console.log(images[row.id].url);
+                            }
+                            // clipboard.writeImage(images[row.id].pathName);
+                            // shell.showItemInFolder(images[row.id].pathName);
+                          },
+                        })
+                      );
+                      menu.popup();
                     }}
                     {...row.getRowProps()}
                   >
@@ -524,6 +650,7 @@ interface CheckBoxProps {
   shouldCheck: boolean;
 }
 interface CheckBoxState {}
+
 class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
   constructor(props: CheckBoxProps) {
     super(props);
@@ -542,6 +669,42 @@ class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
           checked={this.props.shouldCheck}
         />
         <div className="checkboxText">{this.props.value}</div>
+      </div>
+    );
+  }
+}
+
+class FullscreenImage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { show: false, manual: true, render: true };
+  }
+  componentDidUpdate() {
+    if (this.state.show != this.props.show && this.state.manual == true) {
+      this.setState({ show: this.props.show });
+      this.setState({ manual: false });
+    }
+  }
+
+  render() {
+    // if (this.state.render === false) {
+    //   return null;
+    // }
+    return (
+      <div
+        onClick={() => {
+          // this.setState({ show: false });
+          currImage = '';
+          // this.setState({ manual: false });
+          // this.setState({ render: false });
+        }}
+        className={`fullscreenDiv ${currImage != '' ? 'visible' : 'hidden'}`}
+      >
+        <img
+          className="fullscreenImg"
+          // src={this.state.show ? this.props.image : ''}
+          src={currImage}
+        ></img>
       </div>
     );
   }
@@ -581,7 +744,9 @@ class App extends React.Component {
       // if (this.state.images.length != this.state.imgCount) {
       //this fucks everything up :(
       this.forceUpdate();
-      this.setState({ imgCount: this.state.images.length });
+      // this.setState({ imgCount: this.state.images.length });
+      // console.log(this.state.images);
+      // console.log(this.state.currRow);
       // }
       //   this.setState({ images: images });
       //TODO: but fix this..., maybe componentshouldupdate?
@@ -616,6 +781,7 @@ class App extends React.Component {
   render() {
     return (
       <div>
+        <FullscreenImage show={true} image={this.state.currRow?.pathName} />
         <Table
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}

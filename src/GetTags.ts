@@ -37,12 +37,14 @@ class GetTags {
 
     if (patternBooru.exec(urlString)) {
       this.site = 'Danbooru';
-      // console.log('Danbooru');
+      this.urlString = urlString;
+      console.log('Danbooru');
       // this.handeDatabaseConnection();
       var test = await this.readBooruTags(urlString, this.generateFolderName);
       // this.urlString = urlString;
       return 'true';
     } else if (patternTwitter.exec(urlString)) {
+      this.urlString = urlString;
       console.log('Twitter');
       await this.readTwitterTags(urlString, this.generateFolderName);
       this.site = 'Twitter';
@@ -301,7 +303,7 @@ class GetTags {
     var duplicate: boolean =
       (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
     if (!duplicate) {
-      insert(tags);
+      insert(tags, this.urlString);
     } else {
       deleteAndUpdate(file, folder).then((ful: string[]) => {
         // console.log(ful);
@@ -356,7 +358,7 @@ class GetTags {
         var newTags = [...new Set(allTags)];
 
         deleteRecord().then((ful) => {
-          insert(newTags);
+          insert(newTags, this.urlString);
         });
         return new Promise((res) => {
           res(newTags);
@@ -385,14 +387,16 @@ class GetTags {
       // throw 'BREAK';
     }
 
-    async function insert(tagsToInsert: string[]) {
+    async function insert(tagsToInsert: string[], url: string) {
       var query =
-        'INSERT INTO files(folder, fileName, tags) VALUES("' +
+        'INSERT INTO files(folder, fileName, tags, url) VALUES("' +
         folder +
         '","' +
         file +
         '","' +
         arrToString(tagsToInsert) +
+        '","' +
+        url +
         '")';
       await sqlConnection.query(query);
     }

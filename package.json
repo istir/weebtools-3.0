@@ -276,7 +276,8 @@
     "simplebar": "^5.3.0",
     "simplebar-react": "^2.3.0",
     "source-map-support": "^0.5.19",
-    "superagent": "^6.1.0"
+    "superagent": "^6.1.0",
+    "trash": "^7.0.0"
   },
   "devEngines": {
     "node": ">=10.x",
@@ -310,5 +311,4 @@
       "next"
     ]
   }
- 
 }

@@ -15,6 +15,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+// const contextMenu = require('electron-context-menu');
 // const customTitlebar = require('custom-electron-titlebar');
 // import PerfectScrollbar from 'perfect-scrollbar';
 // const clipboardListener = require('clipboard-event');
@@ -82,6 +83,34 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
+  // contextMenu({
+  //   prepend: (defaultActions, params, browserWindow) => [
+  //     {
+  //       label: 'Rainbow',
+  //       // Only show it when right-clicking images
+  //       // visible: params.mediaType === 'image',
+  //       click: () => {
+  //         console.log(params);
+  //         // mainWindow.inspectElement(props.x, props.y);
+  //         document.elementFromPoint(params.x, params.y);
+  //       },
+  //       visible: true,
+  //       // visible:params.
+  //     },
+  //     // {
+  //     //   label: 'Search Google for “{selection}”',
+  //     //   // Only show it when right-clicking text
+  //     //   visible: params.selectionText.trim().length > 0,
+  //     //   click: () => {
+  //     //     shell.openExternal(
+  //     //       `https://google.com/search?q=${encodeURIComponent(
+  //     //         params.selectionText
+  //     //       )}`
+  //     //     );
+  //     //   },
+  //     // },
+  //   ],
+  // });
   // new customTitlebar.Titlebar({
   //   backgroundColor: customTitlebar.Color.fromHex('#444'),
   // });
