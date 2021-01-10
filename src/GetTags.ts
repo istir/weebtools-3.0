@@ -39,68 +39,18 @@ class GetTags {
       this.site = 'Danbooru';
       // console.log('Danbooru');
       // this.handeDatabaseConnection();
-      var test = await this.readBooruTags(urlString);
+      var test = await this.readBooruTags(urlString, this.generateFolderName);
       // this.urlString = urlString;
       return 'true';
     } else if (patternTwitter.exec(urlString)) {
       console.log('Twitter');
+      await this.readTwitterTags(urlString, this.generateFolderName);
       this.site = 'Twitter';
     } else if (patternPixiv.exec(urlString)) {
       console.log('Pixiv');
       this.site = 'Pixiv';
     }
   }
-
-  // constructor(database, urlString: string) {
-  //   this.sqlConnection = database;
-  //   var patternBooru = new RegExp(
-  //     '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
-  //   );
-  //   var patternTwitter = new RegExp(
-  //     '^(ht|f)tp(s?)\\:\\/\\/twitter\\.com\\/[0-z]+\\/status\\/[0-9]+\\/photo.+'
-  //   );
-  //   var patternPixiv = new RegExp(
-  //     '^(ht|f)tp(s?)\\:\\/\\/(www?).pixiv.net\\/.+artworks\\/[0-9]+'
-  //   );
-
-  //   if (patternBooru.exec(urlString)) {
-  //     this.site = 'Danbooru';
-  //     // console.log('Danbooru');
-  //     // this.handeDatabaseConnection();
-  //     this.readBooruTags(urlString);
-  //     // this.urlString = urlString;
-  //   } else if (patternTwitter.exec(urlString)) {
-  //     console.log('Twitter');
-  //     this.site = 'Twitter';
-  //   } else if (patternPixiv.exec(urlString)) {
-  //     console.log('Pixiv');
-  //     this.site = 'Pixiv';
-  //   }
-
-  //   // return{dl:this.dl,_document:this._document,site:this.site,tags:this.tags,fileName:this.fileName,filePath:this.filePath,folderName:this.folderName,sqlConnection:this.sqlConnection,downloadLink:this.downloadLink}
-  //   // this.test = undefined;
-  //   // this.doc = 'asd';
-  //   // return{dl:this.dl};
-  // }
-
-  // async getDownloadInfo() {
-  //   var result = await this.readBooruTags(this.urlString).then(
-  //     (res) => {
-  //       // console.log(res);
-  //     },
-  //     (err) => {
-  //       console.log(err);
-  //     }
-  //   );
-  //   return new Promise((resolve, reject) => {
-  //     // if (this.dl != undefined) {
-  //     //   resolve(result);
-  //     // } else {
-  //     //   reject('ERR');
-  //     // }
-  //     resolve(result);
-  //   });
-  // }
 
   async downloadAsync(url, filePath, callback) {
     // var dl = await download(url).pipe(fs.createWriteStream(filePath));
@@ -120,7 +70,7 @@ class GetTags {
     // dispatchEvent(this.eventFinished);
     // return dl;
   }
-  async readBooruTags(urlString: string) {
+  async readBooruTags(urlString: string, generateFolderName: Function) {
     var tags: string[] = [];
     var downloadLink: string = '';
     var fileName: string = '';
@@ -259,72 +209,77 @@ class GetTags {
     }
     function generatePath() {
       setFileName();
-      folderName = generateFolderName();
+      folderName = generateFolderName(tags);
+
       filePath = path.join(Config.workingPath, folderName, fileName);
     }
     function setFileName() {
       var split = downloadLink.split('/');
       fileName = split[split.length - 1];
     }
+  }
 
-    function generateFolderName(): string {
-      // console.log(Config.tags[0].fromSite);
-      // console.log('generating folder name');
-      // console.log(tags);
+  generateFolderName(tags: string[]): string {
+    // console.log(Config.tags[0].fromSite);
+    // console.log('generating folder name');
+    // console.log(tags);
 
-      for (let i = 0; i < Config.tags.length; i++) {
-        if (!Config.tags[i].checkFolder) {
-          continue;
-        }
-        for (let j = 0; j < tags.length; j++) {
-          for (let k = 0; k < Config.tags[i].fromSite.length; k++) {
-            if (tags[j] == Config.tags[i].fromSite[k]) {
-              // console.log(Config.tags[i].folder);
-              return Config.tags[i].folder;
-            }
+    for (let i = 0; i < Config.tags.length; i++) {
+      if (!Config.tags[i].checkFolder) {
+        continue;
+      }
+      for (let j = 0; j < tags.length; j++) {
+        for (let k = 0; k < Config.tags[i].fromSite.length; k++) {
+          if (tags[j] == Config.tags[i].fromSite[k]) {
+            // console.log(Config.tags[i].folder);
+            return Config.tags[i].folder;
           }
         }
       }
-
-      // for (let i = 0; i < tags.length; i++) {
-      //   for (let j = 0; j < Config.tags.length; j++) {
-      //     if (!Config.tags[j].checkFolder) {
-      //       continue;
-      //     }
-      //     console.log('tags[i]');
-      //     console.log(tags[i]);
-      //     console.log('COnfig.tags[j].folder');
-      //     console.log(Config.tags[j].folder);
-      //     for (let k = 0; k < Config.tags[j].fromSite.length; k++) {
-      //       if (tags[i] == Config.tags[j].fromSite[k]) {
-      //         console.log(Config.tags[j].folder);
-      //         return Config.tags[j].folder;
-
-      //         // console.log('YEPPERS' + tags[i]);
-      //         // console.log(fs.access(Config.workingPath));
-      //         // fs.appendFile(
-      //         //   path.join(Config.workingPath, 'test.txt'),
-      //         //   'contentasdsad',
-      //         //   (err) => {
-      //         //     if (err) {
-      //         //       console.error(err);
-      //         //       return;
-      //         //     }
-      //         //     //file written successfully
-      //         //   }
-      //         // );
-      //         // fs.writeFile(
-      //         //   'E:\\istir\\react-git\\git\\tilde-5.4.0-react\\working-dir\\test.txt',
-      //         //   'asdasdasd'
-      //         // );
-      //       }
-      //     }
-      //   }
-      // }
-      return 'other';
     }
+    return 'other';
   }
 
+  async readTwitterTags(taggedUrlString: string, generateFolderName: Function) {
+    var tags: string[] = [];
+    var downloadLink: string = '';
+    var fileName: string = '';
+    var filePath: string = '';
+    var folderName: string = '';
+    var postLink: string = '';
+    postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
+    downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
+    downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
+    let tagsString = taggedUrlString.substring(
+      taggedUrlString.indexOf('|Tags: ')
+    );
+    tagsString = tagsString.replace('|Tags: ', '');
+    tags = tagsString.split(', ');
+    generatePath();
+    this.tags = tags;
+    this.downloadLink = downloadLink;
+    this.fileName = fileName;
+    this.filePath = filePath;
+    this.folderName = folderName;
+    this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+    fs.writeFile(filePath, await download(downloadLink), (callback) => {
+      this.dl = true;
+    });
+
+    function generatePath() {
+      setFileName();
+      folderName = generateFolderName(tags);
+
+      filePath = path.join(Config.workingPath, folderName, fileName);
+    }
+    function setFileName() {
+      let urlSplit = downloadLink.split('?format=');
+
+      let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
+      let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
+      fileName = name + '.' + ext;
+    }
+  }
   // async handeDatabaseConnection() {
   //   this.sqlConnection = await mysql.createConnection({
   //     host: 'localhost',
