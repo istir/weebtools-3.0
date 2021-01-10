@@ -346,7 +346,12 @@ class GetTags {
     var duplicate: boolean =
       (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
     if (!duplicate) {
-      insert();
+      insert(tags);
+    } else {
+      deleteAndUpdate(file, folder).then((ful: string[]) => {
+        // console.log(ful);
+        this.tags = ful;
+      });
     }
     // console.log(test);
     async function checkIfExists(keyFile: string, keyFolder: string) {
@@ -369,19 +374,78 @@ class GetTags {
       return rows[0].solution;
     }
 
-    async function insert() {
+    async function deleteAndUpdate(fileName: string, folderName: string) {
+      async function getRecord() {
+        var queryGetTags =
+          'SELECT * FROM files WHERE fileName = "' +
+          fileName +
+          '" AND folder ="' +
+          folderName +
+          '"';
+        var [rows] = await sqlConnection.execute(queryGetTags);
+        // return stringToArr(rows[0].Tags);
+        return new Promise((resolve, reject) => {
+          if (rows.length > 0) {
+            resolve(rows[0].Tags);
+          } else {
+            reject();
+          }
+        });
+      }
+      // var newTags = [];
+      return getRecord().then((ful: string) => {
+        // console.log(ful);
+        let oldTags = stringToArr(ful);
+        // console.log(tags);
+        let allTags = oldTags.concat(tags);
+        var newTags = [...new Set(allTags)];
+
+        deleteRecord().then((ful) => {
+          insert(newTags);
+        });
+        return new Promise((res) => {
+          res(newTags);
+        });
+      });
+
+      async function deleteRecord() {
+        var queryDeleteRow =
+          'DELETE FROM files WHERE fileName = "' +
+          fileName +
+          '" AND folder ="' +
+          folderName +
+          '"';
+        var [rows] = await sqlConnection.execute(queryDeleteRow);
+        // console.log(rows);
+        return new Promise((resolved, rejected) => {
+          if (rows.affectedRows >= 1) {
+            // console.log('YEP');
+            resolved(true);
+          } else {
+            rejected(false);
+          }
+        });
+      }
+      // console.log(newTags);
+      // throw 'BREAK';
+    }
+
+    async function insert(tagsToInsert: string[]) {
       var query =
         'INSERT INTO files(folder, fileName, tags) VALUES("' +
         folder +
         '","' +
         file +
         '","' +
-        normalizeTags(tags) +
+        arrToString(tagsToInsert) +
         '")';
       await sqlConnection.query(query);
     }
-    function normalizeTags(tagArr: string[]) {
+    function arrToString(tagArr: string[]) {
       return tagArr.join(', ');
+    }
+    function stringToArr(tagString: string) {
+      return tagString.split(', ');
     }
   }
 }

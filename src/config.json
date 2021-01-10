@@ -63,7 +63,7 @@
       "toReturn": "pantyhose",
       "fromSite": ["pantyhose"],
       "folder": "abandon all hope ye who enter here",
-      "visible": false,
+      "visible": true,
       "checkFolder": true
     },
     {

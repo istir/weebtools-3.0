@@ -114,6 +114,8 @@ const createWindow = async () => {
       ) {
         mainWindow.webContents.send('clipboard', clipboard.readText());
         lastClip = clipboard.readText();
+      } else {
+        console.log('lastClip=' + lastClip);
       }
     } catch (err) {
       console.log(err);

@@ -6,6 +6,7 @@ import Config from './config.json';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
+import { refresh } from 'electron-debug';
 // import 'simplebar/dist/simplebar.min.css';
 const fs = require('fs');
 const { ipcRenderer } = window.require('electron');
@@ -69,12 +70,43 @@ Database().then(
           // );
 
           // const data =[{pathName:"asd",tags:["asd","zxc"]}]
+          // console.log(images);
+          // console.log(images);
+          // var duplicate = false;
+          for (let i = 0; i < images.length; i++) {
+            // const element = images[i];
+            // console.log(images[i].pathName);
+            if (images[i].pathName == path) {
+              // console.log(images);
+              // console.log(images[i].pathName);
+              // console.log(i);
+              images.splice(i, 1);
+              // console.log(images);
+              // duplicate = true;
+              // images[i].tags = getTags.tags;
+            }
+          }
+          // console.log(
+          //   images.indexOf({
+          //     pathName: path,
+          //     fileName: getTags.fileName,
+          //     folder: getTags.folderName,
+          //   })
+          // );
+          // console.log(images);
+          // if (images.includes({pathName:path,fileName:getTags.fileName,folder:getTags.folderName})) {
+
+          // }
+          // if (!duplicate) {
           images.unshift({
             pathName: path,
             fileName: getTags.fileName,
             tags: getTags.tags,
             folder: getTags.folderName,
           });
+          // images = new Set(images);
+          // console.log(images);
+          // }
         }
       }, 500);
     });
@@ -152,7 +184,16 @@ function randomBackground(picker: []) {
     });
   }
 }
-
+async function refreshItem(fileName: string, folder: string) {
+  var query =
+    'SELECT * FROM files WHERE fileName="' +
+    fileName +
+    '" AND folder="' +
+    folder +
+    '"';
+  var [rows] = await database.query(query);
+  return rows[0].Tags.split(', ');
+}
 async function modifyItem(
   oldName: string,
   oldFolder: string,
@@ -423,6 +464,15 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
         this.props.row.folder,
         this.state.checked
       );
+      // refreshItem(this.props.row.fileName, this.props.row.folder).then(
+      //   (ful) => {
+      //     console.log(ful);
+      //   }
+      // );
+      // this.setState({
+      //   checked: ,
+      // });
+      // console.log(this.state.checked);
       // console.log(this.props.row.fileName);
     }
     // modifyItem()
@@ -528,10 +578,11 @@ class App extends React.Component {
   componentDidMount() {
     //probably need to change? but maybe not, not sure how it will work when finished
     this.timerID = setInterval(() => {
-      if (this.state.images.length != this.state.imgCount) {
-        this.forceUpdate();
-        this.setState({ imgCount: this.state.images.length });
-      }
+      // if (this.state.images.length != this.state.imgCount) {
+      //this fucks everything up :(
+      this.forceUpdate();
+      this.setState({ imgCount: this.state.images.length });
+      // }
       //   this.setState({ images: images });
       //TODO: but fix this..., maybe componentshouldupdate?
       // this.forceUpdate();
@@ -539,7 +590,7 @@ class App extends React.Component {
       // }
       // console.log(this.state.images.length);
       // console.log('upd');
-    }, 500);
+    }, 10);
   }
   // shouldComponentUpdate(nextProps, nextState) {
   //   console.log('????');
@@ -553,6 +604,13 @@ class App extends React.Component {
   handleTableClick(e: { id: React.ReactText }) {
     console.log(this.state.currRow);
     console.log(e.id);
+    // console.log(this.state.images);
+    // refreshItem(
+    //   this.state.images[e.id].fileName,
+    //   this.state.images[e.id].folder
+    // ).then((ful) => {
+    //   console.log(ful);
+    // });
     this.setState({ currRow: this.state.images[e.id] });
   }
   render() {
