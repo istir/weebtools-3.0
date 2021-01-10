@@ -254,6 +254,7 @@
     "@material-ui/core": "^4.11.2",
     "clipboard-event": "^1.0.1",
     "clipboardy": "^2.3.0",
+    "custom-electron-titlebar": "^3.2.5",
     "download": "^8.0.0",
     "electron-clipboard-extended": "^1.1.1",
     "electron-debug": "^3.1.0",
@@ -272,6 +273,8 @@
     "react-sidebar": "^3.0.2",
     "react-table": "^7.6.2",
     "regenerator-runtime": "^0.13.5",
+    "simplebar": "^5.3.0",
+    "simplebar-react": "^2.3.0",
     "source-map-support": "^0.5.19",
     "superagent": "^6.1.0"
   },

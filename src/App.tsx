@@ -5,6 +5,8 @@ import Database from './Database';
 import Config from './config.json';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Checkbox } from '@material-ui/core';
+import SimpleBarReact from 'simplebar-react';
+// import 'simplebar/dist/simplebar.min.css';
 const fs = require('fs');
 const { ipcRenderer } = window.require('electron');
 const path = require('path');
@@ -17,7 +19,7 @@ Database().then(
     console.log('Connected successfully');
 
     database = ful;
-    loadLastQueries(database, 50).then(
+    loadLastQueries(database, 100).then(
       (ful) => {
         // document.getElementsByTagName('body')[0].ba
         // console.log
@@ -264,35 +266,29 @@ function Table(props: any) {
 
   return (
     // apply the table props
-    <div>
-      <table className="globalTable" {...getTableProps()}>
-        {/* <thead>
-          {
-            // Loop over the header rows
-            headerGroups.map((headerGroup) => (
-              // Apply the header row props
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {
-                  // Loop over the headers in each row
-                  headerGroup.headers.map((column) => (
-                    // Apply the header cell props
-                    <th {...column.getHeaderProps()}>
-                      {
-                        // Render the header
-                        column.render("Header")
-                      }
-                    </th>
-                  ))
-                }
-              </tr>
-            ))
-          }
-        </thead> */}
-        {/* Apply the table body props */}
-        <tbody {...getTableBodyProps()}>
-          {
-            // Loop over the table rows
-            rows.map(
+    // <div
+    //   style={{
+    //     height: document.getElementsByTagName('body')[0].clientHeight,
+    //     overflowY: 'auto',
+    //   }}
+    //   className="divbeforetabletemp"
+    // >
+    /* <SimpleBar forceVisible="y" autoHide={false} style={{ maxHeight: 300 }}>
+        {[...Array(50)].map((x, i) => (
+          <p key={i} className="odd">
+            Some content
+          </p>
+        ))} */
+    <div className="divbeforetabletemp">
+      <SimpleBarReact
+        style={{
+          top: 30,
+          maxHeight: '100vh',
+        }}
+      >
+        <table className="globalTable" {...getTableProps()}>
+          <tbody {...getTableBodyProps()}>
+            {rows.map(
               (row: {
                 getRowProps: () => JSX.IntrinsicAttributes &
                   React.ClassAttributes<HTMLTableRowElement> &
@@ -334,10 +330,15 @@ function Table(props: any) {
                   </tr>
                 );
               }
-            )
-          }
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+        {/* {[...Array(50)].map((x, i) => (
+          <p key={i} className="odd">
+            Some content
+          </p>
+        ))} */}
+      </SimpleBarReact>
     </div>
   );
 }
@@ -435,6 +436,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     for (let i = 0; i < this.props.tags.length; i++) {
       let value = this.props.tags[i];
       var check = false;
+      // console.log(value);
       if (this.state.checked.length > 0) {
         for (let j = 0; j < value[1].length; j++) {
           // console.log(value[0] + " '" + value[1][j] + "'");
@@ -501,13 +503,15 @@ class App extends React.Component {
 
     var tempTags = [];
     for (let i = 0; i < Config.tags.length; i++) {
-      let test = [Config.tags[i].toReturn];
-      let test1 = [];
-      for (let j = 0; j < Config.tags[i].fromSite.length; j++) {
-        test1.push(Config.tags[i].fromSite[j]);
+      if (Config.tags[i].visible) {
+        let test = [Config.tags[i].toReturn];
+        let test1 = [];
+        for (let j = 0; j < Config.tags[i].fromSite.length; j++) {
+          test1.push(Config.tags[i].fromSite[j]);
+        }
+        test.push(test1);
+        tempTags.push(test);
       }
-      test.push(test1);
-      tempTags.push(test);
     }
     this.state = {
       tags: tempTags,
@@ -559,6 +563,7 @@ class App extends React.Component {
           imageData={this.state.images}
           showableTags={this.state.tags}
         />
+
         <TagPicker tags={this.state.tags} row={this.state.currRow} />
       </div>
     );

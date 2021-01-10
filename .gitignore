@@ -50,3 +50,4 @@ npm-debug.log.*
 *.scss.d.ts
 src/config.json
 working-dir/
+assets/icons/512x512.psd

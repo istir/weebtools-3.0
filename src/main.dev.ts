@@ -15,13 +15,15 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+// const customTitlebar = require('custom-electron-titlebar');
+// import PerfectScrollbar from 'perfect-scrollbar';
 // const clipboardListener = require('clipboard-event');
 // const ClipboardListener = require('clipboard-listener');
 const clipboardy = require('clipboardy');
 const clipboard = require('electron-clipboard-extended');
 // const ClipboardListener = require('clipboard-listener');
 
-// const navigator = require("Navigator");
+// const navigator = require('Navigator');
 const { ipcMain } = require('electron');
 
 // const listener = new ClipboardListener({
@@ -80,13 +82,20 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
+  // new customTitlebar.Titlebar({
+  //   backgroundColor: customTitlebar.Color.fromHex('#444'),
+  // });
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
-    height: 728,
+    height: 768,
+    titleBarStyle: 'hidden',
     icon: getAssetPath('icon.png'),
+    frame: false,
+
     webPreferences: {
       nodeIntegration: true,
+      enableRemoteModule: true,
     },
   });
 
