@@ -3,6 +3,7 @@ import { TouchBarOtherItemsProxy } from 'electron';
 import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
 import Config from './config.json';
 import Downloader from './Downloader';
+import settings from 'electron-settings';
 const fs = require('fs');
 const download = require('download');
 const path = require('path');
@@ -23,7 +24,13 @@ class GetTags {
   dl: any | undefined;
   urlString: string = '';
   eventFinished: any | undefined;
+  workingDirectory: any = '';
+  settingsTags: any | undefined;
   async init(database: any, urlString: string) {
+    // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings.getSync('commonSettings');
+    // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value;
+    this.settingsTags = settings.getSync('tags');
+
     this.sqlConnection = database;
     var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
@@ -54,10 +61,10 @@ class GetTags {
     }
   }
 
-  async downloadAsync(url, filePath, callback) {
+  async downloadAsync(url, filePath) {
     // var dl = await download(url).pipe(fs.createWriteStream(filePath));
     // var dl = fs.writeFileSync(filePath, await download(url));
-    fs.writeFile(filePath, await download(url), (callback) => {
+    fs.writeFile(filePath, await download(url), () => {
       this.dl = true;
     });
     // this.dl = dl;
@@ -213,7 +220,13 @@ class GetTags {
       setFileName();
       folderName = generateFolderName(tags);
 
-      filePath = path.join(Config.workingPath, folderName, fileName);
+      filePath = path.join(
+        settings
+          .getSync('commonSettings')
+          .find((el) => el.key === 'workingPath').value,
+        folderName,
+        fileName
+      );
     }
     function setFileName() {
       var split = downloadLink.split('/');
@@ -222,19 +235,14 @@ class GetTags {
   }
 
   generateFolderName(tags: string[]): string {
-    // console.log(Config.tags[0].fromSite);
-    // console.log('generating folder name');
-    // console.log(tags);
-
-    for (let i = 0; i < Config.tags.length; i++) {
-      if (!Config.tags[i].checkFolder) {
+    for (let i = 0; i < settings.getSync('tags').length; i++) {
+      if (!settings.getSync('tags')[i].checkFolder) {
         continue;
       }
       for (let j = 0; j < tags.length; j++) {
-        for (let k = 0; k < Config.tags[i].fromSite.length; k++) {
-          if (tags[j] == Config.tags[i].fromSite[k]) {
-            // console.log(Config.tags[i].folder);
-            return Config.tags[i].folder;
+        for (let k = 0; k < settings.getSync('tags')[i].fromSite.length; k++) {
+          if (tags[j] == settings.getSync('tags')[i].fromSite[k]) {
+            return settings.getSync('tags')[i].folder;
           }
         }
       }
@@ -272,7 +280,13 @@ class GetTags {
       setFileName();
       folderName = generateFolderName(tags);
 
-      filePath = path.join(Config.workingPath, folderName, fileName);
+      filePath = path.join(
+        settings
+          .getSync('commonSettings')
+          .find((el) => el.key === 'workingPath').value,
+        folderName,
+        fileName
+      );
     }
     function setFileName() {
       let urlSplit = downloadLink.split('?format=');

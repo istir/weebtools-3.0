@@ -2,12 +2,14 @@ import React from 'react';
 import GetTags from './GetTags';
 import { useTable } from 'react-table';
 import Database from './Database';
-import Config from './config.json';
+// import Config from './config.json';
+import settings from 'electron-settings';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
 import { refresh } from 'electron-debug';
 import { clipboard } from 'electron';
+import ConfigButton from './ConfigDiv';
 // import { BrowserWindow } from 'electron/main';
 // import { shell } from 'electron/common';
 const { remote } = require('electron');
@@ -25,6 +27,10 @@ const path = require('path');
 var currImage: string = '';
 var images: Object[] = [];
 var database: any;
+var workingDirectory = settings.getSync('commonSettings');
+workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
+  .value;
+// var settings.getSync('tags') = settings.getSync('tags');
 Database().then(
   (ful: any) => {
     console.log('Connected successfully');
@@ -39,7 +45,7 @@ Database().then(
         // console.log(ful[Math.floor(Math.random() * ful.length)]);
         // var filePath = path
         //   .join(
-        //     Config.workingPath,
+        //     workingDirectory,
         //     ful[Math.floor(Math.random() * ful.length)].folder,
         //     ful[Math.floor(Math.random() * ful.length)].fileName
         //   )
@@ -65,6 +71,7 @@ Database().then(
       await getTags.init(database, arg);
       var interval = setInterval(() => {
         if (getTags.dl != undefined) {
+          clipboard.writeText('');
           clearInterval(interval);
           var path = getTags.filePath;
           // listA.push('zzz');
@@ -130,11 +137,7 @@ Database().then(
       // }
       await rows.map((item: any) => {
         // console.log(item);
-        var filePath = path.join(
-          Config.workingPath,
-          item.folder,
-          item.fileName
-        );
+        var filePath = path.join(workingDirectory, item.folder, item.fileName);
         fs.access(filePath, fs.constants.R_OK, (err: Error) => {
           if (!err) {
             // tablesLoaded.push(
@@ -180,7 +183,7 @@ function randomBackground(picker: []) {
   } else {
     // console.log(picker[random]);
     var filePath = path.join(
-      Config.workingPath,
+      workingDirectory,
       picker[random].folder,
       picker[random].fileName
     );
@@ -659,10 +662,18 @@ class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
   render() {
     // console.log(this.props.test);
     return (
-      <div>
+      <div
+      // onClick={(e) => {
+      //   console.log(e.target.parentNode);
+      //   console.log(e);
+      // }}
+      >
         <Checkbox
           // onChange={this.changed.bind(this)}
           onChange={this.props.change}
+          // onChange={(e) => {
+          //   console.log(e);
+          // }}
           // onClick={this.ch()}
           key="input"
           value={this.props.value}
@@ -713,14 +724,15 @@ class FullscreenImage extends React.Component {
 class App extends React.Component {
   constructor(props: {} | Readonly<{}>) {
     super(props);
-
+    // this.refreshTags();
+    var tempTags = this.refreshTags();
     var tempTags = [];
-    for (let i = 0; i < Config.tags.length; i++) {
-      if (Config.tags[i].visible) {
-        let test = [Config.tags[i].toReturn];
+    for (let i = 0; i < settings.getSync('tags').length; i++) {
+      if (settings.getSync('tags')[i].visible) {
+        let test = [settings.getSync('tags')[i].toReturn];
         let test1 = [];
-        for (let j = 0; j < Config.tags[i].fromSite.length; j++) {
-          test1.push(Config.tags[i].fromSite[j]);
+        for (let j = 0; j < settings.getSync('tags')[i].fromSite.length; j++) {
+          test1.push(settings.getSync('tags')[i].fromSite[j]);
         }
         test.push(test1);
         tempTags.push(test);
@@ -731,6 +743,7 @@ class App extends React.Component {
       currRow: null,
       images: images,
       imgCount: 0,
+      currRowID: -1,
     };
     // this.state = {
     //   images: simulateImageData(),
@@ -738,11 +751,37 @@ class App extends React.Component {
     //   currRow: null,
     // };
   }
+
+  refreshTags() {
+    // console.log('LULW');
+    this.forceUpdate();
+    var tempTags = [];
+    for (let i = 0; i < settings.getSync('tags').length; i++) {
+      if (settings.getSync('tags')[i].visible) {
+        let test = [settings.getSync('tags')[i].toReturn];
+        let test1 = [];
+        for (let j = 0; j < settings.getSync('tags')[i].fromSite.length; j++) {
+          test1.push(settings.getSync('tags')[i].fromSite[j]);
+        }
+        test.push(test1);
+        tempTags.push(test);
+      }
+    }
+    this.setState({ tags: tempTags });
+    // return tempTags;
+  }
+
   componentDidMount() {
     //probably need to change? but maybe not, not sure how it will work when finished
     this.timerID = setInterval(() => {
       // if (this.state.images.length != this.state.imgCount) {
       //this fucks everything up :(
+      this.setState({
+        currRow:
+          this.state.currRowID >= 0
+            ? this.state.images[this.state.currRowID]
+            : null,
+      });
       this.forceUpdate();
       // this.setState({ imgCount: this.state.images.length });
       // console.log(this.state.images);
@@ -776,11 +815,13 @@ class App extends React.Component {
     // ).then((ful) => {
     //   console.log(ful);
     // });
-    this.setState({ currRow: this.state.images[e.id] });
+    this.setState({ currRowID: e.id });
+    this.setState({ currRow: this.state.images[this.state.currRowID] });
   }
   render() {
     return (
       <div>
+        <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
         <FullscreenImage show={true} image={this.state.currRow?.pathName} />
         <Table
           handleClick={this.handleTableClick.bind(this)}

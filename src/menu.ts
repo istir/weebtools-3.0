@@ -216,12 +216,38 @@ export default class MenuBuilder {
           {
             label: '&Config',
             click: () => {
-              dialog.showMessageBox(this.mainWindow, {
-                buttons: ['OK'],
-                title: 'Config',
-                message: 'WIP',
-                type: 'info',
-              });
+              // console.log(config.get('tags'));
+              // let configWindow: BrowserWindow | null = null;
+              // configWindow = new BrowserWindow({
+              //   show: false,
+              //   width: 1024,
+              //   height: 768,
+              //   // titleBarStyle: 'hidden',
+              //   // frame: false,
+              //   webPreferences: {
+              //     nodeIntegration: true,
+              //     enableRemoteModule: true,
+              //   },
+              // });
+              // configWindow.loadURL(`file://${__dirname}/indexConfig.html`);
+              // configWindow.webContents.on('did-finish-load', () => {
+              //   if (!configWindow) {
+              //     throw new Error('"mainWindow" is not defined');
+              //   }
+              //   if (process.env.START_MINIMIZED) {
+              //     configWindow.minimize();
+              //   } else {
+              //     configWindow.show();
+              //     configWindow.focus();
+              //   }
+              // });
+              // configWindow.show();
+              // dialog.showMessageBox(this.mainWindow, {
+              //   buttons: ['OK'],
+              //   title: 'Config',
+              //   message: 'WIP',
+              //   type: 'info',
+              // });
             },
           },
           {
