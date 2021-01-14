@@ -270,21 +270,34 @@ function Table(props: any) {
   );
   //initialize data from imageData from props
   function normalizeName(arr: string[]) {
-    // console.log(arr);
-    // console.log(props.showableTags);
     let tempArr = [];
-    for (let i = 0; i < props.showableTags.length; i++) {
-      // console.log(props.showableTags[i]);
-      for (let j = 0; j < props.showableTags[i][1].length; j++) {
-        // console.log(props.showableTags[i][1][j]);
-        if (arr.includes(props.showableTags[i][1][j])) {
-          tempArr.push(props.showableTags[i][1][j]);
-
-          // tempArr.push(arr[arr.indexOf(props.showableTags[i][1][j])]);
+    for (let i = 0; i < props.showableTags2.length; i++) {
+      const element = props.showableTags2[i];
+      if (element.shown) {
+        if (arr.includes(element.fromSite)) {
+          if (!tempArr.includes(element.returnValue)) {
+            tempArr.push(element.returnValue);
+          }
+          // console.log(element.returnValue);
         }
       }
+      // console.log(element);
     }
-    tempArr.length == 0 ? tempArr.push('other') : '';
+    // console.log(arr);
+    // console.log(arr);
+    // console.log(props.showableTags);
+    // let tempArr = [];
+    // for (let i = 0; i < props.showableTags.length; i++) {
+    //   // console.log(props.showableTags[i]);
+    //   for (let j = 0; j < props.showableTags[i][1].length; j++) {
+    //     // console.log(props.showableTags[i][1][j]);
+    //     if (arr.includes(props.showableTags[i][1][j])) {
+    //       tempArr.push(props.showableTags[i][1][j]);
+    //       // tempArr.push(arr[arr.indexOf(props.showableTags[i][1][j])]);
+    //     }
+    //   }
+    // }
+    // tempArr.length == 0 ? tempArr.push('other') : '';
     return tempArr.join(', ');
   }
 
@@ -546,26 +559,54 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
       // console.log(this.props.row.tags);
       // console.log(this.state.checked);
       // console.log(this.props.tags);
-      var currTag = [''];
-      for (let i = 0; i < this.props.tags.length; i++) {
-        if (this.props.tags[i][0] == e.target.value) {
-          // console.log("yeep");
-          // console.log(this.props.tags[i]);
-          for (let j = 0; j < this.props.tags[i].length; j++) {
-            // console.log(this.state.checked);
-            // console.log(this.props.tags[i][j]);
-            for (let k = 0; k < this.props.tags[i][j].length; k++) {
-              // console.log(this.props.tags[i][j][k]);
-              if (this.state.checked.includes(this.props.tags[i][j][k])) {
-                currTag.push(this.props.tags[i][j][k]);
-              }
-            }
-            // if (this.state.checked.includes(this.props.tags[i][j])) {
-            //   // console.log(this.props.tags[i][j]);
-            // }
+      // var currTag = [''];
+      // for (let i = 0; i < this.props.tags.length; i++) {
+      //   if (this.props.tags[i][0] == e.target.value) {
+      //     // console.log("yeep");
+      //     // console.log(this.props.tags[i]);
+      //     for (let j = 0; j < this.props.tags[i].length; j++) {
+      //       // console.log(this.state.checked);
+      //       // console.log(this.props.tags[i][j]);
+      //       for (let k = 0; k < this.props.tags[i][j].length; k++) {
+      //         // console.log(this.props.tags[i][j][k]);
+      //         if (this.state.checked.includes(this.props.tags[i][j][k])) {
+      //           currTag.push(this.props.tags[i][j][k]);
+      //         }
+      //       }
+      //       // if (this.state.checked.includes(this.props.tags[i][j])) {
+      //       //   // console.log(this.props.tags[i][j]);
+      //       // }
+      //     }
+      //   }
+      // }
+
+      let currTag = [];
+      for (let i = 0; i < this.props.tagsDictionary.length; i++) {
+        const element = this.props.tagsDictionary[i];
+        // console.log(e.target.value);
+        // console.log(element);
+        if (element.returnValue === e.target.value && element.shown) {
+          // console.log(element.fromSite);
+          if (!currTag.includes(element.fromSite)) {
+            currTag.push(element.fromSite);
           }
         }
+        // if (arr.includes(element.fromSite)) {
+        //   if (!tempArr.includes(element.returnValue)) {
+        //     tempArr.push(element.returnValue);
+        //   }
+        //   // console.log(element.returnValue);
       }
+
+      // console.log(e.target.value);
+      var foundTag = this.props.tagsDictionary.find(
+        (el) => el.returnValue === e.target.value
+      );
+      // console.log(foundTag);
+
+      // console.log(element);
+      // console.log(this.state.checked);
+      // console.log(currTag);
       if (!e.target.checked) {
         //TODO: make it so currTag is an array and newState removes that array from itself
         for (let i = 0; i < currTag.length; i++) {
@@ -579,11 +620,30 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           //here is almost the same but if item isn't togged I add it to "checked" state
         }
       }
+      // if (!e.target.checked) {
+      //   //TODO: make it so currTag is an array and newState removes that array from itself
+      //   for (let i = 0; i < currTag.length; i++) {
+      //     if (this.state.checked.includes(currTag[i])) {
+      //       let index = this.state.checked.indexOf(currTag[i]);
+      //       let newState = this.state.checked;
+      //       newState.splice(index, 1);
+      //       // console.log(newState);
+      //       this.setState({ checked: newState });
+      //     }
+      //     //here is almost the same but if item isn't togged I add it to "checked" state
+      //   }
+      // }
+      // console.log(e.target.value);
 
+      // console.log(
+
+      // );
       if (e.target.checked) {
-        if (!this.state.checked.includes(e.target.value)) {
+        if (!this.state.checked.includes(foundTag.fromSite)) {
           let newState = this.state.checked;
-          newState.push(e.target.value);
+
+          newState.push(foundTag.fromSite);
+          // newState.push(e.target.value);
           this.setState({ checked: newState });
         }
       }
@@ -593,16 +653,6 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
         this.props.row.folder,
         this.state.checked
       );
-      // refreshItem(this.props.row.fileName, this.props.row.folder).then(
-      //   (ful) => {
-      //     console.log(ful);
-      //   }
-      // );
-      // this.setState({
-      //   checked: ,
-      // });
-      // console.log(this.state.checked);
-      // console.log(this.props.row.fileName);
     }
     // modifyItem()
     // console.log(this.state.checked)
@@ -724,37 +774,34 @@ class FullscreenImage extends React.Component {
 class App extends React.Component {
   constructor(props: {} | Readonly<{}>) {
     super(props);
-    // this.refreshTags();
-    var tempTags = this.refreshTags();
-    var tempTags = [];
-    for (let i = 0; i < settings.getSync('tags').length; i++) {
-      if (settings.getSync('tags')[i].visible) {
-        let test = [settings.getSync('tags')[i].toReturn];
-        let test1 = [];
-        for (let j = 0; j < settings.getSync('tags')[i].fromSite.length; j++) {
-          test1.push(settings.getSync('tags')[i].fromSite[j]);
-        }
-        test.push(test1);
-        tempTags.push(test);
-      }
-    }
+
     this.state = {
-      tags: tempTags,
+      tags: this.getTags(),
       currRow: null,
       images: images,
       imgCount: 0,
       currRowID: -1,
+      tagDictionary: this.getTagDictionary(),
     };
-    // this.state = {
-    //   images: simulateImageData(),
-    //   tags: [''],
-    //   currRow: null,
-    // };
   }
 
-  refreshTags() {
-    // console.log('LULW');
-    this.forceUpdate();
+  getTagDictionary() {
+    let tagObj = [];
+    var stt = settings.getSync('tags');
+    for (let i = 0; i < stt.length; i++) {
+      for (let j = 0; j < stt[i].fromSite.length; j++) {
+        tagObj.push({
+          fromSite: stt[i].fromSite[j],
+          returnValue: stt[i].toReturn,
+          shown: stt[i].visible,
+        });
+        // console.log(stt[i].fromSite[j] + ' ' + stt[i].toReturn);
+      }
+    }
+    return tagObj;
+  }
+
+  getTags() {
     var tempTags = [];
     for (let i = 0; i < settings.getSync('tags').length; i++) {
       if (settings.getSync('tags')[i].visible) {
@@ -767,8 +814,13 @@ class App extends React.Component {
         tempTags.push(test);
       }
     }
-    this.setState({ tags: tempTags });
-    // return tempTags;
+    return tempTags;
+  }
+  refreshTags() {
+    this.forceUpdate();
+
+    this.setState({ tags: this.getTags() });
+    this.setState({ tagDictionary: this.getTagDictionary() });
   }
 
   componentDidMount() {
@@ -806,8 +858,8 @@ class App extends React.Component {
     // console.log(this.state.images);
   }
   handleTableClick(e: { id: React.ReactText }) {
-    console.log(this.state.currRow);
-    console.log(e.id);
+    // console.log(this.state.currRow);
+    // console.log(e.id);
     // console.log(this.state.images);
     // refreshItem(
     //   this.state.images[e.id].fileName,
@@ -815,6 +867,7 @@ class App extends React.Component {
     // ).then((ful) => {
     //   console.log(ful);
     // });
+    // console.log(this.state.tags);
     this.setState({ currRowID: e.id });
     this.setState({ currRow: this.state.images[this.state.currRowID] });
   }
@@ -827,9 +880,14 @@ class App extends React.Component {
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}
           showableTags={this.state.tags}
+          showableTags2={this.state.tagDictionary}
         />
 
-        <TagPicker tags={this.state.tags} row={this.state.currRow} />
+        <TagPicker
+          tags={this.state.tags}
+          tagsDictionary={this.state.tagDictionary}
+          row={this.state.currRow}
+        />
       </div>
     );
   }
