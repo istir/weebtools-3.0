@@ -213,7 +213,36 @@ h2 {
 .settingTag {
   margin-bottom: 20px;
 }
-
+.settingTag > div {
+  margin-top: 30px;
+}
+.tagDelete {
+  margin-right: 15px;
+  display: block;
+  width: fit-content;
+  min-width: 30px;
+  overflow: hidden;
+  float: right;
+}
+.tagDelete > div {
+  margin-top: 30px;
+}
+/* .tagDelete > svg {
+  display: flex;
+  position: absolute;
+}
+.tagDelete > span {
+  transform: translateX(-100%);
+  position: relative;
+  transition: 1s;
+}
+.tagDelete:hover > span {
+  visibility: visible;
+  transform: translateX(0px);
+}
+.tagDelete:hover > * {
+  padding: 0px 5px;
+} */
 /**NODE TEST*/
 .settingPane-enter {
   opacity: 0;
@@ -235,7 +264,26 @@ h2 {
   backdrop-filter: blur(10px);
   outline: none;
 }
-
+@keyframes anvil {
+  0% {
+    transform: scale(1) translateY(0px);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(241, 241, 241, 0);
+  }
+  1% {
+    transform: scale(0.96) translateY(10px);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(241, 241, 241, 0);
+  }
+  100% {
+    transform: scale(1) translateY(0px);
+    opacity: 1;
+    box-shadow: 0 0 500px rgba(241, 241, 241, 0);
+  }
+}
+/* .popup-content {
+  -webkit-animation: anvil 0.3s cubic-bezier(0.38, 0.1, 0.36, 0.9) forwards;
+} */
 .popup-content {
   margin: auto;
   background: #ff9393;
@@ -244,6 +292,7 @@ h2 {
   padding: 20px;
   border-radius: 15px;
   box-shadow: 0px 10px 30px 0px rgba(0, 0, 0, 0.5);
+  -webkit-animation: anvil 0.3s cubic-bezier(0.38, 0.1, 0.36, 0.9) forwards;
 }
 
 .tagObj {
@@ -253,6 +302,15 @@ h2 {
 
 input {
   outline: none;
+}
+.settingTagInput {
+  border-radius: 5px;
+  border: 1px solid transparent;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.5);
+  width: 20vw;
+}
+.settingTagCheckbox {
+  background: #000;
 }
 .saveButton {
   width: fit-content;
@@ -309,9 +367,10 @@ input {
 }
 button {
   background-color: white;
-  width: 30px;
+  min-width: 30px;
+  width: fit-content;
   height: 30px;
-  padding: 0;
+  padding: 0px 5px;
   border-radius: 30px;
   margin: 10px;
   cursor: pointer;
@@ -364,7 +423,9 @@ a:hover {
 .MuiButtonBase-root.MuiIconButton-root.PrivateSwitchBase-root-1.MuiCheckbox-root.MuiCheckbox-colorSecondary {
   transform: scale(0.9);
 }
-
+.settingTag > div > .MuiCheckbox-colorSecondary {
+  color: #fff !important;
+}
 /** titlebar */
 .container-after-titlebar {
   inset: 0px !important;

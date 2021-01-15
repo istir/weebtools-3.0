@@ -36,18 +36,17 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
       changedListObject: null,
       workingPathState: '',
       commonSettingItems: null,
+      showModal: false,
     };
-
-    // this.setState({settings.})
-
-    // this.TEST = '';
-    // this workingPath = commonKey.find((el) => el.key === 'workingPath');
   }
-
+  tagToDelete(e) {
+    let obj = this.state.changedListObject;
+    var found = obj.tags.find((el) => el.key === e);
+    obj.tags.splice(obj.tags.indexOf(found), 1);
+  }
   componentDidMount() {
     if (settings.hasSync('tags')) {
       let obj = settings.getSync('tags').map((value) => (
-        // <SettingsItem name={value.toReturn} value={value.fromSite} />
         <Tag
           keyProp={value.key}
           toReturn={value.toReturn}
@@ -58,23 +57,12 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
           // checkedChanged={this.checkedChanged.bind(this)}
           // textChanged={this.textChanged.bind(this)}
           itemChanged={this.itemChanged.bind(this)}
+          toDelete={this.tagToDelete.bind(this)}
         />
       ));
-      // var something = [];
+
       var changedTags: ConfigToSaveList = [];
       var commonSettings = [];
-      // something.push({ key: 'workingPath', workingPath: Config.workingPath });
-      // changedObj.push({ workingPath: Config.workingPath });
-      // var commonSettings = [];
-      // for (let i = 0; i < Object.keys(Config).length - 1; i++) {
-      //   // const element = Config[i];
-      //   let obj = {
-      //     key: 'workingPath',
-      //     value: Config.workingPath,
-      //   };
-      //   // console.log(Config[i]);
-      //   commonSettings.push(obj);
-      // }
 
       if (settings.hasSync('commonSettings')) {
         var commonKey = settings.getSync('commonSettings');
@@ -220,6 +208,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
         folder={value.folder}
         visible={value.visible}
         checkFolder={value.checkFolder}
+        toDelete={this.toDelete}
         // checkedChanged={this.checkedChanged.bind(this)}
         // textChanged={this.textChanged.bind(this)}
         itemChanged={this.itemChanged.bind(this)}
@@ -261,21 +250,14 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
             style={{
               maxHeight: '100%',
               width: '100%',
+              borderRadius: '15px',
+              padding: '10px',
             }}
           >
-            <Popup trigger={<button> Add </button>} modal>
-              <PopupPanel
-                contents={<TagToAdd onSave={this.addObject.bind(this)} />}
-              />
-            </Popup>
-            {/* <div>{this.state.newListObjects}</div> */}
-            {/* <div>
-              <div>{this.state.listObjects}</div>
-              <div>{this.state.newListObjects}</div>
-            </div> */}
             <div className="settingsList">
               {this.state.commonSettingItems}
               <h3 style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>Tags</h3>
+              <div className="tagObj">{this.state.listObjects}</div>
               <button
                 className="saveButton"
                 style={{ gridColumnStart: 2, gridColumnEnd: 5 }}
@@ -284,10 +266,27 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
                 Save
               </button>
 
-              {/* {this.state.listObjects}
-                {this.state.newListObjects} */}
-              {/* <div>{this.state.newListObjects}</div> */}
-              <div className="tagObj">{this.state.listObjects}</div>
+              {/* <CSSTransition
+                in={this.state.shown}
+                timeout={200}
+                classNames="settingPane"
+                unmountOnExit
+              > */}
+
+              {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
+
+              <Popup trigger={<button> Add </button>} modal>
+                {/* <CSSTransition
+                  in={this.state.showModal}
+                  timeout={200}
+                  // classNames="settingPane"
+                  unmountOnExit
+                > */}
+                <PopupPanel
+                  contents={<TagToAdd onSave={this.addObject.bind(this)} />}
+                />
+                {/* </CSSTransition> */}
+              </Popup>
             </div>
           </SimpleBarReact>
         </div>
@@ -339,6 +338,7 @@ class SettingsItem extends React.Component<SettingsItemProps> {
       <div>
         <div>{this.props.name}</div>
         <input
+          className="settingTagInput"
           key={this.props.name}
           type="text"
           defaultValue={this.props.value}
@@ -486,10 +486,12 @@ interface TagProps {
     name: string,
     value: string[]
   ): Function;
+  toDelete(value: any): Function;
 }
 class Tag extends React.Component<TagProps> {
   constructor(props) {
     super(props);
+    this.state = { render: true };
   }
 
   textChanged(e) {
@@ -510,53 +512,75 @@ class Tag extends React.Component<TagProps> {
       e.target.checked
     );
   }
+  toDelete(e) {
+    this.setState({ render: false });
+    // console.log(this.props.keyProp);
+    this.props.toDelete(this.props.keyProp);
+  }
   render() {
-    return (
+    return this.state.render ? (
       <div className="settingTag">
-        <div>Key</div>
-        <input
-          name={'key'}
-          type="text"
-          readOnly={true}
-          defaultValue={this.props.keyProp}
-          onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div className="toReturnSetting">To Return</div>
-        <input
-          name={'toReturn'}
-          type="text"
-          defaultValue={this.props.toReturn}
-          onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>From Site</div>
-        <input
-          name={'fromSite'}
-          type="text"
-          defaultValue={this.props.fromSite.join(', ')}
-          onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>Folder</div>
-        <input
-          name={'folder'}
-          type="text"
-          defaultValue={this.props.folder}
-          onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>Visible</div>
-        <input
-          name={'visible'}
-          type="checkbox"
-          defaultChecked={this.props.visible}
-          onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
-        <div>Check Folder</div>
-        <input
-          name={'checkFolder'}
-          type="checkbox"
-          defaultChecked={this.props.checkFolder}
-          onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
+        <button onClick={this.toDelete.bind(this)} className="tagDelete">
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
+        <div>
+          <div>Key</div>
+          <input
+            className="settingTagInput"
+            name={'key'}
+            type="text"
+            readOnly={true}
+            defaultValue={this.props.keyProp}
+            onChange={this.textChanged.bind(this)}
+          ></input>{' '}
+          <div className="toReturnSetting">To Return</div>
+          <input
+            className="settingTagInput"
+            name={'toReturn'}
+            type="text"
+            defaultValue={this.props.toReturn}
+            onChange={this.textChanged.bind(this)}
+          ></input>{' '}
+          <div>From Site</div>
+          <input
+            className="settingTagInput"
+            name={'fromSite'}
+            type="text"
+            defaultValue={this.props.fromSite.join(', ')}
+            onChange={this.textChanged.bind(this)}
+          ></input>{' '}
+          <div>Folder</div>
+          <input
+            className="settingTagInput"
+            name={'folder'}
+            type="text"
+            defaultValue={this.props.folder}
+            onChange={this.textChanged.bind(this)}
+          ></input>{' '}
+          <div>Visible</div>
+          <Checkbox
+            // className="settingTagCheckbox"
+            name={'visible'}
+            type="checkbox"
+            defaultChecked={this.props.visible}
+            onChange={this.checkedChanged.bind(this)}
+          ></Checkbox>{' '}
+          <div>Check Folder</div>
+          <Checkbox
+            // className="settingTagCheckbox"
+            // classes={{root:}}
+            // classes={{
+            //   root: 'klasaTest', // class name, e.g. `classes-nesting-root-x`
+            // }}
+            name={'checkFolder'}
+            type="checkbox"
+            defaultChecked={this.props.checkFolder}
+            onChange={this.checkedChanged.bind(this)}
+          ></Checkbox>{' '}
+        </div>
       </div>
+    ) : (
+      ''
     );
   }
 }
