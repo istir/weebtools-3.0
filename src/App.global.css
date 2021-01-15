@@ -227,6 +227,7 @@ h2 {
 .tagDelete > div {
   margin-top: 30px;
 }
+<<<<<<< HEAD
 
 .popupPanel {
   display: block;
@@ -254,6 +255,8 @@ h2 {
   margin-left: 50vw;
   display: grid;
 }
+=======
+>>>>>>> 66b2366 (added ability to remove tags)
 /* .tagDelete > svg {
   display: flex;
   position: absolute;
