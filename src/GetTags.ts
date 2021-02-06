@@ -53,31 +53,39 @@ class GetTags {
     } else if (patternTwitter.exec(urlString)) {
       this.urlString = urlString;
       console.log('Twitter');
-      await this.readTwitterTags(urlString, this.generateFolderName);
       this.site = 'Twitter';
+      await this.handleDownloadingPixivTwitter(
+        urlString,
+        this.generateFolderName,
+        this.site
+      );
+      // await this.readTwitterTags(urlString, this.generateFolderName);
     } else if (patternPixiv.exec(urlString)) {
-      console.log('Pixiv');
+      // console.log('Pixiv');
       this.site = 'Pixiv';
+      await this.handleDownloadingPixivTwitter(
+        urlString,
+        this.generateFolderName,
+        this.site
+      );
+      // await this.readPixivTags(urlString, this.generateFolderName);
     }
   }
 
+  // async downloadAsyncPixiv(url, filePath) {
+  //   fs.writeFile(
+  //     filePath,
+  //     await download(url),
+  //     { headers: { referer: 'https://app-api.pixiv.net/' } },
+  //     () => {
+  //       this.dl = true;
+  //     }
+  //   );
+  // }
   async downloadAsync(url, filePath) {
-    // var dl = await download(url).pipe(fs.createWriteStream(filePath));
-    // var dl = fs.writeFileSync(filePath, await download(url));
     fs.writeFile(filePath, await download(url), () => {
       this.dl = true;
     });
-    // this.dl = dl;
-    // this.eventFinished = new CustomEvent('SpecialMessage', {
-    //   detail: {
-    //     message: 'Hello There',
-    //     time: new Date(),
-    //   },
-    //   bubbles: true,
-    //   cancelable: true,
-    // });
-    // dispatchEvent(this.eventFinished);
-    // return dl;
   }
   async readBooruTags(urlString: string, generateFolderName: Function) {
     var tags: string[] = [];
@@ -148,8 +156,10 @@ class GetTags {
       // }
     }
     function getActualTags(_document: Document) {
-      var elements = _document.getElementById('tag-list')
-        ?.children as HTMLCollectionOf<HTMLElement>;
+      // var elements = _document.getElementById('tag-list')
+      var elements = _document.getElementsByClassName(
+        'tag-list categorized-tag-list'
+      )[0]?.children as HTMLCollectionOf<HTMLElement>;
       // console.log('OBROBIONY:');
       if (elements != null) {
         for (let i = 0; i < elements.length; i++) {
@@ -250,7 +260,11 @@ class GetTags {
     return 'other';
   }
 
-  async readTwitterTags(taggedUrlString: string, generateFolderName: Function) {
+  async handleDownloadingPixivTwitter(
+    taggedUrlString: string,
+    generateFolderName: Function,
+    site: string
+  ) {
     var tags: string[] = [];
     var downloadLink: string = '';
     var fileName: string = '';
@@ -272,12 +286,24 @@ class GetTags {
     this.filePath = filePath;
     this.folderName = folderName;
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-    fs.writeFile(filePath, await download(downloadLink), (callback) => {
-      this.dl = true;
-    });
+    if (site == 'Pixiv') {
+      fs.writeFile(
+        filePath,
+        await download(downloadLink, {
+          headers: { Referer: 'https://app-api.pixiv.net/' },
+        }),
+        () => {
+          this.dl = true;
+        }
+      );
+    } else {
+      fs.writeFile(filePath, await download(downloadLink), () => {
+        this.dl = true;
+      });
+    }
 
     function generatePath() {
-      setFileName();
+      site == 'Twitter' ? setFileNameTwitter() : setFileNamePixiv();
       folderName = generateFolderName(tags);
 
       filePath = path.join(
@@ -288,7 +314,18 @@ class GetTags {
         fileName
       );
     }
-    function setFileName() {
+
+    function setFileNamePixiv() {
+      // let urlSplit = downloadLink.split('?format=');
+      console.log(downloadLink);
+      let name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
+      console.log(name);
+      // let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
+      // let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
+      fileName = name;
+    }
+
+    function setFileNameTwitter() {
       let urlSplit = downloadLink.split('?format=');
 
       let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
@@ -296,6 +333,108 @@ class GetTags {
       fileName = name + '.' + ext;
     }
   }
+
+  // async readPixivTags(taggedUrlString: string, generateFolderName: Function) {
+  //   var tags: string[] = [];
+  //   var downloadLink: string = '';
+  //   var fileName: string = '';
+  //   var filePath: string = '';
+  //   var folderName: string = '';
+  //   var postLink: string = '';
+  //   postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
+  //   downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
+  //   downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
+  //   let tagsString = taggedUrlString.substring(
+  //     taggedUrlString.indexOf('|Tags: ')
+  //   );
+  //   tagsString = tagsString.replace('|Tags: ', '');
+  //   tags = tagsString.split(', ');
+  //   generatePath();
+  //   this.tags = tags;
+  //   this.downloadLink = downloadLink;
+  //   this.fileName = fileName;
+  //   this.filePath = filePath;
+  //   this.folderName = folderName;
+  //   this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+  //   fs.writeFile(
+  //     filePath,
+  //     await download(downloadLink, {
+  //       headers: { Referer: 'https://app-api.pixiv.net/' },
+  //     }),
+  //     () => {
+  //       this.dl = true;
+  //     }
+  //   );
+
+  //   function generatePath() {
+  //     setFileName();
+  //     folderName = generateFolderName(tags);
+
+  //     filePath = path.join(
+  //       settings
+  //         .getSync('commonSettings')
+  //         .find((el) => el.key === 'workingPath').value,
+  //       folderName,
+  //       fileName
+  //     );
+  //   }
+  //   function setFileName() {
+  //     // let urlSplit = downloadLink.split('?format=');
+  //     console.log(downloadLink);
+  //     let name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
+  //     console.log(name);
+  //     // let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
+  //     // let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
+  //     fileName = name;
+  //   }
+  // }
+
+  // async readTwitterTags(taggedUrlString: string, generateFolderName: Function) {
+  //   var tags: string[] = [];
+  //   var downloadLink: string = '';
+  //   var fileName: string = '';
+  //   var filePath: string = '';
+  //   var folderName: string = '';
+  //   var postLink: string = '';
+  //   postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
+  //   downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
+  //   downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
+  //   let tagsString = taggedUrlString.substring(
+  //     taggedUrlString.indexOf('|Tags: ')
+  //   );
+  //   tagsString = tagsString.replace('|Tags: ', '');
+  //   tags = tagsString.split(', ');
+  //   generatePath();
+  //   this.tags = tags;
+  //   this.downloadLink = downloadLink;
+  //   this.fileName = fileName;
+  //   this.filePath = filePath;
+  //   this.folderName = folderName;
+  //   this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+  //   fs.writeFile(filePath, await download(downloadLink), (callback) => {
+  //     this.dl = true;
+  //   });
+
+  //   function generatePath() {
+  //     setFileName();
+  //     folderName = generateFolderName(tags);
+
+  //     filePath = path.join(
+  //       settings
+  //         .getSync('commonSettings')
+  //         .find((el) => el.key === 'workingPath').value,
+  //       folderName,
+  //       fileName
+  //     );
+  //   }
+  //   function setFileName() {
+  //     let urlSplit = downloadLink.split('?format=');
+
+  //     let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
+  //     let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
+  //     fileName = name + '.' + ext;
+  //   }
+  // }
   // async handeDatabaseConnection() {
   //   this.sqlConnection = await mysql.createConnection({
   //     host: 'localhost',

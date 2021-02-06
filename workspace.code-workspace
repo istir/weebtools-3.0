@@ -1,0 +1,21 @@
+{
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "..\\weebtools-static-test"
+	}
+],
+  "settings": {
+    "files.associations": {
+      ".babelrc": "jsonc",
+      ".eslintrc": "jsonc",
+      ".prettierrc": "jsonc",
+      ".eslintignore": "ignore"
+    },
+    "javascript.validate.enable": false,
+    "javascript.format.enable": false,
+    "typescript.format.enable": false
+  }
+}

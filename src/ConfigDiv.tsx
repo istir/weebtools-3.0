@@ -9,11 +9,18 @@ import { Console } from 'console';
 import { CSSTransition } from 'react-transition-group';
 import { common } from '@material-ui/core/colors';
 import Popup from 'reactjs-popup';
+
+import onClickOutside from 'react-onclickoutside';
+
 settings.configure({ prettify: true });
+
+/*INTERFACES*/
 interface ConfigPaneState {
   listObjects: any;
   changedListObject: any;
   workingPathState: string;
+  commonSettingItems: any;
+  showModal: boolean;
 }
 interface ConfigPaneProps {
   // shown: boolean;
@@ -28,6 +35,55 @@ interface ConfigToSave {
   checkFolder: boolean;
 }
 interface ConfigToSaveList extends Array<ConfigToSave> {}
+
+interface PopupPanelProps {
+  contents: React.FC;
+}
+interface SettingsItemProps {
+  name: string;
+  // valueToSetTo: string;
+  value: string;
+}
+
+interface TagToAddProps {
+  onSave(value): Function;
+}
+interface TagToAddState {
+  value: {
+    key: string;
+    toReturn: string;
+    fromSite: string[];
+    folder: string;
+    visible: boolean;
+    checkFolder: boolean;
+  };
+}
+interface TagProps {
+  keyProp: string;
+  toReturn: string;
+  fromSite: string[];
+  folder: string;
+  visible: boolean;
+  checkFolder: boolean;
+  // checkedChanged(event: any): Function;
+  // textChanged(event: any): Function;
+  itemChanged(
+    masterKey: string,
+    key: string,
+    name: string,
+    value: string[]
+  ): Function;
+  toDelete(value: any): Function;
+}
+
+interface ConfigButtonState {
+  shown: boolean;
+  popupShown: boolean;
+}
+interface ConfigButtonProps {}
+
+/*COMPONENTS*/
+
 class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   constructor(props) {
     super(props);
@@ -227,12 +283,21 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     this.setState({ listObjects: listObject });
     this.setState({ changedListObject: listObj });
   }
+
+  showAdd() {
+    this.setState({ showModal: true });
+  }
+  hideAdd() {
+    this.setState({ showModal: false });
+  }
+
   render() {
     return (
       <div
         // className={`settingsBG ${this.props.shown ? '' : 'hidden'}`}
         className="settingsBG"
-        onClick={this.closePane.bind(this)}
+        // onClick={this.closePane.bind(this)}
+        // onClick={this.closePane.bind(this)}
       >
         <div
           onClick={(e) => {
@@ -240,6 +305,17 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
           }}
           className="settingsPane"
         >
+          <CSSTransition
+            in={this.state.showModal}
+            timeout={200}
+            classNames="tagToAddModalContent"
+            unmountOnExit
+          >
+            <PopupPanel
+              contents={<TagToAdd onSave={this.addObject.bind(this)} />}
+              hide={this.hideAdd.bind(this)}
+            />
+          </CSSTransition>
           <button
             className="closeButtonPane"
             onClick={this.closePane.bind(this)}
@@ -275,43 +351,18 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
               {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
 
-              <Popup trigger={<button> Add </button>} modal>
-                {/* <CSSTransition
-                  in={this.state.showModal}
-                  timeout={200}
-                  // classNames="settingPane"
-                  unmountOnExit
-                > */}
-                <PopupPanel
-                  contents={<TagToAdd onSave={this.addObject.bind(this)} />}
-                />
-                {/* </CSSTransition> */}
-              </Popup>
+              {/* <button onClick={this.setState({ showModal: true })}>Add</button> */}
+              <button onClick={this.showAdd.bind(this)}>Add</button>
+
+              {/* <Popup trigger={<button> Add </button>} modal> */}
+
+              {/* </Popup> */}
             </div>
           </SimpleBarReact>
         </div>
       </div>
     );
   }
-}
-
-interface PopupPanelProps {
-  contents: React.FC;
-}
-class PopupPanel extends React.Component<PopupPanelProps> {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return <div className="popupPanel">{this.props.contents}</div>;
-  }
-}
-
-interface SettingsItemProps {
-  name: string;
-  // valueToSetTo: string;
-  value: string;
 }
 class SettingsItem extends React.Component<SettingsItemProps> {
   constructor(props) {
@@ -349,145 +400,6 @@ class SettingsItem extends React.Component<SettingsItemProps> {
   }
 }
 
-interface TagToAddProps {
-  onSave(value): Function;
-}
-interface TagToAddState {
-  value: {
-    key: string;
-    toReturn: string;
-    fromSite: string[];
-    folder: string;
-    visible: boolean;
-    checkFolder: boolean;
-  };
-}
-class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
-  // keyProp={value.key}
-  // toReturn={value.toReturn}
-  // fromSite={value.fromSite}
-  // folder={value.folder}
-  // visible={value.visible}
-  // checkFolder={value.checkFolder}
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: {
-        key: '',
-        toReturn: '',
-        fromSite: [''],
-        folder: '',
-        visible: false,
-        checkFolder: false,
-      },
-    };
-  }
-  onSave() {
-    let value = this.state.value;
-    // console.log(value);
-    if (value.fromSite.includes(', ')) {
-      value.fromSite = value.fromSite.split(', ');
-    } else {
-      value.fromSite = [value.fromSite];
-    }
-
-    this.setState({ value: value });
-    // console.log(this.state.value);
-    // console.log(value);
-    this.props.onSave(this.state.value);
-  }
-  onChangeText(e) {
-    let obj = this.state.value;
-    // console.log(obj[e.target.name]);
-    obj[e.target.name] = e.target.value;
-    this.setState({ value: obj });
-    // console.log(e.target.value, e.target.name);
-    // console.log(this.state.value);
-  }
-  onChangeCheckbox(e) {
-    let obj = this.state.value;
-    // console.log(obj[e.target.name]);
-    obj[e.target.name] = e.target.checked;
-    this.setState({ value: obj });
-    // console.log(e.target.value, e.target.name);
-    // console.log(this.state.value);
-  }
-
-  render() {
-    return (
-      <div>
-        <div>Key</div>
-        <input
-          name={'key'}
-          type="text"
-          onChange={this.onChangeText.bind(this)}
-          // readOnly={true}
-          // defaultValue={this.props.keyProp}
-          // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div className="toReturnSetting">To Return</div>
-        <input
-          name={'toReturn'}
-          type="text"
-          onChange={this.onChangeText.bind(this)}
-          // defaultValue={this.props.toReturn}
-          // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>From Site</div>
-        <input
-          name={'fromSite'}
-          type="text"
-          onChange={this.onChangeText.bind(this)}
-          // defaultValue={this.props.fromSite.join(', ')}
-          // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>Folder</div>
-        <input
-          name={'folder'}
-          type="text"
-          onChange={this.onChangeText.bind(this)}
-          // defaultValue={this.props.folder}
-          // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
-        <div>Visible</div>
-        <input
-          name={'visible'}
-          type="checkbox"
-          onChange={this.onChangeCheckbox.bind(this)}
-          // defaultChecked={this.props.visible}
-          // onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
-        <div>Check Folder</div>
-        <input
-          name={'checkFolder'}
-          type="checkbox"
-          onChange={this.onChangeCheckbox.bind(this)}
-          // defaultChecked={this.props.checkFolder}
-          // onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
-        <button onClick={this.onSave.bind(this)}>Save</button>
-      </div>
-    );
-  }
-}
-interface TagProps {
-  keyProp: string;
-  toReturn: string;
-  fromSite: string[];
-  folder: string;
-  visible: boolean;
-  checkFolder: boolean;
-  // checkedChanged(event: any): Function;
-  // textChanged(event: any): Function;
-  itemChanged(
-    masterKey: string,
-    key: string,
-    name: string,
-    value: string[]
-  ): Function;
-  toDelete(value: any): Function;
-}
 class Tag extends React.Component<TagProps> {
   constructor(props) {
     super(props);
@@ -584,11 +496,133 @@ class Tag extends React.Component<TagProps> {
     );
   }
 }
-interface ConfigButtonState {
-  shown: boolean;
-  popupShown: boolean;
+class PopupPanel extends React.Component<PopupPanelProps> {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <div className="popupPanel">
+        <button className="closeAddModal" onClick={this.props.hide}>
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
+        <div>{this.props.contents}</div>
+      </div>
+    );
+  }
 }
-interface ConfigButtonProps {}
+
+class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
+  // keyProp={value.key}
+  // toReturn={value.toReturn}
+  // fromSite={value.fromSite}
+  // folder={value.folder}
+  // visible={value.visible}
+  // checkFolder={value.checkFolder}
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: {
+        key: '',
+        toReturn: '',
+        fromSite: [''],
+        folder: '',
+        visible: false,
+        checkFolder: false,
+      },
+    };
+  }
+  onSave() {
+    let value = this.state.value;
+    // console.log(value);
+    if (value.fromSite.includes(', ')) {
+      value.fromSite = value.fromSite.split(', ');
+    } else {
+      value.fromSite = [value.fromSite];
+    }
+
+    this.setState({ value: value });
+    // console.log(this.state.value);
+    // console.log(value);
+    this.props.onSave(this.state.value);
+  }
+  onChangeText(e) {
+    let obj = this.state.value;
+    // console.log(obj[e.target.name]);
+    obj[e.target.name] = e.target.value;
+    this.setState({ value: obj });
+    // console.log(e.target.value, e.target.name);
+    // console.log(this.state.value);
+  }
+  onChangeCheckbox(e) {
+    let obj = this.state.value;
+    // console.log(obj[e.target.name]);
+    obj[e.target.name] = e.target.checked;
+    this.setState({ value: obj });
+    // console.log(e.target.value, e.target.name);
+    // console.log(this.state.value);
+  }
+
+  render() {
+    return (
+      <div className="tagToAddModal">
+        <div>Key</div>
+        <input
+          name={'key'}
+          type="text"
+          onChange={this.onChangeText.bind(this)}
+          // readOnly={true}
+          // defaultValue={this.props.keyProp}
+          // onChange={this.textChanged.bind(this)}
+        ></input>{' '}
+        <div className="toReturnSetting">To Return</div>
+        <input
+          name={'toReturn'}
+          type="text"
+          onChange={this.onChangeText.bind(this)}
+          // defaultValue={this.props.toReturn}
+          // onChange={this.textChanged.bind(this)}
+        ></input>{' '}
+        <div>From Site</div>
+        <input
+          name={'fromSite'}
+          type="text"
+          onChange={this.onChangeText.bind(this)}
+          // defaultValue={this.props.fromSite.join(', ')}
+          // onChange={this.textChanged.bind(this)}
+        ></input>{' '}
+        <div>Folder</div>
+        <input
+          name={'folder'}
+          type="text"
+          onChange={this.onChangeText.bind(this)}
+          // defaultValue={this.props.folder}
+          // onChange={this.textChanged.bind(this)}
+        ></input>{' '}
+        <div>Visible</div>
+        <input
+          name={'visible'}
+          type="checkbox"
+          onChange={this.onChangeCheckbox.bind(this)}
+          // defaultChecked={this.props.visible}
+          // onChange={this.checkedChanged.bind(this)}
+        ></input>{' '}
+        <div>Check Folder</div>
+        <input
+          name={'checkFolder'}
+          type="checkbox"
+          onChange={this.onChangeCheckbox.bind(this)}
+          // defaultChecked={this.props.checkFolder}
+          // onChange={this.checkedChanged.bind(this)}
+        ></input>{' '}
+        <button onClick={this.onSave.bind(this)}>Save</button>
+      </div>
+    );
+  }
+}
+
 class ConfigButton extends React.Component<
   ConfigButtonProps,
   ConfigButtonState
