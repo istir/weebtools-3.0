@@ -897,20 +897,20 @@ class App extends React.Component {
       <div>
         <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
         <FullscreenImage show={true} image={this.state.currRow?.pathName} />
-        {/* <Table
+        <Table
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
-        /> */}
-        <Pages
+        />
+        {/* <Pages
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
           database={database}
           workingDir={workingDirectory}
-        />
+        /> */}
         <TagPicker
           tags={this.state.tags}
           tagsDictionary={this.state.tagDictionary}
