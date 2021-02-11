@@ -1,7 +1,12 @@
 import React from 'react';
 import Table from './Table';
+import GetTags from './GetTags';
+import settings from 'electron-settings';
+
 const fs = require('fs');
 const path = require('path');
+const { ipcRenderer } = window.require('electron');
+
 interface State {
   itemsPerPage: number;
   maxPages: number;
@@ -25,28 +30,36 @@ class Pagination extends React.Component<PaginationProps> {
   constructor(props) {
     super(props);
     // this.state = { pageList: null };
-    var pageList = [];
-    var maxPages = this.props.maxPages;
-    if (maxPages > 10) {
-      maxPages = 10;
-      for (let i = 0; i < maxPages; i++) {
-        pageList.push(<div>{i}</div>);
-      }
-      pageList.push(<div>{this.props.maxPages}</div>);
-    } else {
-      for (let i = 0; i < maxPages; i++) {
-        pageList.push(<div>{i}</div>);
-      }
-    }
+    // var pageList = [];
+    // var maxPages = this.props.maxPages;
+    // if (maxPages > 10) {
+    //   maxPages = 10;
+    //   for (let i = 0; i < maxPages; i++) {
+    //     pageList.push(<div>{i}</div>);
+    //   }
+    //   pageList.push(<div>{this.props.maxPages}</div>);
+    // } else {
+    //   for (let i = 0; i < maxPages; i++) {
+    //     pageList.push(<div>{i}</div>);
+    //   }
+    // }
 
-    this.state = { pageList: pageList };
+    // this.state = { pageList: pageList };
   }
   componentDidMount() {}
   render() {
-    return this.state.pageList !== null && this.props.maxPages !== null ? (
-      <div>{this.state.pageList}</div>
-    ) : (
-      ''
+    // return this.state.pageList !== null && this.props.maxPages !== null ? (
+    //   <div>{this.state.pageList}</div>
+    // ) : (
+    //   ''
+    // );
+
+    return (
+      <tr className="loadMore">
+        <td>
+          <button onClick={this.props.loadItems}>Load More</button>
+        </td>
+      </tr>
     );
   }
 }
@@ -56,9 +69,13 @@ class Pages extends React.Component<Props, State> {
     super(props);
     // this.props.database.execute(query) <= zmiana strony
     // this.props.database.execute("SELECT COUNT(*) from files") = maxPages = this/itemsPerPage
+    console.log(settings.getSync('commonSettings'));
+    var itemsToLoad = settings
+      .getSync('commonSettings')
+      .find((el) => el.key === 'itemsToLoad').value;
 
     this.state = {
-      itemsPerPage: 100,
+      itemsPerPage: itemsToLoad,
       maxPages: null,
       currentPage: 0,
       pageItems: null,
@@ -77,55 +94,121 @@ class Pages extends React.Component<Props, State> {
       console.log(ex);
     }
   }
+
+  isDownloadedCallback(done, path, name, tags, folder, url) {
+    if (done) {
+      console.log('...');
+      // console.log(this.state.pageItems);
+      let items = this.state.pageItems;
+      items.unshift({
+        pathName: path,
+        fileName: name,
+        tags: tags,
+        folder: folder,
+        url: url,
+      });
+      // console.log(items);
+
+      this.setState({
+        pageItems: items,
+      });
+      // console.log(this.state.pageItems);
+      // for (let i = 0; i < state.length; i++) {
+      //   if (state[i].pathName == path) {
+      //     state.splice(i, 1);
+      //   }
+      //   state.unshift({
+      //     pathName: path,
+      //     fileName: name,
+      //     tags: tags,
+      //     folder: folder,
+      //     url: url,
+      //   });
+      // }
+      // console.log(path, name, tags, folder, url);
+    }
+  }
+
+  handleTableClick(e) {
+    this.props.handleClick(e.id, this.state.pageItems[e.id]);
+    // this.forceUpdate();
+  }
+
   componentDidMount() {
+    ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
+      // console.log(arg);
+
+      var getTags = await new GetTags();
+
+      // tables.push(<TableRow pathName="TEST" />);
+      ////////////////////////////////////////////////////////////////////////////////
+      await getTags.init(
+        this.props.database,
+        arg,
+        this.isDownloadedCallback.bind(this)
+      );
+    });
+
     this.timerID = setInterval(() => {
-      if (typeof this.props.database !== 'undefined') {
+      console.log(this.props.database);
+      if (this.props.database !== null) {
         clearInterval(this.timerID);
         this.getRowCount();
         this.loadItems();
         // console.log(this.state.maxPages);
         console.log(this.props.imageData);
+        // this.props.refresh();
+        this.forceUpdate();
       }
     }, 10);
   }
   async loadItems() {
-    var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
-    var limit = this.state.itemsPerPage;
-    if (this.state.pageItems === null) {
-      this.state.pageItems = [];
-    }
-    console.log(offset);
-    // async function loadLastQueries(database: any, limit: number) {
-    var query =
-      'SELECT * FROM files ORDER BY ID DESC LIMIT ' + offset + ',' + limit;
+    if (this.props.database !== null) {
+      // var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
+      var offset =
+        this.state.pageItems != null ? this.state.pageItems.length : 0;
+      var limit = this.state.itemsPerPage;
+      if (this.state.pageItems === null) {
+        this.state.pageItems = [];
+      }
+      console.log(offset);
+      // async function loadLastQueries(database: any, limit: number) {
+      var query =
+        'SELECT * FROM files ORDER BY ID DESC LIMIT ' + offset + ',' + limit;
 
-    var [rows] = await this.props.database.execute(query);
-    // for (let i = 0; i < rows.length; i++) {
-    //   filesToLoad.push(rows[i].folder);
-    // }
-    await rows.map((item: any) => {
-      // console.log(item);
-      var filePath = path.join(
-        this.props.workingDir,
-        item.folder,
-        item.fileName
-      );
-      fs.access(filePath, fs.constants.R_OK, (err: Error) => {
-        if (!err) {
-          this.state.pageItems.push({
-            pathName: filePath,
-            fileName: item.fileName,
-            tags: item.Tags.split(', '),
-            folder: item.folder,
-            url: item.url,
-          });
-          // filesToLoad.push(filePath);
-        }
+      var [rows] = await this.props.database.execute(query);
+      // for (let i = 0; i < rows.length; i++) {
+      //   filesToLoad.push(rows[i].folder);
+      // }
+      // console.log(rows);
+      await rows.map((item: any) => {
+        // console.log(item);
+        var filePath = path.join(
+          this.props.workingDir,
+          item.folder,
+          item.fileName
+        );
+        fs.access(filePath, fs.constants.R_OK, (err: Error) => {
+          if (!err) {
+            let items = this.state.pageItems;
+
+            items.push({
+              pathName: filePath,
+              fileName: item.fileName,
+              tags: item.Tags.split(', '),
+              folder: item.folder,
+              url: item.url,
+            });
+            this.setState({ pageItems: items });
+            // filesToLoad.push(filePath);
+          }
+        });
       });
-    });
-    // console.log(filesToLoad);
-    // return rows;
-    // }
+      // console.log(filesToLoad);
+      // return rows;
+      // }
+      this.props.refresh();
+    }
   }
 
   render() {
@@ -133,17 +216,20 @@ class Pages extends React.Component<Props, State> {
       ''
     ) : (
       <div>
-        <Pagination
+        {/* <Pagination
           maxPages={this.state.maxPages}
           currentPage={this.state.currentPage}
-        />
+        /> */}
         <Table
-          handleClick={this.props.handleClick}
+          handleClick={this.handleTableClick.bind(this)}
           // imageData={this.props.imageData}
           imageData={this.state.pageItems}
           showableTags={this.props.showableTags}
           showableTags2={this.props.showableTags2}
-        />
+          loadMore={<Pagination loadItems={this.loadItems.bind(this)} />}
+        >
+          {/* <Pagination /> */}
+        </Table>
       </div>
     );
   }

@@ -728,3 +728,18 @@ a:hover {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+.loadMore {
+  position: sticky;
+  display: block;
+  left: 50%;
+  text-align: center;
+  transform: translateX(-50%);
+  width: fit-content;
+  padding: 1px;
+}
+.loadMore > td > button {
+  /* border: 1px solid #000 !important; */
+  margin: 2px !important;
+  
+}

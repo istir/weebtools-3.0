@@ -26,12 +26,14 @@ class GetTags {
   eventFinished: any | undefined;
   workingDirectory: any = '';
   settingsTags: any | undefined;
-  async init(database: any, urlString: string) {
+  downloadedCallback: any;
+  async init(database: any, urlString: string, downloadedCallback: any) {
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings.getSync('commonSettings');
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value;
     this.settingsTags = settings.getSync('tags');
 
     this.sqlConnection = database;
+    this.downloadedCallback = downloadedCallback;
     var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
     );
@@ -84,7 +86,15 @@ class GetTags {
   // }
   async downloadAsync(url, filePath) {
     fs.writeFile(filePath, await download(url), () => {
-      this.dl = true;
+      // this.dl = true;
+      this.downloadedCallback(
+        true,
+        this.filePath,
+        this.fileName,
+        this.tags,
+        this.folderName,
+        this.urlString
+      );
     });
   }
   async readBooruTags(urlString: string, generateFolderName: Function) {
@@ -108,7 +118,7 @@ class GetTags {
         // console.log(new Downloader(this.downloadLink, this.filePath));
         await this.downloadAsync(this.downloadLink, this.filePath);
         // console.log(test);
-        return this.dl;
+        // return this.dl;
       },
       (err) => {
         console.log(err);
@@ -174,10 +184,17 @@ class GetTags {
             // var obrobiony = element.innerText;
 
             // console.log(element);
-            var obrobiony = normalizeString(element.innerText);
-            for (let j = 0; j < obrobiony.length; j++) {
-              tags.push(obrobiony[j]);
+
+            for (let j = 0; j < elements[i].childElementCount; j++) {
+              tags.push(elements[i].children[j].children[1]?.innerText);
+              // console.log(elements[i].children[j].children[1].innerText);
+              // console.log(el.children[1].innerText)
             }
+
+            // var obrobiony = normalizeString(element.innerText);
+            // for (let j = 0; j < obrobiony.length; j++) {
+            //   tags.push(obrobiony[j]);
+            // }
             // var obrobiony: string[] = normalizeString(element.innerText);
           }
         }
