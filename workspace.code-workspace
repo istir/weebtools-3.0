@@ -1,12 +1,9 @@
 {
   "folders": [
-	{
-		"path": "."
-	},
-	{
-		"path": "..\\weebtools-static-test"
-	}
-],
+    {
+      "path": "."
+    }
+  ],
   "settings": {
     "files.associations": {
       ".babelrc": "jsonc",

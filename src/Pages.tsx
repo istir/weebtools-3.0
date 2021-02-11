@@ -29,31 +29,9 @@ interface PaginationProps {
 class Pagination extends React.Component<PaginationProps> {
   constructor(props) {
     super(props);
-    // this.state = { pageList: null };
-    // var pageList = [];
-    // var maxPages = this.props.maxPages;
-    // if (maxPages > 10) {
-    //   maxPages = 10;
-    //   for (let i = 0; i < maxPages; i++) {
-    //     pageList.push(<div>{i}</div>);
-    //   }
-    //   pageList.push(<div>{this.props.maxPages}</div>);
-    // } else {
-    //   for (let i = 0; i < maxPages; i++) {
-    //     pageList.push(<div>{i}</div>);
-    //   }
-    // }
-
-    // this.state = { pageList: pageList };
   }
   componentDidMount() {}
   render() {
-    // return this.state.pageList !== null && this.props.maxPages !== null ? (
-    //   <div>{this.state.pageList}</div>
-    // ) : (
-    //   ''
-    // );
-
     return (
       <tr className="loadMore">
         <td>
@@ -79,6 +57,7 @@ class Pages extends React.Component<Props, State> {
       maxPages: null,
       currentPage: 0,
       pageItems: null,
+      currentRowID: null,
     };
   }
 
@@ -112,24 +91,19 @@ class Pages extends React.Component<Props, State> {
       this.setState({
         pageItems: items,
       });
-      // console.log(this.state.pageItems);
-      // for (let i = 0; i < state.length; i++) {
-      //   if (state[i].pathName == path) {
-      //     state.splice(i, 1);
-      //   }
-      //   state.unshift({
-      //     pathName: path,
-      //     fileName: name,
-      //     tags: tags,
-      //     folder: folder,
-      //     url: url,
-      //   });
-      // }
-      // console.log(path, name, tags, folder, url);
+
+      if (this.state.currentRowID != null) {
+        this.props.handleClick(
+          this.state.currentRowID,
+          this.state.pageItems[this.state.currentRowID]
+        );
+      }
+      this.props.refresh();
     }
   }
 
   handleTableClick(e) {
+    this.setState({ currentRowID: e.id });
     this.props.handleClick(e.id, this.state.pageItems[e.id]);
     // this.forceUpdate();
   }
@@ -226,6 +200,7 @@ class Pages extends React.Component<Props, State> {
           imageData={this.state.pageItems}
           showableTags={this.props.showableTags}
           showableTags2={this.props.showableTags2}
+          doubleClick={this.props.doubleClick}
           loadMore={<Pagination loadItems={this.loadItems.bind(this)} />}
         >
           {/* <Pagination /> */}
