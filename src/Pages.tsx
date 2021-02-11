@@ -107,7 +107,16 @@ class Pages extends React.Component<Props, State> {
     this.props.handleClick(e.id, this.state.pageItems[e.id]);
     // this.forceUpdate();
   }
-
+  componentDidUpdate(prevState, prevProps) {
+    if (prevState.searchFor != this.props.searchFor) {
+      // this.state.pageItems=
+      this.setState({ pageItems: [{}] });
+      this.loadItems(true);
+    }
+    // console.log(prevState.searchFor);
+    // console.log(this.props.searchFor);
+    // this.loadItems();
+  }
   componentDidMount() {
     ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
       // console.log(arg);
@@ -128,7 +137,7 @@ class Pages extends React.Component<Props, State> {
       if (this.props.database !== null) {
         clearInterval(this.timerID);
         this.getRowCount();
-        this.loadItems();
+        this.loadItems(false);
         // console.log(this.state.maxPages);
         console.log(this.props.imageData);
         // this.props.refresh();
@@ -136,19 +145,168 @@ class Pages extends React.Component<Props, State> {
       }
     }, 10);
   }
-  async loadItems() {
+
+  handleSearchQuery() {
+    var toTrim = this.props.searchFor;
+    var name = '';
+    var folder = '';
+    var tags = '';
+    var requireName = false;
+    var requireFolder = false;
+    var requireTag = false;
+
+    //name:p0 folder: other tags:"keqing",stockings
+    toTrim = toTrim.toLowerCase();
+
+    var namePos = toTrim.indexOf('name:');
+    var folderPos = toTrim.indexOf('folder:');
+    var tagsPos = toTrim.indexOf('tags:');
+
+    var arr = [namePos, folderPos, tagsPos];
+
+    arr.sort(function (a, b) {
+      return a - b;
+    });
+    var arrNew = [
+      toTrim.substring(arr[0], arr[1]),
+      toTrim.substring(arr[1], arr[2]),
+      toTrim.substring(arr[2]),
+    ];
+    for (let j = 0; j < arrNew.length; j++) {
+      let value = arrNew[j].trim();
+
+      if (value.includes('name:')) {
+        name = value.replace('name:', '').trim();
+        requireName = true;
+      }
+      if (value.includes('folder:')) {
+        folder = value.replace('folder:', '').trim();
+        requireFolder = true;
+      }
+      if (value.includes('tags:')) {
+        tags = value.replace('tags:', '').trim();
+        var tagsArr = tags.split(',');
+        // for (let i = 0; i < tagsArr.length; i++) {
+        //   tagsArr[i] = tagsArr[i].trim();
+        // }
+        // tags = tagsArr.join(', ');
+        requireTag = true;
+      }
+    }
+
+    if (!name.includes('"')) {
+      name = '"%' + name + '%"';
+      // requireName = true;
+    }
+    if (!folder.includes('"')) {
+      folder = '"%' + folder + '%"';
+    }
+    if (!tags.includes('"')) {
+      tags = '"%' + tags + '%"';
+    }
+    if (name == '"%%"' && folder == '"%%"' && tags == '"%%"') {
+      name = '"%' + toTrim + '%"';
+      folder = '"%' + toTrim + '%"';
+      tags = '"%' + toTrim + '%"';
+    }
+    // console.log('name ' + name, 'folder ' + folder, 'tags ' + tags);
+    var query = 'SELECT * FROM files ';
+    let i = 0;
+    if (requireTag) {
+      i > 0 ? (query += 'and ') : (query += 'WHERE ');
+      let andOr = ' and ';
+      for (let k = 0; k < tagsArr.length; k++) {
+        console.log(tagsArr[k].trim());
+        // if(tagsArr[k])
+        let currValue = tagsArr[k].trim();
+        console.log(currValue);
+        //tags:r18,stockings
+        if (currValue[0] === '"' && currValue[currValue.length - 1] === '"') {
+          currValue = currValue.replaceAll('"', '');
+          // andOr = ' and ';
+        } else {
+          // andOr = ' or ';
+        }
+        currValue = '"%' + currValue + '%"';
+        query +=
+          (i > 0 ? andOr : '') +
+          'Tags ' +
+          (currValue[2] == '!' ? 'NOT LIKE ' : 'LIKE ') +
+          currValue.replace('!', '');
+        i++;
+      }
+      // query += 'Tags LIKE ' + tags;
+    }
+    if (requireName) {
+      i > 0 ? (query += ' and ') : (query += 'WHERE ');
+      query += 'fileName LIKE ' + name;
+      i++;
+    }
+    if (requireFolder) {
+      i > 0 ? (query += ' and ') : (query += 'WHERE ');
+      query += 'folder LIKE ' + folder;
+      i++;
+    }
+    if (i == 0) {
+      query +=
+        'WHERE Tags LIKE "%' +
+        toTrim +
+        '%" or fileName LIKE "%' +
+        toTrim +
+        '%" or folder LIKE "%' +
+        toTrim +
+        '%" ';
+    }
+    // console.log(query);
+    return query;
+  }
+
+  async loadItems(shouldSearch) {
     if (this.props.database !== null) {
-      // var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
       var offset =
         this.state.pageItems != null ? this.state.pageItems.length : 0;
+      if (shouldSearch === true) {
+        // this.setState({ pageItems: null });
+        this.setState({ pageItems: [] });
+        offset = 0;
+      }
+      // var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
+      console.log(this.state.pageItems);
+      // var offset = 0;
+      // if (this.state.pageItems != null) {
+      //   if (this.state.pageItems.length > 0) {
+      //     offset = this.state.pageItems.length;
+      //   }
+      // }
+
       var limit = this.state.itemsPerPage;
       if (this.state.pageItems === null) {
         this.state.pageItems = [];
       }
       console.log(offset);
+
       // async function loadLastQueries(database: any, limit: number) {
+      // this.handleSearchQuery();
+      // return 0;
       var query =
-        'SELECT * FROM files ORDER BY ID DESC LIMIT ' + offset + ',' + limit;
+        this.handleSearchQuery() +
+        ' ORDER BY ID DESC LIMIT ' +
+        offset +
+        ',' +
+        limit;
+      console.log(query);
+      // return 0;
+      // var query =
+      //   'SELECT * FROM files WHERE Tags LIKE "%' +
+      //   this.props.searchFor +
+      //   '%" or fileName LIKE "%' +
+      //   this.props.searchFor +
+      //   '%" or folder LIKE "%' +
+      //   this.props.searchFor +
+      //   '%" ORDER BY ID DESC LIMIT ' +
+      //   offset +
+      //   ',' +
+      //   limit;
 
       var [rows] = await this.props.database.execute(query);
       // for (let i = 0; i < rows.length; i++) {

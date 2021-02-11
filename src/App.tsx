@@ -10,6 +10,7 @@ import SimpleBarReact from 'simplebar-react';
 import { refresh } from 'electron-debug';
 import { clipboard } from 'electron';
 import ConfigButton from './ConfigDiv';
+import SearchButton from './Search';
 import { FixedSizeList as List } from 'react-window';
 import Table from './Table';
 import Pages from './Pages';
@@ -250,6 +251,7 @@ class App extends React.Component {
       tagDictionary: this.getTagDictionary(),
       database: null,
       showFullscreen: false,
+      searchFor: '',
     };
   }
 
@@ -318,11 +320,22 @@ class App extends React.Component {
   clickFullscreenImage(value) {
     this.setState({ showFullscreen: value });
   }
-
+  setSearch(value) {
+    this.setState({ searchFor: value });
+    // console.log(this.state.searchFor);
+  }
   render() {
     return (
       <div>
+        {/* <div className="icon">
+          {' '} */}
         <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
+        <SearchButton
+          currentSearch={this.state.searchFor}
+          setSearch={this.setSearch.bind(this)}
+        />
+        {/* </div> */}
+
         <FullscreenImage
           show={this.state.showFullscreen}
           shouldShow={this.clickFullscreenImage.bind(this)}
@@ -345,6 +358,7 @@ class App extends React.Component {
           showableTags2={this.state.tagDictionary}
           database={this.state.database}
           workingDir={workingDirectory}
+          searchFor={this.state.searchFor}
           refresh={this.refresh.bind(this)}
         />
         <TagPicker
