@@ -174,19 +174,11 @@ class GetTags {
             // var obrobiony = element.innerText;
 
             // console.log(element);
-            // console.log(element.children[0].children[1].innerText);
-
-            for (let j = 0; j < elements[i].childElementCount; j++) {
-              tags.push(elements[i].children[j].children[1]?.innerText);
-              // console.log(elements[i].children[j].children[1].innerText);
-              // console.log(el.children[1].innerText)
+            var obrobiony = normalizeString(element.innerText);
+            for (let j = 0; j < obrobiony.length; j++) {
+              tags.push(obrobiony[j]);
             }
-
-            // var obrobiony = normalizeString(element.innerText);
-            // for (let j = 0; j < obrobiony.length; j++) {
-            //   tags.push(obrobiony[j]);
-            // }
-            // // var obrobiony: string[] = normalizeString(element.innerText);
+            // var obrobiony: string[] = normalizeString(element.innerText);
           }
         }
       }
@@ -223,15 +215,12 @@ class GetTags {
       var items = [];
       // console.log(input);
       var strings = input.split('?');
-
       // console.log(strings);
       for (let i = 1; i < strings.length; i++) {
         // console.log(i);
         var output = strings[i].replace(' ', '');
-
         output = output.replace(/&#39;/g, "'");
-        output = output.replace(/ [0-9.]+ *k* *\n*$/g, '');
-        console.log(output);
+        output = output.replace(/ [0-9.]+ *k* *$/g, '');
         // console.log(output);
         items.push(output);
       }
