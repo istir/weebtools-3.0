@@ -282,8 +282,10 @@ function Table(props: any) {
                 );
               }
             )}
+            {props.loadMore}
           </tbody>
         </table>
+
         {/* {[...Array(50)].map((x, i) => (
             <p key={i} className="odd">
               Some content

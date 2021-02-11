@@ -34,226 +34,174 @@ var workingDirectory = settings.getSync('commonSettings');
 workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
   .value;
 // var settings.getSync('tags') = settings.getSync('tags');
-Database().then(
-  (ful: any) => {
-    console.log('Connected successfully');
+// Database().then(
+//   (ful: any) => {
+//     console.log('Connected successfully');
 
-    database = ful;
-    loadLastQueries(database, 100).then(
-      (ful) => {
-        // document.getElementsByTagName('body')[0].ba
-        // console.log
-        // console.log(images.length);
-        // console.log(Math.floor(Math.random() * ful.length));
-        // console.log(ful[Math.floor(Math.random() * ful.length)]);
-        // var filePath = path
-        //   .join(
-        //     workingDirectory,
-        //     ful[Math.floor(Math.random() * ful.length)].folder,
-        //     ful[Math.floor(Math.random() * ful.length)].fileName
-        //   )
-        //   .replace(/\\/g, '/');
-        // console.log(filePath);
-        // //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
-        // document.body.style.backgroundImage = 'url(' + filePath + ')';
-        // randomBackground(ful);
-        // console.log(filesToLoad);
-      },
-      (err) => {
-        console.log(err);
-      }
-    );
-    // new LoadLocalFiles(database);
-    ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
-      // console.log(arg);
+//     database = ful;
+//     // loadLastQueries(database, 5).then(
+//     //   (ful) => {
+//     //     // document.getElementsByTagName('body')[0].ba
+//     //     // console.log
+//     //     // console.log(images.length);
+//     //     // console.log(Math.floor(Math.random() * ful.length));
+//     //     // console.log(ful[Math.floor(Math.random() * ful.length)]);
+//     //     // var filePath = path
+//     //     //   .join(
+//     //     //     workingDirectory,
+//     //     //     ful[Math.floor(Math.random() * ful.length)].folder,
+//     //     //     ful[Math.floor(Math.random() * ful.length)].fileName
+//     //     //   )
+//     //     //   .replace(/\\/g, '/');
+//     //     // console.log(filePath);
+//     //     // //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
+//     //     // document.body.style.backgroundImage = 'url(' + filePath + ')';
+//     //     // randomBackground(ful);
+//     //     // console.log(filesToLoad);
+//     //   },
+//     //   (err) => {
+//     //     console.log(err);
+//     //   }
+//     // );
+//     // new LoadLocalFiles(database);
+//     // ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
+//     //   // console.log(arg);
 
-      var getTags = await new GetTags();
+//     //   var getTags = await new GetTags();
 
-      // tables.push(<TableRow pathName="TEST" />);
-      ////////////////////////////////////////////////////////////////////////////////
-      await getTags.init(database, arg);
-      var interval = setInterval(() => {
-        if (getTags.dl != undefined) {
-          clipboard.writeText('');
-          clearInterval(interval);
-          var path = getTags.filePath;
-          // listA.push('zzz');
-          // console.log(path);
-          // console.log('UNSHIFT');
-          // tables.push(
-          //   <TableRow
-          //     pathName={path}
-          //     fileName={getTags.fileName}
-          //     tags={getTags.tags}
-          //     folder={getTags.folderName}
-          //   />
-          // );
+//     //   // tables.push(<TableRow pathName="TEST" />);
+//     //   ////////////////////////////////////////////////////////////////////////////////
+//     //   await getTags.init(database, arg);
+//     //   var interval = setInterval(() => {
+//     //     if (getTags.dl != undefined) {
+//     //       clipboard.writeText('');
+//     //       clearInterval(interval);
+//     //       var path = getTags.filePath;
+//     //       // listA.push('zzz');
+//     //       // console.log(path);
+//     //       // console.log('UNSHIFT');
+//     //       // tables.push(
+//     //       //   <TableRow
+//     //       //     pathName={path}
+//     //       //     fileName={getTags.fileName}
+//     //       //     tags={getTags.tags}
+//     //       //     folder={getTags.folderName}
+//     //       //   />
+//     //       // );
 
-          // const data =[{pathName:"asd",tags:["asd","zxc"]}]
-          // console.log(images);
-          // console.log(images);
-          // var duplicate = false;
-          for (let i = 0; i < images.length; i++) {
-            // const element = images[i];
-            // console.log(images[i].pathName);
-            if (images[i].pathName == path) {
-              // console.log(images);
-              // console.log(images[i].pathName);
-              // console.log(i);
-              images.splice(i, 1);
-              // console.log(images);
-              // duplicate = true;
-              // images[i].tags = getTags.tags;
-            }
-          }
-          // console.log(
-          //   images.indexOf({
-          //     pathName: path,
-          //     fileName: getTags.fileName,
-          //     folder: getTags.folderName,
-          //   })
-          // );
-          // console.log(images);
-          // if (images.includes({pathName:path,fileName:getTags.fileName,folder:getTags.folderName})) {
+//     //       // const data =[{pathName:"asd",tags:["asd","zxc"]}]
+//     //       // console.log(images);
+//     //       // console.log(images);
+//     //       // var duplicate = false;
+//     //       for (let i = 0; i < images.length; i++) {
+//     //         // const element = images[i];
+//     //         // console.log(images[i].pathName);
+//     //         if (images[i].pathName == path) {
+//     //           // console.log(images);
+//     //           // console.log(images[i].pathName);
+//     //           // console.log(i);
+//     //           images.splice(i, 1);
+//     //           // console.log(images);
+//     //           // duplicate = true;
+//     //           // images[i].tags = getTags.tags;
+//     //         }
+//     //       }
+//     //       // console.log(
+//     //       //   images.indexOf({
+//     //       //     pathName: path,
+//     //       //     fileName: getTags.fileName,
+//     //       //     folder: getTags.folderName,
+//     //       //   })
+//     //       // );
+//     //       // console.log(images);
+//     //       // if (images.includes({pathName:path,fileName:getTags.fileName,folder:getTags.folderName})) {
 
-          // }
-          // if (!duplicate) {
-          images.unshift({
-            pathName: path,
-            fileName: getTags.fileName,
-            tags: getTags.tags,
-            folder: getTags.folderName,
-            url: getTags.urlString,
-          });
-          // images = new Set(images);
-          // console.log(images);
-          // }
-        }
-      }, 500);
-    });
-    async function loadLastQueries(database: any, limit: number) {
-      var query = 'SELECT * FROM files ORDER BY ID DESC LIMIT ' + limit;
+//     //       // }
+//     //       // if (!duplicate) {
+//     //       images.unshift({
+//     //         pathName: path,
+//     //         fileName: getTags.fileName,
+//     //         tags: getTags.tags,
+//     //         folder: getTags.folderName,
+//     //         url: getTags.urlString,
+//     //       });
+//     //       // images = new Set(images);
+//     //       // console.log(images);
+//     //       // }
+//     //     }
+//     //   }, 500);
+//     // });
+//     async function loadLastQueries(database: any, limit: number) {
+//       var query = 'SELECT * FROM files ORDER BY ID DESC LIMIT ' + limit;
 
-      var [rows] = await database.execute(query);
-      // for (let i = 0; i < rows.length; i++) {
-      //   filesToLoad.push(rows[i].folder);
-      // }
-      await rows.map((item: any) => {
-        // console.log(item);
-        var filePath = path.join(workingDirectory, item.folder, item.fileName);
-        fs.access(filePath, fs.constants.R_OK, (err: Error) => {
-          if (!err) {
-            // tablesLoaded.push(
-            //   <TableRow
-            //     pathName={filePath}
-            //     fileName={item.fileName}
-            //     tags={item.Tags.split(', ')}
-            //     folder={item.folder}
-            //   />
-            // );
+//       var [rows] = await database.execute(query);
+//       // for (let i = 0; i < rows.length; i++) {
+//       //   filesToLoad.push(rows[i].folder);
+//       // }
+//       await rows.map((item: any) => {
+//         // console.log(item);
+//         var filePath = path.join(workingDirectory, item.folder, item.fileName);
+//         fs.access(filePath, fs.constants.R_OK, (err: Error) => {
+//           if (!err) {
+//             // tablesLoaded.push(
+//             //   <TableRow
+//             //     pathName={filePath}
+//             //     fileName={item.fileName}
+//             //     tags={item.Tags.split(', ')}
+//             //     folder={item.folder}
+//             //   />
+//             // );
 
-            images.push({
-              pathName: filePath,
-              fileName: item.fileName,
-              tags: item.Tags.split(', '),
-              folder: item.folder,
-              url: item.url,
-            });
-            // filesToLoad.push(filePath);
-          }
-        });
-      });
-      // console.log(filesToLoad);
-      // return rows;
-      // }
-      return new Promise((resolve, reject) => {
-        resolve(rows);
-      });
-    }
-  },
-  (rej) => {
-    console.log("Couldn't connect to database.");
-    console.log(rej);
-  }
-);
+//             images.push({
+//               pathName: filePath,
+//               fileName: item.fileName,
+//               tags: item.Tags.split(', '),
+//               folder: item.folder,
+//               url: item.url,
+//             });
+//             // filesToLoad.push(filePath);
+//           }
+//         });
+//       });
+//       // console.log(filesToLoad);
+//       // return rows;
+//       // }
+//       return new Promise((resolve, reject) => {
+//         resolve(rows);
+//       });
+//     }
+//   },
+//   (rej) => {
+//     console.log("Couldn't connect to database.");
+//     console.log(rej);
+//   }
+// );
 
-function randomBackground(picker: []) {
-  let random = Math.floor(Math.random() * picker.length);
-  var tags = picker[random].Tags.split(', ');
-  if (tags.includes('Rating: Explicit')) {
-    //TODO: change later!
-    randomBackground(picker);
-  } else {
-    // console.log(picker[random]);
-    var filePath = path.join(
-      workingDirectory,
-      picker[random].folder,
-      picker[random].fileName
-    );
-    filePath = filePath.replace(/\\/g, '/');
-    // console.log(filePath);
-    //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
-    fs.access(filePath, fs.constants.R_OK, (err: Error) => {
-      if (!err) {
-        document.body.style.backgroundImage = 'url(' + filePath + ')';
-      } else {
-        randomBackground(picker);
-      }
-    });
-  }
-}
-async function refreshItem(fileName: string, folder: string) {
-  var query =
-    'SELECT * FROM files WHERE fileName="' +
-    fileName +
-    '" AND folder="' +
-    folder +
-    '"';
-  var [rows] = await database.query(query);
-  return rows[0].Tags.split(', ');
-}
-async function modifyItem(
-  oldName: string,
-  oldFolder: string,
-  newFolder: string,
-  newTags: string[]
-) {
-  var query =
-    'UPDATE files SET folder="' +
-    newFolder +
-    '",Tags="' +
-    normalizeTags(newTags) +
-    '" where fileName="' +
-    oldName +
-    '" AND folder="' +
-    oldFolder +
-    '"';
-  await database.query(query);
-  function normalizeTags(tagArr: string[]) {
-    return tagArr.join(', ');
-  }
-}
-
-function deleteItemFromDatabase(fileName: string, folderName: string) {
-  //  async function deleteRecord() {
-  var queryDeleteRow =
-    'DELETE FROM files WHERE fileName = "' +
-    fileName +
-    '" AND folder ="' +
-    folderName +
-    '"';
-  database.execute(queryDeleteRow);
-  // console.log(rows);
-  //   return new Promise((resolved, rejected) => {
-  //     if (rows.affectedRows >= 1) {
-  //       // console.log('YEP');
-  //       resolved(true);
-  //     } else {
-  //       rejected(false);
-  //     }
-  //   });
-  // }
-}
+// function randomBackground(picker: []) {
+//   let random = Math.floor(Math.random() * picker.length);
+//   var tags = picker[random].Tags.split(', ');
+//   if (tags.includes('Rating: Explicit')) {
+//     //TODO: change later!
+//     randomBackground(picker);
+//   } else {
+//     // console.log(picker[random]);
+//     var filePath = path.join(
+//       workingDirectory,
+//       picker[random].folder,
+//       picker[random].fileName
+//     );
+//     filePath = filePath.replace(/\\/g, '/');
+//     // console.log(filePath);
+//     //E:\istir\Drive\Media\reddit\qt\other\__mayoi_sakyu_vgaming__48d5f39678e1335329666182531a6b35.jpg
+//     fs.access(filePath, fs.constants.R_OK, (err: Error) => {
+//       if (!err) {
+//         document.body.style.backgroundImage = 'url(' + filePath + ')';
+//       } else {
+//         randomBackground(picker);
+//       }
+//     });
+//   }
+// }
 
 // function Table(props: any) {
 //   // const [selected, setSelected] = useState(null);
@@ -668,7 +616,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           this.setState({ checked: newState });
         }
       }
-      modifyItem(
+      this.modifyItem(
         this.props.row.fileName,
         this.props.row.folder,
         this.props.row.folder,
@@ -677,6 +625,60 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     }
     // modifyItem()
     // console.log(this.state.checked)
+    this.props.refresh();
+  }
+
+  async refreshItem(fileName: string, folder: string) {
+    var query =
+      'SELECT * FROM files WHERE fileName="' +
+      fileName +
+      '" AND folder="' +
+      folder +
+      '"';
+    var [rows] = await this.props.database.query(query);
+    return rows[0].Tags.split(', ');
+  }
+  async modifyItem(
+    oldName: string,
+    oldFolder: string,
+    newFolder: string,
+    newTags: string[]
+  ) {
+    var query =
+      'UPDATE files SET folder="' +
+      newFolder +
+      '",Tags="' +
+      normalizeTags(newTags) +
+      '" where fileName="' +
+      oldName +
+      '" AND folder="' +
+      oldFolder +
+      '"';
+    await this.props.database.query(query);
+    function normalizeTags(tagArr: string[]) {
+      return tagArr.join(', ');
+    }
+  }
+
+  deleteItemFromDatabase(fileName: string, folderName: string) {
+    //  async function deleteRecord() {
+    var queryDeleteRow =
+      'DELETE FROM files WHERE fileName = "' +
+      fileName +
+      '" AND folder ="' +
+      folderName +
+      '"';
+    this.props.database.execute(queryDeleteRow);
+    // console.log(rows);
+    //   return new Promise((resolved, rejected) => {
+    //     if (rows.affectedRows >= 1) {
+    //       // console.log('YEP');
+    //       resolved(true);
+    //     } else {
+    //       rejected(false);
+    //     }
+    //   });
+    // }
   }
 
   render() {
@@ -803,6 +805,7 @@ class App extends React.Component {
       imgCount: 0,
       currRowID: -1,
       tagDictionary: this.getTagDictionary(),
+      database: null,
     };
   }
 
@@ -845,29 +848,40 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    Database().then(
+      (ful: any) => {
+        console.log('connected');
+        // console.log(ful);
+        this.setState({ database: ful });
+      },
+      (rej: any) => {
+        console.log('error');
+      }
+    );
+
     //probably need to change? but maybe not, not sure how it will work when finished
-    this.timerID = setInterval(() => {
-      // if (this.state.images.length != this.state.imgCount) {
-      //this fucks everything up :(
-      this.setState({
-        currRow:
-          this.state.currRowID >= 0
-            ? this.state.images[this.state.currRowID]
-            : null,
-      });
-      this.forceUpdate();
-      // this.setState({ imgCount: this.state.images.length });
-      // console.log(this.state.images);
-      // console.log(this.state.currRow);
-      // }
-      //   this.setState({ images: images });
-      //TODO: but fix this..., maybe componentshouldupdate?
-      // this.forceUpdate();
-      // this.shouldComponentUpdate();
-      // }
-      // console.log(this.state.images.length);
-      // console.log('upd');
-    }, 10);
+    // this.timerID = setInterval(() => {
+    //   // if (this.state.images.length != this.state.imgCount) {
+    //   //this fucks everything up :(
+    //   this.setState({
+    //     currRow:
+    //       this.state.currRowID >= 0
+    //         ? this.state.images[this.state.currRowID]
+    //         : null,
+    //   });
+    //   // this.forceUpdate();
+    //   // this.setState({ imgCount: this.state.images.length });
+    //   // console.log(this.state.images);
+    //   // console.log(this.state.currRow);
+    //   // }
+    //   //   this.setState({ images: images });
+    //   //TODO: but fix this..., maybe componentshouldupdate?
+    //   // this.forceUpdate();
+    //   // this.shouldComponentUpdate();
+    //   // }
+    //   // console.log(this.state.images.length);
+    //   // console.log('upd');
+    // }, 10);
   }
   // shouldComponentUpdate(nextProps, nextState) {
   //   console.log('????');
@@ -878,7 +892,7 @@ class App extends React.Component {
   componentDidUpdate() {
     // console.log(this.state.images);
   }
-  handleTableClick(e: { id: React.ReactText }) {
+  handleTableClick(id, imageData) {
     // console.log(this.state.currRow);
     // console.log(e.id);
     // console.log(this.state.images);
@@ -889,32 +903,40 @@ class App extends React.Component {
     //   console.log(ful);
     // });
     // console.log(this.state.tags);
-    this.setState({ currRowID: e.id });
-    this.setState({ currRow: this.state.images[this.state.currRowID] });
+    this.setState({ currRowID: id });
+    this.setState({ currRow: imageData });
   }
+
+  refresh() {
+    this.forceUpdate();
+  }
+
   render() {
     return (
       <div>
         <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
         <FullscreenImage show={true} image={this.state.currRow?.pathName} />
-        <Table
+        {/* <Table
           handleClick={this.handleTableClick.bind(this)}
           imageData={this.state.images}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
-        />
-        {/* <Pages
-          handleClick={this.handleTableClick.bind(this)}
-          imageData={this.state.images}
-          showableTags={this.state.tags}
-          showableTags2={this.state.tagDictionary}
-          database={database}
-          workingDir={workingDirectory}
         /> */}
+        <Pages
+          handleClick={this.handleTableClick.bind(this)}
+          // imageData={this.state.images}
+          showableTags={this.state.tags}
+          showableTags2={this.state.tagDictionary}
+          database={this.state.database}
+          workingDir={workingDirectory}
+          refresh={this.refresh.bind(this)}
+        />
         <TagPicker
           tags={this.state.tags}
           tagsDictionary={this.state.tagDictionary}
           row={this.state.currRow}
+          database={this.state.database}
+          refresh={this.refresh.bind(this)}
         />
       </div>
     );
