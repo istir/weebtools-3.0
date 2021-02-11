@@ -2,6 +2,10 @@ import React from 'react';
 import SimpleBarReact from 'simplebar-react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { useTable } from 'react-table';
+const { remote } = require('electron');
+const { Menu, MenuItem } = remote;
+const { BrowserWindow } = require('electron').remote;
+const { shell } = require('electron');
 function Table(props: any) {
   // const [selected, setSelected] = useState(null);
   //initialize columns, probably could just not add it later on
@@ -165,7 +169,8 @@ function Table(props: any) {
                     }}
                     onDoubleClick={() => {
                       //TODO
-                      currImage = images[row.id].pathName;
+                      // currImage = props.imageData[row.id].pathName;
+                      props.doubleClick(true);
                       // <FullscreenImage image={images[row.id].pathName} />;
                     }}
                     onContextMenu={() => {
@@ -176,7 +181,9 @@ function Table(props: any) {
                           label: 'Show in Explorer',
                           click: () => {
                             // clipboard.writeImage(images[row.id].pathName);
-                            shell.showItemInFolder(images[row.id].pathName);
+                            shell.showItemInFolder(
+                              props.imageData[row.id].pathName
+                            );
                           },
                         })
                       );
@@ -184,7 +191,9 @@ function Table(props: any) {
                         new MenuItem({
                           label: 'Copy image',
                           click: () => {
-                            clipboard.writeImage(images[row.id].pathName);
+                            clipboard.writeImage(
+                              props.imageData[row.id].pathName
+                            );
                           },
                         })
                       );
@@ -205,7 +214,7 @@ function Table(props: any) {
                             // (async () => {
                             //   await trash('E:/test.txt');
                             // })();
-
+                            return 0;
                             let response = dialog
                               .showMessageBox(
                                 BrowserWindow.getFocusedWindow(),
@@ -217,14 +226,17 @@ function Table(props: any) {
                               )
                               .then((result) => {
                                 if (result.response === 0) {
-                                  fs.unlink(images[row.id].pathName, (err) => {
-                                    throw err;
-                                  });
-                                  deleteItemFromDatabase(
-                                    images[row.id].fileName,
-                                    images[row.id].folder
+                                  fs.unlink(
+                                    props.imageData[row.id].pathName,
+                                    (err) => {
+                                      throw err;
+                                    }
                                   );
-                                  images.splice(row.id, 1);
+                                  deleteItemFromDatabase(
+                                    props.imageData[row.id].fileName,
+                                    props.imageData[row.id].folder
+                                  );
+                                  props.imageData.splice(row.id, 1);
                                 }
                               });
                             // if (response == 0) {
@@ -245,8 +257,9 @@ function Table(props: any) {
                         new MenuItem({
                           label: 'Open site',
                           click: () => {
-                            if (images[row.id].url != '') {
-                              console.log(images[row.id].url);
+                            if (props.imageData[row.id].url != '') {
+                              // console.log(props.imageData[row.id].url);
+                              shell.openExternal(props.imageData[row.id].url);
                             }
                             // clipboard.writeImage(images[row.id].pathName);
                             // shell.showItemInFolder(images[row.id].pathName);
