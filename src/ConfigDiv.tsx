@@ -351,14 +351,6 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
               {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
 
-<<<<<<< HEAD
-              {/* <button onClick={this.setState({ showModal: true })}>Add</button> */}
-              <button onClick={this.showAdd.bind(this)}>Add</button>
-
-              {/* <Popup trigger={<button> Add </button>} modal> */}
-
-              {/* </Popup> */}
-=======
               <Popup trigger={<button> Add </button>} modal>
                 {/* <CSSTransition
                   in={this.state.showModal}
@@ -371,7 +363,6 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
                 />
                 {/* </CSSTransition> */}
               </Popup>
->>>>>>> 66b2366 (added ability to remove tags)
             </div>
           </SimpleBarReact>
         </div>
@@ -415,102 +406,6 @@ class SettingsItem extends React.Component<SettingsItemProps> {
   }
 }
 
-class Tag extends React.Component<TagProps> {
-  constructor(props) {
-    super(props);
-    this.state = { render: true };
-  }
-
-  textChanged(e) {
-    // console.log('tags', this.props.keyProp, e.target.name, e.target.value);
-    this.props.itemChanged(
-      'tags',
-      this.props.keyProp,
-      e.target.name,
-      e.target.value
-    );
-  }
-  checkedChanged(e) {
-    // console.log(e.target.checked);
-    this.props.itemChanged(
-      'tags',
-      this.props.keyProp,
-      e.target.name,
-      e.target.checked
-    );
-  }
-  toDelete(e) {
-    this.setState({ render: false });
-    // console.log(this.props.keyProp);
-    this.props.toDelete(this.props.keyProp);
-  }
-  render() {
-    return this.state.render ? (
-      <div className="settingTag">
-        <button onClick={this.toDelete.bind(this)} className="tagDelete">
-          <FontAwesomeIcon icon={faTimes} />
-        </button>
-        <div>
-          <div>Key</div>
-          <input
-            className="settingTagInput"
-            name={'key'}
-            type="text"
-            readOnly={true}
-            defaultValue={this.props.keyProp}
-            onChange={this.textChanged.bind(this)}
-          ></input>{' '}
-          <div className="toReturnSetting">To Return</div>
-          <input
-            className="settingTagInput"
-            name={'toReturn'}
-            type="text"
-            defaultValue={this.props.toReturn}
-            onChange={this.textChanged.bind(this)}
-          ></input>{' '}
-          <div>From Site</div>
-          <input
-            className="settingTagInput"
-            name={'fromSite'}
-            type="text"
-            defaultValue={this.props.fromSite.join(', ')}
-            onChange={this.textChanged.bind(this)}
-          ></input>{' '}
-          <div>Folder</div>
-          <input
-            className="settingTagInput"
-            name={'folder'}
-            type="text"
-            defaultValue={this.props.folder}
-            onChange={this.textChanged.bind(this)}
-          ></input>{' '}
-          <div>Visible</div>
-          <Checkbox
-            // className="settingTagCheckbox"
-            name={'visible'}
-            type="checkbox"
-            defaultChecked={this.props.visible}
-            onChange={this.checkedChanged.bind(this)}
-          ></Checkbox>{' '}
-          <div>Check Folder</div>
-          <Checkbox
-            // className="settingTagCheckbox"
-            // classes={{root:}}
-            // classes={{
-            //   root: 'klasaTest', // class name, e.g. `classes-nesting-root-x`
-            // }}
-            name={'checkFolder'}
-            type="checkbox"
-            defaultChecked={this.props.checkFolder}
-            onChange={this.checkedChanged.bind(this)}
-          ></Checkbox>{' '}
-        </div>
-      </div>
-    ) : (
-      ''
-    );
-  }
-}
 class PopupPanel extends React.Component<PopupPanelProps> {
   constructor(props) {
     super(props);
@@ -637,9 +532,6 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
     );
   }
 }
-<<<<<<< HEAD
-
-=======
 interface TagProps {
   keyProp: string;
   toReturn: string;
@@ -758,7 +650,6 @@ interface ConfigButtonState {
   popupShown: boolean;
 }
 interface ConfigButtonProps {}
->>>>>>> 66b2366 (added ability to remove tags)
 class ConfigButton extends React.Component<
   ConfigButtonProps,
   ConfigButtonState
