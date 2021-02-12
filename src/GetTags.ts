@@ -4,12 +4,13 @@ import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
 import Config from './config.json';
 import Downloader from './Downloader';
 import settings from 'electron-settings';
+import { faGrinTongueSquint } from '@fortawesome/free-solid-svg-icons';
 const fs = require('fs');
 const download = require('download');
 const path = require('path');
 // const mysql = require('mysql2/promise');
 // var http = require('http');
-// var https = require('https');
+var https = require('https');
 var superagent = require('superagent');
 const domparser = new DOMParser();
 class GetTags {
@@ -27,11 +28,12 @@ class GetTags {
   workingDirectory: any = '';
   settingsTags: any | undefined;
   downloadedCallback: any;
+  commonSettings: any | undefined;
   async init(database: any, urlString: string, downloadedCallback: any) {
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings.getSync('commonSettings');
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value;
     this.settingsTags = settings.getSync('tags');
-
+    this.commonSettings = settings.getSync('commonSettings');
     this.sqlConnection = database;
     this.downloadedCallback = downloadedCallback;
     var patternBooru = new RegExp(
@@ -49,7 +51,18 @@ class GetTags {
       this.urlString = urlString;
       console.log('Danbooru');
       // this.handeDatabaseConnection();
-      var test = await this.readBooruTags(urlString, this.generateFolderName);
+      // var test = await this.readBooruTags(urlString, this.generateFolderName);
+      if (this.commonSettings.find((el) => el.key === 'useDanbooruAPI').value==="true") {
+        // console.log('YEP');
+        await this.readBooruTagsAPI(
+          urlString,
+          this.generateFolderName.bind(this),
+          true
+        );
+      } else {
+        await this.readBooruTags(urlString, this.generateFolderName);
+      }
+
       // this.urlString = urlString;
       return 'true';
     } else if (patternTwitter.exec(urlString)) {
@@ -58,16 +71,17 @@ class GetTags {
       this.site = 'Twitter';
       await this.handleDownloadingPixivTwitter(
         urlString,
-        this.generateFolderName,
+        this.generateFolderName.bind(this),
         this.site
       );
       // await this.readTwitterTags(urlString, this.generateFolderName);
     } else if (patternPixiv.exec(urlString)) {
       // console.log('Pixiv');
+      this.urlString = urlString;
       this.site = 'Pixiv';
       await this.handleDownloadingPixivTwitter(
         urlString,
-        this.generateFolderName,
+        this.generateFolderName.bind(this),
         this.site
       );
       // await this.readPixivTags(urlString, this.generateFolderName);
@@ -87,6 +101,7 @@ class GetTags {
   async downloadAsync(url, filePath) {
     fs.writeFile(filePath, await download(url), () => {
       // this.dl = true;
+      // console.log(this.urlString);
       this.downloadedCallback(
         true,
         this.filePath,
@@ -97,6 +112,121 @@ class GetTags {
       );
     });
   }
+
+  async readBooruTagsAPI(
+    urlString: string,
+    generateFolderName: Function,
+    shouldCrawlForName: boolean
+  ) {
+    var tags: string[] = [];
+    var downloadLink: string = '';
+    var fileName: string = '';
+    var filePath: string = '';
+    var folderName: string = '';
+    if (shouldCrawlForName) {
+      var _document = await superagent.get(urlString);
+
+      _document = _document.text;
+      var downloadedDocument: Document;
+      downloadedDocument = domparser.parseFromString(_document, 'text/html');
+      var downloaded = downloadedDocument.getElementById('post-option-download')
+        ?.innerHTML;
+
+      if (downloaded != null) {
+        downloaded = downloaded.substr(downloaded.indexOf('href="'));
+        downloaded = downloaded.replace('href="', '');
+        downloaded = downloaded.substr(0, downloaded.indexOf('?download=1'));
+        downloadLink = downloaded;
+        var split = downloaded.split('/');
+        fileName = split[split.length - 1];
+      }
+    }
+    // console.log(fileName);
+
+    var options = {
+      hostname: 'danbooru.donmai.us',
+      path: '/posts/' + getID(urlString) + '.json',
+      method: 'GET',
+    };
+    var data = '';
+    const req = https.request(options, (res) => {
+      res.on('data', (d) => {
+        data += d;
+      });
+      res.on('end', () => {
+        var jsonData = JSON.parse(data);
+        // console.log(parseInfo(jsonData));
+        // if (parseInfo(jsonData)=="OK") {
+
+        // }
+        var bindParseInfo = parseInfo.bind(this);
+        bindParseInfo(jsonData).then(
+          (ful) => {
+            // console.log(ful);
+            this.tags = tags;
+            this.downloadLink = downloadLink;
+            this.fileName = fileName;
+            this.filePath = filePath;
+            this.folderName = folderName;
+            this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+            this.downloadAsync(this.downloadLink, this.filePath);
+          },
+          (rej) => {
+            console.log('Something went wrong when parsing info. Try Again');
+          }
+        );
+      });
+    });
+    req.on('error', (error) => {
+      console.error(error);
+    });
+
+    req.end();
+    function parseInfo(data) {
+      tags = data.tag_string.split(' ');
+      folderName = generateFolderName(tags);
+      var bindGeneratePath = generatePath.bind(this);
+      bindGeneratePath();
+      // generatePath();
+      if (!shouldCrawlForName || fileName.length < 1) {
+        fileName = 'danbooru_' + data.md5 + '.' + data.file_ext;
+      }
+      return new Promise((resolve, reject) => {
+        if (
+          fileName.length > 0 &&
+          tags.length > 0 &&
+          downloadLink.length > 0 &&
+          filePath.length > 0 &&
+          folderName.length > 0
+        ) {
+          resolve('OK');
+        } else {
+          console.log(
+            'fileName ' + fileName,
+            '\ntags ' + tags,
+            '\ndownloadLink ' + downloadLink,
+            '\nfolderName ' + folderName,
+            '\nfilePath ' + filePath
+          );
+          reject('NOT OK ');
+        }
+      });
+    }
+    function generatePath() {
+      filePath = path.join(
+        this.commonSettings.find((el) => el.key === 'workingPath').value,
+        folderName,
+        fileName
+      );
+    }
+    function getID(url) {
+      var url1 = url.substring(url.indexOf('/posts/'));
+      url1 = url1.replace('/posts/', '');
+      var urlA = url1.split('?');
+      return urlA[0];
+    }
+  }
+
   async readBooruTags(urlString: string, generateFolderName: Function) {
     var tags: string[] = [];
     var downloadLink: string = '';
@@ -248,9 +378,7 @@ class GetTags {
       folderName = generateFolderName(tags);
 
       filePath = path.join(
-        settings
-          .getSync('commonSettings')
-          .find((el) => el.key === 'workingPath').value,
+        this.commonSettings.find((el) => el.key === 'workingPath').value,
         folderName,
         fileName
       );
@@ -262,18 +390,19 @@ class GetTags {
   }
 
   generateFolderName(tags: string[]): string {
-    for (let i = 0; i < settings.getSync('tags').length; i++) {
-      if (!settings.getSync('tags')[i].checkFolder) {
+    for (let i = 0; i < this.settingsTags.length; i++) {
+      if (!this.settingsTags[i].checkFolder) {
         continue;
       }
       for (let j = 0; j < tags.length; j++) {
-        for (let k = 0; k < settings.getSync('tags')[i].fromSite.length; k++) {
-          if (tags[j] == settings.getSync('tags')[i].fromSite[k]) {
-            return settings.getSync('tags')[i].folder;
+        for (let k = 0; k < this.settingsTags[i].fromSite.length; k++) {
+          if (tags[j] == this.settingsTags[i].fromSite[k]) {
+            return this.settingsTags[i].folder;
           }
         }
       }
     }
+
     return 'other';
   }
 
@@ -302,6 +431,9 @@ class GetTags {
     this.fileName = fileName;
     this.filePath = filePath;
     this.folderName = folderName;
+    console.log(this.urlString);
+    this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
+
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
     if (site == 'Pixiv') {
       fs.writeFile(
@@ -310,12 +442,28 @@ class GetTags {
           headers: { Referer: 'https://app-api.pixiv.net/' },
         }),
         () => {
-          this.dl = true;
+          // this.dl = true;
+          this.downloadedCallback(
+            true,
+            this.filePath,
+            this.fileName,
+            this.tags,
+            this.folderName,
+            this.urlString
+          );
         }
       );
     } else {
       fs.writeFile(filePath, await download(downloadLink), () => {
-        this.dl = true;
+        // this.dl = true;
+        this.downloadedCallback(
+          true,
+          this.filePath,
+          this.fileName,
+          this.tags,
+          this.folderName,
+          this.urlString
+        );
       });
     }
 
@@ -324,9 +472,7 @@ class GetTags {
       folderName = generateFolderName(tags);
 
       filePath = path.join(
-        settings
-          .getSync('commonSettings')
-          .find((el) => el.key === 'workingPath').value,
+        this.commonSettings.find((el) => el.key === 'workingPath').value,
         folderName,
         fileName
       );
@@ -469,13 +615,13 @@ class GetTags {
   // }
   async insertIntoDatabase(folder: string, file: string, tags: string[]) {
     var sqlConnection = this.sqlConnection;
-
+    // console.log(this.urlString);
     var duplicate: boolean =
       (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
     if (!duplicate) {
       insert(tags, this.urlString);
     } else {
-      deleteAndUpdate(file, folder).then((ful: string[]) => {
+      deleteAndUpdate(file, folder, this.urlString).then((ful: string[]) => {
         // console.log(ful);
         this.tags = ful;
       });
@@ -501,7 +647,11 @@ class GetTags {
       return rows[0].solution;
     }
 
-    async function deleteAndUpdate(fileName: string, folderName: string) {
+    async function deleteAndUpdate(
+      fileName: string,
+      folderName: string,
+      urlString: string
+    ) {
       async function getRecord() {
         var queryGetTags =
           'SELECT * FROM files WHERE fileName = "' +
@@ -528,7 +678,7 @@ class GetTags {
         var newTags = [...new Set(allTags)];
 
         deleteRecord().then((ful) => {
-          insert(newTags, this.urlString);
+          insert(newTags, urlString);
         });
         return new Promise((res) => {
           res(newTags);
