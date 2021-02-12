@@ -15,6 +15,7 @@ import { FixedSizeList as List } from 'react-window';
 import Table from './Table';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
+import ProgressBar from './ProgressBar';
 // import { BrowserWindow } from 'electron/main';
 // import { shell } from 'electron/common';
 const { remote } = require('electron');
@@ -252,6 +253,8 @@ class App extends React.Component {
       database: null,
       showFullscreen: false,
       searchFor: '',
+      progressBarPercentage: 0,
+      progressShouldMinimize: false,
     };
   }
 
@@ -324,6 +327,38 @@ class App extends React.Component {
     this.setState({ searchFor: value });
     // console.log(this.state.searchFor);
   }
+  setProgressBarPercentage(value: number) {
+    if (value > 1) {
+      value = 1;
+    } else if (value < 0) {
+      value = 0;
+    }
+    let newValue = Math.round(value * 100);
+    if (this.state.progressShouldMinimize) {
+      this.setState({ progressShouldMinimize: false });
+    }
+
+    if (
+      Math.abs(newValue - this.state.progressBarPercentage) > 10 ||
+      (newValue < 1 && newValue != this.state.progressBarPercentage) ||
+      newValue == 100
+    ) {
+      // console.log(newValue);
+      if (this.timerID) {
+        clearInterval(this.timerID);
+      }
+      this.setState({ progressBarPercentage: newValue });
+    }
+    if (newValue == 100) {
+      this.timerID = setTimeout(() => {
+        // this.setState({ currWidth: 0 });
+        this.setState({ progressShouldMinimize: true });
+      }, 5000);
+    }
+    // console.log();
+    // this.state.progressBarPercentage
+    // console.log(this.state.progressBarPercentage);
+  }
   render() {
     return (
       <div>
@@ -335,7 +370,17 @@ class App extends React.Component {
           setSearch={this.setSearch.bind(this)}
         />
         {/* </div> */}
-
+        <ProgressBar
+          maxWidth={200}
+          shouldStop={this.state.progressShouldMinimize}
+          percentage={this.state.progressBarPercentage}
+        />
+        {/* <Line
+          className="progress parent"
+          percent={this.state.progressBarPercentage}
+          strokeWidth="4"
+          strokeColor="#D3D3D3"
+        /> */}
         <FullscreenImage
           show={this.state.showFullscreen}
           shouldShow={this.clickFullscreenImage.bind(this)}
@@ -360,6 +405,7 @@ class App extends React.Component {
           workingDir={workingDirectory}
           searchFor={this.state.searchFor}
           refresh={this.refresh.bind(this)}
+          setProgressBarPercentage={this.setProgressBarPercentage.bind(this)}
         />
         <TagPicker
           tags={this.state.tags}

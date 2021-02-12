@@ -29,13 +29,20 @@ class GetTags {
   settingsTags: any | undefined;
   downloadedCallback: any;
   commonSettings: any | undefined;
-  async init(database: any, urlString: string, downloadedCallback: any) {
+  setProgressBarPercentage: any | undefined;
+  async init(
+    database: any,
+    urlString: string,
+    downloadedCallback: any,
+    setProgressBarPercentage: any
+  ) {
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings.getSync('commonSettings');
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value;
     this.settingsTags = settings.getSync('tags');
     this.commonSettings = settings.getSync('commonSettings');
     this.sqlConnection = database;
     this.downloadedCallback = downloadedCallback;
+    this.setProgressBarPercentage = setProgressBarPercentage;
     var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
     );
@@ -52,7 +59,10 @@ class GetTags {
       console.log('Danbooru');
       // this.handeDatabaseConnection();
       // var test = await this.readBooruTags(urlString, this.generateFolderName);
-      if (this.commonSettings.find((el) => el.key === 'useDanbooruAPI').value==="true") {
+      if (
+        this.commonSettings.find((el) => el.key === 'useDanbooruAPI').value ===
+        'true'
+      ) {
         // console.log('YEP');
         await this.readBooruTagsAPI(
           urlString,
@@ -99,18 +109,44 @@ class GetTags {
   //   );
   // }
   async downloadAsync(url, filePath) {
-    fs.writeFile(filePath, await download(url), () => {
-      // this.dl = true;
-      // console.log(this.urlString);
-      this.downloadedCallback(
-        true,
-        this.filePath,
-        this.fileName,
-        this.tags,
-        this.folderName,
-        this.urlString
-      );
-    });
+    fs.writeFile(
+      filePath,
+      await download(url)
+        .on('downloadProgress', (progress) => {
+          // console.log(progress);
+          this.setProgressBarPercentage(progress.percent);
+        })
+        .on('end', (end) => {
+          console.log('END');
+          this.setProgressBarPercentage(1);
+        }),
+      () => {
+        // this.dl = true;
+        // console.log(this.urlString);
+        this.downloadedCallback(
+          true,
+          this.filePath,
+          this.fileName,
+          this.tags,
+          this.folderName,
+          this.urlString
+        );
+      }
+    );
+
+    // download(url, filePath)
+    //   .on('downloadProgress', (data) => console.log(data))
+    //   .then(() => {
+    //     console.log('done');
+    //     this.downloadedCallback(
+    //       true,
+    //       this.filePath,
+    //       this.fileName,
+    //       this.tags,
+    //       this.folderName,
+    //       this.urlString
+    //     );
+    //   });
   }
 
   async readBooruTagsAPI(

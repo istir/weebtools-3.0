@@ -47,7 +47,7 @@ class Pages extends React.Component<Props, State> {
     super(props);
     // this.props.database.execute(query) <= zmiana strony
     // this.props.database.execute("SELECT COUNT(*) from files") = maxPages = this/itemsPerPage
-    console.log(settings.getSync('commonSettings'));
+    // console.log(settings.getSync('commonSettings'));
     var itemsToLoad = settings
       .getSync('commonSettings')
       .find((el) => el.key === 'itemsToLoad').value;
@@ -128,18 +128,19 @@ class Pages extends React.Component<Props, State> {
       await getTags.init(
         this.props.database,
         arg,
-        this.isDownloadedCallback.bind(this)
+        this.isDownloadedCallback.bind(this),
+        this.props.setProgressBarPercentage
       );
     });
 
     this.timerID = setInterval(() => {
-      console.log(this.props.database);
+      // console.log(this.props.database);
       if (this.props.database !== null) {
         clearInterval(this.timerID);
         this.getRowCount();
         this.loadItems(false);
         // console.log(this.state.maxPages);
-        console.log(this.props.imageData);
+        // console.log(this.props.imageData);
         // this.props.refresh();
         this.forceUpdate();
       }
@@ -216,10 +217,10 @@ class Pages extends React.Component<Props, State> {
       i > 0 ? (query += 'and ') : (query += 'WHERE ');
       let andOr = ' and ';
       for (let k = 0; k < tagsArr.length; k++) {
-        console.log(tagsArr[k].trim());
+        // console.log(tagsArr[k].trim());
         // if(tagsArr[k])
         let currValue = tagsArr[k].trim();
-        console.log(currValue);
+        // console.log(currValue);
         //tags:r18,stockings
         if (currValue[0] === '"' && currValue[currValue.length - 1] === '"') {
           currValue = currValue.replaceAll('"', '');
@@ -271,7 +272,7 @@ class Pages extends React.Component<Props, State> {
         offset = 0;
       }
       // var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
-      console.log(this.state.pageItems);
+      // console.log(this.state.pageItems);
       // var offset = 0;
       // if (this.state.pageItems != null) {
       //   if (this.state.pageItems.length > 0) {
@@ -283,7 +284,7 @@ class Pages extends React.Component<Props, State> {
       if (this.state.pageItems === null) {
         this.state.pageItems = [];
       }
-      console.log(offset);
+      // console.log(offset);
 
       // async function loadLastQueries(database: any, limit: number) {
       // this.handleSearchQuery();
@@ -294,7 +295,7 @@ class Pages extends React.Component<Props, State> {
         offset +
         ',' +
         limit;
-      console.log(query);
+      // console.log(query);
       // return 0;
       // var query =
       //   'SELECT * FROM files WHERE Tags LIKE "%' +
