@@ -104,6 +104,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     if (settings.hasSync('tags')) {
       let obj = settings.getSync('tags').map((value) => (
         <Tag
+          key={value.key}
           keyProp={value.key}
           toReturn={value.toReturn}
           fromSite={value.fromSite}
