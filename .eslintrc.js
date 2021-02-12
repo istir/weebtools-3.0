@@ -3,6 +3,8 @@ module.exports = {
   rules: {
     // A temporary hack related to IDE not resolving correct package.json
     'import/no-extraneous-dependencies': 'off',
+    'react/destructuring-assignment': 'off',
+    'max-classes-per-file': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,
@@ -20,7 +22,7 @@ module.exports = {
       },
     },
     'import/parsers': {
-      '@typescript-eslint/parser': ['.ts', '.tsx'],
+      '@typescript-eslint/parser': ['.ts', '.tsx', '.js', '.jsx'],
     },
   },
 };

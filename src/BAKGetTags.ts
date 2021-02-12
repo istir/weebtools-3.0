@@ -1,47 +1,35 @@
+import { assert } from 'console';
+import { TouchBarOtherItemsProxy } from 'electron';
+import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
+import Config from './config.json';
+import Downloader from './Downloader';
 import settings from 'electron-settings';
-
+import { faGrinTongueSquint } from '@fortawesome/free-solid-svg-icons';
 const fs = require('fs');
 const download = require('download');
 const path = require('path');
 // const mysql = require('mysql2/promise');
 // var http = require('http');
-const https = require('https');
-const superagent = require('superagent');
-
+var https = require('https');
+var superagent = require('superagent');
 const domparser = new DOMParser();
 class GetTags {
   site: string | undefined;
-
-  _document = '';
-
+  _document: string = '';
   tags: string[] = [];
-
   downloadLink: string | undefined;
-
   fileName: string | undefined;
-
   filePath: string | undefined;
-
   folderName: string | undefined;
-
   sqlConnection: any | undefined;
-
   dl: any | undefined;
-
-  urlString = '';
-
+  urlString: string = '';
   eventFinished: any | undefined;
-
   workingDirectory: any = '';
-
   settingsTags: any | undefined;
-
   downloadedCallback: any;
-
   commonSettings: any | undefined;
-
   setProgressBarPercentage: any | undefined;
-
   async init(
     database: any,
     urlString: string,
@@ -55,13 +43,13 @@ class GetTags {
     this.sqlConnection = database;
     this.downloadedCallback = downloadedCallback;
     this.setProgressBarPercentage = setProgressBarPercentage;
-    const patternBooru = new RegExp(
+    var patternBooru = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(danbooru|safebooru)\\.donmai\\.us\\/posts\\/[0-9]{4,}'
     );
-    const patternTwitter = new RegExp(
+    var patternTwitter = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/twitter\\.com\\/[0-z]+\\/status\\/[0-9]+\\/photo.+'
     );
-    const patternPixiv = new RegExp(
+    var patternPixiv = new RegExp(
       '^(ht|f)tp(s?)\\:\\/\\/(www?).pixiv.net\\/.+artworks\\/[0-9]+'
     );
 
@@ -87,8 +75,7 @@ class GetTags {
 
       // this.urlString = urlString;
       return 'true';
-    }
-    if (patternTwitter.exec(urlString)) {
+    } else if (patternTwitter.exec(urlString)) {
       this.urlString = urlString;
       console.log('Twitter');
       this.site = 'Twitter';
@@ -167,18 +154,18 @@ class GetTags {
     generateFolderName: Function,
     shouldCrawlForName: boolean
   ) {
-    let tags: string[] = [];
-    let downloadLink = '';
-    let fileName = '';
-    let filePath = '';
-    let folderName = '';
+    var tags: string[] = [];
+    var downloadLink: string = '';
+    var fileName: string = '';
+    var filePath: string = '';
+    var folderName: string = '';
     if (shouldCrawlForName) {
-      let _document = await superagent.get(urlString);
+      var _document = await superagent.get(urlString);
 
       _document = _document.text;
-      let downloadedDocument: Document;
+      var downloadedDocument: Document;
       downloadedDocument = domparser.parseFromString(_document, 'text/html');
-      let downloaded = downloadedDocument.getElementById('post-option-download')
+      var downloaded = downloadedDocument.getElementById('post-option-download')
         ?.innerHTML;
 
       if (downloaded != null) {
@@ -186,29 +173,29 @@ class GetTags {
         downloaded = downloaded.replace('href="', '');
         downloaded = downloaded.substr(0, downloaded.indexOf('?download=1'));
         downloadLink = downloaded;
-        const split = downloaded.split('/');
+        var split = downloaded.split('/');
         fileName = split[split.length - 1];
       }
     }
     // console.log(fileName);
 
-    const options = {
+    var options = {
       hostname: 'danbooru.donmai.us',
-      path: `/posts/${getID(urlString)}.json`,
+      path: '/posts/' + getID(urlString) + '.json',
       method: 'GET',
     };
-    let data = '';
+    var data = '';
     const req = https.request(options, (res) => {
       res.on('data', (d) => {
         data += d;
       });
       res.on('end', () => {
-        const jsonData = JSON.parse(data);
+        var jsonData = JSON.parse(data);
         // console.log(parseInfo(jsonData));
         // if (parseInfo(jsonData)=="OK") {
 
         // }
-        const bindParseInfo = parseInfo.bind(this);
+        var bindParseInfo = parseInfo.bind(this);
         bindParseInfo(jsonData).then(
           (ful) => {
             // console.log(ful);
@@ -234,11 +221,11 @@ class GetTags {
     function parseInfo(data) {
       tags = data.tag_string.split(' ');
       folderName = generateFolderName(tags);
-      const bindGeneratePath = generatePath.bind(this);
+      var bindGeneratePath = generatePath.bind(this);
       bindGeneratePath();
       // generatePath();
       if (!shouldCrawlForName || fileName.length < 1) {
-        fileName = `danbooru_${data.md5}.${data.file_ext}`;
+        fileName = 'danbooru_' + data.md5 + '.' + data.file_ext;
       }
       return new Promise((resolve, reject) => {
         if (
@@ -251,11 +238,11 @@ class GetTags {
           resolve('OK');
         } else {
           console.log(
-            `fileName ${fileName}`,
-            `\ntags ${tags}`,
-            `\ndownloadLink ${downloadLink}`,
-            `\nfolderName ${folderName}`,
-            `\nfilePath ${filePath}`
+            'fileName ' + fileName,
+            '\ntags ' + tags,
+            '\ndownloadLink ' + downloadLink,
+            '\nfolderName ' + folderName,
+            '\nfilePath ' + filePath
           );
           reject('NOT OK ');
         }
@@ -269,19 +256,19 @@ class GetTags {
       );
     }
     function getID(url) {
-      let url1 = url.substring(url.indexOf('/posts/'));
+      var url1 = url.substring(url.indexOf('/posts/'));
       url1 = url1.replace('/posts/', '');
-      const urlA = url1.split('?');
+      var urlA = url1.split('?');
       return urlA[0];
     }
   }
 
   async readBooruTags(urlString: string, generateFolderName: Function) {
-    const tags: string[] = [];
-    let downloadLink = '';
-    let fileName = '';
-    let filePath = '';
-    let folderName = '';
+    var tags: string[] = [];
+    var downloadLink: string = '';
+    var fileName: string = '';
+    var filePath: string = '';
+    var folderName: string = '';
     getAllThings().then(
       async () => {
         this.tags = tags;
@@ -307,7 +294,7 @@ class GetTags {
     async function getAllThings() {
       // console.log('XD');
 
-      let _document = await superagent.get(urlString);
+      var _document = await superagent.get(urlString);
 
       _document = _document.text;
       // console.log(_document);
@@ -318,7 +305,7 @@ class GetTags {
       // console.log(bruh);
       // console.log(downloaded);
       // return downloaded;
-      let downloadedDocument: Document;
+      var downloadedDocument: Document;
       downloadedDocument = domparser.parseFromString(doc, 'text/html');
       // if (downloadedDocument) {
       getDownloadLink(downloadedDocument);
@@ -332,7 +319,7 @@ class GetTags {
       // );
       // if (_document !== null) {
       //   // try{
-      let downloaded = _document.getElementById('post-option-download')
+      var downloaded = _document.getElementById('post-option-download')
         ?.innerHTML;
       if (downloaded != null) {
         downloaded = downloaded.substr(downloaded.indexOf('href="'));
@@ -346,14 +333,14 @@ class GetTags {
     }
     function getActualTags(_document: Document) {
       // var elements = _document.getElementById('tag-list')
-      const elements = _document.getElementsByClassName(
+      var elements = _document.getElementsByClassName(
         'tag-list categorized-tag-list'
       )[0]?.children as HTMLCollectionOf<HTMLElement>;
       // console.log('OBROBIONY:');
       if (elements != null) {
         for (let i = 0; i < elements.length; i++) {
           // console.log(i);
-          const element = elements[i];
+          var element = elements[i];
           if (
             (element.className.includes('copyright-tag-list') ||
               element.className.includes('character-tag-list') ||
@@ -379,7 +366,7 @@ class GetTags {
         }
       }
 
-      const elementRating = _document.getElementById('post-info-rating')
+      var elementRating = _document.getElementById('post-info-rating')
         ?.innerText;
       if (elementRating != null) {
         // console.log(elementRating);
@@ -408,13 +395,13 @@ class GetTags {
     }
 
     function normalizeString(input: string) {
-      const items = [];
+      var items = [];
       // console.log(input);
-      const strings = input.split('?');
+      var strings = input.split('?');
       // console.log(strings);
       for (let i = 1; i < strings.length; i++) {
         // console.log(i);
-        let output = strings[i].replace(' ', '');
+        var output = strings[i].replace(' ', '');
         output = output.replace(/&#39;/g, "'");
         output = output.replace(/ [0-9.]+ *k* *$/g, '');
         // console.log(output);
@@ -433,7 +420,7 @@ class GetTags {
       );
     }
     function setFileName() {
-      const split = downloadLink.split('/');
+      var split = downloadLink.split('/');
       fileName = split[split.length - 1];
     }
   }
@@ -460,12 +447,12 @@ class GetTags {
     generateFolderName: Function,
     site: string
   ) {
-    let tags: string[] = [];
-    let downloadLink = '';
-    let fileName = '';
-    let filePath = '';
-    let folderName = '';
-    let postLink = '';
+    var tags: string[] = [];
+    var downloadLink: string = '';
+    var fileName: string = '';
+    var filePath: string = '';
+    var folderName: string = '';
+    var postLink: string = '';
     postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
     downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
     downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
@@ -530,7 +517,7 @@ class GetTags {
     function setFileNamePixiv() {
       // let urlSplit = downloadLink.split('?format=');
       console.log(downloadLink);
-      const name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
+      let name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
       console.log(name);
       // let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
       // let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
@@ -538,11 +525,11 @@ class GetTags {
     }
 
     function setFileNameTwitter() {
-      const urlSplit = downloadLink.split('?format=');
+      let urlSplit = downloadLink.split('?format=');
 
-      const name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
-      const ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
-      fileName = `${name}.${ext}`;
+      let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
+      let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
+      fileName = name + '.' + ext;
     }
   }
 
@@ -663,9 +650,10 @@ class GetTags {
   //   });
   // }
   async insertIntoDatabase(folder: string, file: string, tags: string[]) {
-    const { sqlConnection } = this;
+    var sqlConnection = this.sqlConnection;
     // console.log(this.urlString);
-    const duplicate: boolean = (await checkIfExists('fileName', 'folder')) > 0;
+    var duplicate: boolean =
+      (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
     if (!duplicate) {
       insert(tags, this.urlString);
     } else {
@@ -676,9 +664,18 @@ class GetTags {
     }
     // console.log(test);
     async function checkIfExists(keyFile: string, keyFolder: string) {
-      const query = `SELECT COUNT(*) as solution FROM files WHERE ${keyFile}="${file}" and ${keyFolder}="${folder}"`;
+      var query =
+        'SELECT COUNT(*) as solution FROM files WHERE ' +
+        keyFile +
+        '="' +
+        file +
+        '" and ' +
+        keyFolder +
+        '="' +
+        folder +
+        '"';
 
-      const [rows] = await sqlConnection.execute(query);
+      var [rows] = await sqlConnection.execute(query);
       // var asd = await sqlConnection.query(query);
 
       // length = asd;
@@ -692,8 +689,13 @@ class GetTags {
       urlString: string
     ) {
       async function getRecord() {
-        const queryGetTags = `SELECT * FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        const [rows] = await sqlConnection.execute(queryGetTags);
+        var queryGetTags =
+          'SELECT * FROM files WHERE fileName = "' +
+          fileName +
+          '" AND folder ="' +
+          folderName +
+          '"';
+        var [rows] = await sqlConnection.execute(queryGetTags);
         // return stringToArr(rows[0].Tags);
         return new Promise((resolve, reject) => {
           if (rows.length > 0) {
@@ -706,10 +708,10 @@ class GetTags {
       // var newTags = [];
       return getRecord().then((ful: string) => {
         // console.log(ful);
-        const oldTags = stringToArr(ful);
+        let oldTags = stringToArr(ful);
         // console.log(tags);
-        const allTags = oldTags.concat(tags);
-        const newTags = [...new Set(allTags)];
+        let allTags = oldTags.concat(tags);
+        var newTags = [...new Set(allTags)];
 
         deleteRecord().then((ful) => {
           insert(newTags, urlString);
@@ -720,8 +722,13 @@ class GetTags {
       });
 
       async function deleteRecord() {
-        const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        const [rows] = await sqlConnection.execute(queryDeleteRow);
+        var queryDeleteRow =
+          'DELETE FROM files WHERE fileName = "' +
+          fileName +
+          '" AND folder ="' +
+          folderName +
+          '"';
+        var [rows] = await sqlConnection.execute(queryDeleteRow);
         // console.log(rows);
         return new Promise((resolved, rejected) => {
           if (rows.affectedRows >= 1) {
@@ -737,9 +744,16 @@ class GetTags {
     }
 
     async function insert(tagsToInsert: string[], url: string) {
-      const query = `INSERT INTO files(folder, fileName, tags, url) VALUES("${folder}","${file}","${arrToString(
-        tagsToInsert
-      )}","${url}")`;
+      var query =
+        'INSERT INTO files(folder, fileName, tags, url) VALUES("' +
+        folder +
+        '","' +
+        file +
+        '","' +
+        arrToString(tagsToInsert) +
+        '","' +
+        url +
+        '")';
       await sqlConnection.query(query);
     }
     function arrToString(tagArr: string[]) {
