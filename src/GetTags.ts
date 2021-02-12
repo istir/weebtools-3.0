@@ -4,6 +4,7 @@ import { supportsGoWithoutReloadUsingHash } from 'history/DOMUtils';
 import Config from './config.json';
 import Downloader from './Downloader';
 import settings from 'electron-settings';
+import { faGrinTongueSquint } from '@fortawesome/free-solid-svg-icons';
 const fs = require('fs');
 const download = require('download');
 const path = require('path');
@@ -64,6 +65,7 @@ class GetTags {
       // await this.readTwitterTags(urlString, this.generateFolderName);
     } else if (patternPixiv.exec(urlString)) {
       // console.log('Pixiv');
+      this.urlString = urlString;
       this.site = 'Pixiv';
       await this.handleDownloadingPixivTwitter(
         urlString,
@@ -87,6 +89,7 @@ class GetTags {
   async downloadAsync(url, filePath) {
     fs.writeFile(filePath, await download(url), () => {
       // this.dl = true;
+      console.log(this.urlString);
       this.downloadedCallback(
         true,
         this.filePath,
@@ -302,6 +305,9 @@ class GetTags {
     this.fileName = fileName;
     this.filePath = filePath;
     this.folderName = folderName;
+    console.log(this.urlString);
+    this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
+
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
     if (site == 'Pixiv') {
       fs.writeFile(
@@ -310,12 +316,28 @@ class GetTags {
           headers: { Referer: 'https://app-api.pixiv.net/' },
         }),
         () => {
-          this.dl = true;
+          // this.dl = true;
+          this.downloadedCallback(
+            true,
+            this.filePath,
+            this.fileName,
+            this.tags,
+            this.folderName,
+            this.urlString
+          );
         }
       );
     } else {
       fs.writeFile(filePath, await download(downloadLink), () => {
-        this.dl = true;
+        // this.dl = true;
+        this.downloadedCallback(
+          true,
+          this.filePath,
+          this.fileName,
+          this.tags,
+          this.folderName,
+          this.urlString
+        );
       });
     }
 
@@ -469,13 +491,13 @@ class GetTags {
   // }
   async insertIntoDatabase(folder: string, file: string, tags: string[]) {
     var sqlConnection = this.sqlConnection;
-
+    console.log(this.urlString);
     var duplicate: boolean =
       (await checkIfExists('fileName', 'folder')) > 0 ? true : false;
     if (!duplicate) {
       insert(tags, this.urlString);
     } else {
-      deleteAndUpdate(file, folder).then((ful: string[]) => {
+      deleteAndUpdate(file, folder, this.urlString).then((ful: string[]) => {
         // console.log(ful);
         this.tags = ful;
       });
@@ -501,7 +523,11 @@ class GetTags {
       return rows[0].solution;
     }
 
-    async function deleteAndUpdate(fileName: string, folderName: string) {
+    async function deleteAndUpdate(
+      fileName: string,
+      folderName: string,
+      urlString: string
+    ) {
       async function getRecord() {
         var queryGetTags =
           'SELECT * FROM files WHERE fileName = "' +
@@ -528,7 +554,7 @@ class GetTags {
         var newTags = [...new Set(allTags)];
 
         deleteRecord().then((ful) => {
-          insert(newTags, this.urlString);
+          insert(newTags, urlString);
         });
         return new Promise((res) => {
           res(newTags);
