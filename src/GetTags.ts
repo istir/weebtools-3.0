@@ -220,6 +220,9 @@ class GetTags {
     req.end();
     function parseInfo(data) {
       tags = data.tag_string.split(' ');
+      for (let i = 0; i < tags.length; i += 1) {
+        tags[i] = tags[i].replaceAll('_', ' ');
+      }
       folderName = generateFolderName(tags);
       var bindGeneratePath = generatePath.bind(this);
       bindGeneratePath();
