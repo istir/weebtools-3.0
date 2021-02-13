@@ -16,7 +16,8 @@ async function Database() {
   });
   return new Promise((resolve, reject) => {
     resolve(sqlConnection);
-    reject('NOTOK');
+    reject("Couldn't resolve database connection")
+    // reject('NOTOK');
   });
 }
 

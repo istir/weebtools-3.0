@@ -37,6 +37,28 @@ let database: any;
 let workingDirectory = settings.getSync('commonSettings');
 workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
   .value;
+
+interface CheckBoxProps {
+  change: any;
+  value: string;
+  text: string;
+  shouldCheck: boolean;
+}
+
+const CheckboxComponent = function (props: CheckBoxProps) {
+  return (
+    <div>
+      <Checkbox
+        onChange={props.change}
+        key="input"
+        value={props.value}
+        checked={props.shouldCheck}
+      />
+      <div className="checkboxText">{props.value}</div>
+    </div>
+  );
+};
+
 interface TagPickerState {
   checked: string[];
   row: any;
@@ -54,6 +76,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     this.state = { checked: [''], row: this.props.row };
     // initialize list of <Checkbox/>
     this.checkboxes = [];
+    this.handleChangingBound = this.handleChanging.bind(this);
   }
 
   componentDidUpdate() {
@@ -86,34 +109,36 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           if (this.state.checked.includes(currTag[i])) {
             const index = this.state.checked.indexOf(currTag[i]);
 
-            this.setState((state, props) => {
-              const newState = state.checked;
-              newState.splice(index, 1);
-              return {
-                checked: newState,
-              };
-            });
+            // this.setState((state, props) => {
+            //   const newState = state.checked;
+            //   newState.splice(index, 1);
+            //   console.log(newState);
+            //   return {
+            //     checked: newState,
+            //   };
+            // });
 
-            // const newState = this.state.checked;
-            // newState.splice(index, 1);
+            const newState = this.state.checked;
+            newState.splice(index, 1);
             // console.log(newState);
-            // this.setState({ checked: newState });
+            this.setState({ checked: newState });
           }
           // here is almost the same but if item isn't togged I add it to "checked" state
         }
       }
       if (e.target.checked) {
         if (!this.state.checked.includes(foundTag.fromSite)) {
-          this.setState((state) => {
-            const newState = state.checked;
-            newState.push(foundTag.fromSite);
-            return { checked: newState };
-          });
-          // const newState = this.state.checked;
+          // this.setState(function (prevState) {
+          //   const newState = prevState.checked;
+          //   newState.push(foundTag.fromSite);
+          //   console.log(newState);
+          //   return { checked: newState };
+          // });
+          const newState = this.state.checked;
 
-          // newState.push(foundTag.fromSite);
-          // // newState.push(e.target.value);
-          // this.setState({ checked: newState });
+          newState.push(foundTag.fromSite);
+          // newState.push(e.target.value);
+          this.setState({ checked: newState });
         }
       }
       this.modifyItem(
@@ -140,13 +165,13 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     newFolder: string,
     newTags: string[]
   ) {
+    function normalizeTags(tagArr: string[]) {
+      return tagArr.join(', ');
+    }
     const query = `UPDATE files SET folder="${newFolder}",Tags="${normalizeTags(
       newTags
     )}" where fileName="${oldName}" AND folder="${oldFolder}"`;
     await this.props.database.query(query);
-    function normalizeTags(tagArr: string[]) {
-      return tagArr.join(', ');
-    }
   }
 
   deleteItemFromDatabase(fileName: string, folderName: string) {
@@ -194,7 +219,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           shouldCheck={check}
           value={value[0]}
           text={value[1][0]}
-          change={this.handleChanging.bind(this)}
+          change={this.handleChangingBound}
         />
       );
     }
@@ -203,55 +228,17 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   }
 }
 // var tagPicker = <TagPicker />;
-interface CheckBoxProps {
-  change: any;
-  value: string;
-  text: string;
-  shouldCheck: boolean;
-}
-interface CheckBoxState {}
-
-class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
-  constructor(props: CheckBoxProps) {
-    super(props);
-  }
-
-  render() {
-    // console.log(this.props.test);
-    return (
-      <div
-      // onClick={(e) => {
-      //   console.log(e.target.parentNode);
-      //   console.log(e);
-      // }}
-      >
-        <Checkbox
-          // onChange={this.changed.bind(this)}
-          onChange={this.props.change}
-          // onChange={(e) => {
-          //   console.log(e);
-          // }}
-          // onClick={this.ch()}
-          key="input"
-          value={this.props.value}
-          checked={this.props.shouldCheck}
-        />
-        <div className="checkboxText">{this.props.value}</div>
-      </div>
-    );
-  }
-}
 
 class App extends React.Component {
-  constructor(props: {} | Readonly<{}>) {
+  constructor(props) {
     super(props);
 
     this.state = {
       tags: this.getTags(),
       currRow: null,
-      images,
-      imgCount: 0,
-      currRowID: -1,
+      // images,
+      // imgCount: 0,
+      // currRowID: -1,
       tagDictionary: this.getTagDictionary(),
       database: null,
       showFullscreen: false,
@@ -259,6 +246,25 @@ class App extends React.Component {
       progressBarPercentage: 0,
       progressShouldMinimize: false,
     };
+  }
+
+  componentDidMount() {
+    Database()
+      .then(
+        (ful: any) => {
+          console.log('connected');
+          // console.log(ful);
+          this.setState({ database: ful });
+          return ful;
+        },
+        (rej: any) => {
+          console.log('error');
+          return rej;
+        }
+      )
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   getTagDictionary() {
@@ -297,43 +303,6 @@ class App extends React.Component {
     return tempTags;
   }
 
-  refreshTags() {
-    this.forceUpdate();
-
-    this.setState({ tags: this.getTags() });
-    this.setState({ tagDictionary: this.getTagDictionary() });
-  }
-
-  componentDidMount() {
-    Database().then(
-      (ful: any) => {
-        console.log('connected');
-        // console.log(ful);
-        this.setState({ database: ful });
-      },
-      (rej: any) => {
-        console.log('error');
-      }
-    );
-  }
-
-  componentDidUpdate() {
-    // console.log(this.state.images);
-  }
-
-  handleTableClick(id, imageData) {
-    this.setState({ currRowID: id });
-    this.setState({ currRow: imageData });
-  }
-
-  refresh() {
-    this.forceUpdate();
-  }
-
-  clickFullscreenImage(value) {
-    this.setState({ showFullscreen: value });
-  }
-
   setSearch(value) {
     this.setState({ searchFor: value });
     // console.log(this.state.searchFor);
@@ -370,6 +339,26 @@ class App extends React.Component {
     // console.log();
     // this.state.progressBarPercentage
     // console.log(this.state.progressBarPercentage);
+  }
+
+  clickFullscreenImage(value) {
+    this.setState({ showFullscreen: value });
+  }
+
+  refresh() {
+    this.forceUpdate();
+  }
+
+  handleTableClick(id, imageData) {
+    // this.setState({ currRowID: id });
+    this.setState({ currRow: imageData });
+  }
+
+  refreshTags() {
+    this.forceUpdate();
+
+    this.setState({ tags: this.getTags() });
+    this.setState({ tagDictionary: this.getTagDictionary() });
   }
 
   render() {
