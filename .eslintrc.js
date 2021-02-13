@@ -6,6 +6,7 @@ module.exports = {
     'react/destructuring-assignment': 'off',
     'max-classes-per-file': 'off',
     'class-methods-use-this': 'off',
+    'no-use-before-define': ['error', { functions: false, classes: false }],
   },
   parserOptions: {
     ecmaVersion: 2020,

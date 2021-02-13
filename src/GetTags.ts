@@ -109,6 +109,7 @@ class GetTags {
       );
       // await this.readPixivTags(urlString, this.generateFolderName);
     }
+    return true;
   }
 
   // async downloadAsyncPixiv(url, filePath) {
@@ -129,8 +130,8 @@ class GetTags {
           // console.log(progress);
           this.setProgressBarPercentage(progress.percent);
         })
-        .on('end', (end) => {
-          console.log('END');
+        .on('end', () => {
+          // console.log('END');
           this.setProgressBarPercentage(1);
         }),
       () => {
@@ -164,7 +165,7 @@ class GetTags {
 
   async readBooruTagsAPI(
     urlString: string,
-    generateFolderName: Function,
+    generateFolderName: (tags: string[]) => string,
     shouldCrawlForName: boolean
   ) {
     let tags: string[] = [];
@@ -172,12 +173,76 @@ class GetTags {
     let fileName = '';
     let filePath = '';
     let folderName = '';
-    if (shouldCrawlForName) {
-      let _document = await superagent.get(urlString);
 
-      _document = _document.text;
-      let downloadedDocument: Document;
-      downloadedDocument = domparser.parseFromString(_document, 'text/html');
+    function getID(url) {
+      let url1 = url.substring(url.indexOf('/posts/'));
+      url1 = url1.replace('/posts/', '');
+      const urlA = url1.split('?');
+      return urlA[0];
+    }
+    function generatePath() {
+      filePath = path.join(
+        this.commonSettings.find((el) => el.key === 'workingPath').value,
+        folderName,
+        fileName
+      );
+    }
+    function parseInfo(data) {
+      tags = data.tag_string.split(' ');
+      // tags.forEach((element) => {
+      //   element = element.replaceAll('_', ' ');
+      // });
+      for (let i = 0; i < tags.length; i += 1) {
+        tags[i] = tags[i].replaceAll('_', ' ');
+      }
+      // let modifiedTag = data.tag_string.replace('_', ' ');
+      // console.log(data.tag_string);
+      folderName = generateFolderName(tags);
+      const bindGeneratePath = generatePath.bind(this);
+      bindGeneratePath();
+      // generatePath();
+      if (!shouldCrawlForName || fileName.length < 1) {
+        fileName = `danbooru_${data.md5}.${data.file_ext}`;
+      }
+      return new Promise((resolve, reject) => {
+        if (
+          fileName.length > 0 &&
+          tags.length > 0 &&
+          downloadLink.length > 0 &&
+          filePath.length > 0 &&
+          folderName.length > 0
+        ) {
+          resolve('OK');
+        } else {
+          // console.log(
+          //   `fileName ${fileName}`,
+          //   `\ntags ${tags}`,
+          //   `\ndownloadLink ${downloadLink}`,
+          //   `\nfolderName ${folderName}`,
+          //   `\nfilePath ${filePath}`
+          // );
+          reject(
+            new Error(
+              `Couldn't get information from API` +
+                `\nfileName ${fileName}` +
+                `\ntags ${tags}` +
+                `\ndownloadLink ${downloadLink}` +
+                `\nfolderName ${folderName}` +
+                `\nfilePath ${filePath}`
+            )
+          );
+        }
+      });
+    }
+
+    if (shouldCrawlForName) {
+      let danbooruDocument = await superagent.get(urlString);
+
+      danbooruDocument = danbooruDocument.text;
+      const downloadedDocument: Document = domparser.parseFromString(
+        danbooruDocument,
+        'text/html'
+      );
       let downloaded = downloadedDocument.getElementById('post-option-download')
         ?.innerHTML;
 
@@ -209,123 +274,129 @@ class GetTags {
 
         // }
         const bindParseInfo = parseInfo.bind(this);
-        bindParseInfo(jsonData).then(
-          (ful) => {
-            // console.log(ful);
-            this.tags = tags;
-            this.downloadLink = downloadLink;
-            this.fileName = fileName;
-            this.filePath = filePath;
-            this.folderName = folderName;
-            this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-            this.downloadAsync(this.downloadLink, this.filePath);
-          },
-          (rej) => {
-            console.log('Something went wrong when parsing info. Try Again');
-          }
-        );
+        bindParseInfo(jsonData)
+          .then(
+            (ful) => {
+              // console.log(ful);
+              this.tags = tags;
+              this.downloadLink = downloadLink;
+              this.fileName = fileName;
+              this.filePath = filePath;
+              this.folderName = folderName;
+              this.insertIntoDatabase(
+                this.folderName,
+                this.fileName,
+                this.tags
+              );
+              this.downloadAsync(this.downloadLink, this.filePath);
+              return ful;
+            },
+            (rej) => {
+              throw rej;
+              return rej;
+            }
+          )
+          .catch((error) => {
+            // console.error(error);
+            throw error;
+          });
       });
     });
     req.on('error', (error) => {
-      console.error(error);
+      // console.error(error);
+      throw error;
     });
 
     req.end();
-    function parseInfo(data) {
-      tags = data.tag_string.split(' ');
-      folderName = generateFolderName(tags);
-      const bindGeneratePath = generatePath.bind(this);
-      bindGeneratePath();
-      // generatePath();
-      if (!shouldCrawlForName || fileName.length < 1) {
-        fileName = `danbooru_${data.md5}.${data.file_ext}`;
-      }
-      return new Promise((resolve, reject) => {
-        if (
-          fileName.length > 0 &&
-          tags.length > 0 &&
-          downloadLink.length > 0 &&
-          filePath.length > 0 &&
-          folderName.length > 0
-        ) {
-          resolve('OK');
-        } else {
-          console.log(
-            `fileName ${fileName}`,
-            `\ntags ${tags}`,
-            `\ndownloadLink ${downloadLink}`,
-            `\nfolderName ${folderName}`,
-            `\nfilePath ${filePath}`
-          );
-          reject('NOT OK ');
-        }
-      });
+  }
+
+  async readBooruTags(
+    urlString: string,
+    generateFolderName: (tags: string[]) => string
+  ) {
+    const tags: string[] = [];
+    let downloadLink = '';
+    let fileName = '';
+    let filePath = '';
+    let folderName = '';
+    function setFileName() {
+      const split = downloadLink.split('/');
+      fileName = split[split.length - 1];
     }
+
     function generatePath() {
+      setFileName();
+      folderName = generateFolderName(tags);
+
       filePath = path.join(
         this.commonSettings.find((el) => el.key === 'workingPath').value,
         folderName,
         fileName
       );
     }
-    function getID(url) {
-      let url1 = url.substring(url.indexOf('/posts/'));
-      url1 = url1.replace('/posts/', '');
-      const urlA = url1.split('?');
-      return urlA[0];
-    }
-  }
 
-  async readBooruTags(urlString: string, generateFolderName: Function) {
-    const tags: string[] = [];
-    let downloadLink = '';
-    let fileName = '';
-    let filePath = '';
-    let folderName = '';
-    getAllThings().then(
-      async () => {
-        this.tags = tags;
-        this.downloadLink = downloadLink;
-        this.fileName = fileName;
-        this.filePath = filePath;
-        this.folderName = folderName;
-        // console.log(this.tags);
-        // console.log(this.downloadLink);
-        // console.log(this.fileName);
-        // console.log(this.filePath);
-        this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-        // console.log(new Downloader(this.downloadLink, this.filePath));
-        await this.downloadAsync(this.downloadLink, this.filePath);
-        // console.log(test);
-        // return this.dl;
-      },
-      (err) => {
-        console.log(err);
+    function getActualTags(_document: Document) {
+      // var elements = _document.getElementById('tag-list')
+      const elements = _document.getElementsByClassName(
+        'tag-list categorized-tag-list'
+      )[0]?.children as HTMLCollectionOf<HTMLElement>;
+      // console.log('OBROBIONY:');
+      if (elements != null) {
+        for (let i = 0; i < elements.length; i += 1) {
+          // console.log(i);
+          const element = elements[i];
+          if (
+            (element.className.includes('copyright-tag-list') ||
+              element.className.includes('character-tag-list') ||
+              element.className.includes('general-tag-list')) &&
+            !element.tagName.includes('H3')
+          ) {
+            // var obrobiony = element.innerText;
+
+            // console.log(element);
+
+            for (let j = 0; j < elements[i].childElementCount; j += 1) {
+              tags.push(elements[i].children[j].children[1]?.innerText);
+              // console.log(elements[i].children[j].children[1].innerText);
+              // console.log(el.children[1].innerText)
+            }
+
+            // var obrobiony = normalizeString(element.innerText);
+            // for (let j = 0; j < obrobiony.length; j+=1) {
+            //   tags.push(obrobiony[j]);
+            // }
+            // var obrobiony: string[] = normalizeString(element.innerText);
+          }
+        }
       }
-    );
 
-    async function getAllThings() {
-      // console.log('XD');
+      const elementRating = _document.getElementById('post-info-rating')
+        ?.innerText;
+      if (elementRating != null) {
+        // console.log(elementRating);
+        tags.push(elementRating);
+      }
 
-      let _document = await superagent.get(urlString);
+      // var elementsInfo = _document.getElementById('post-information')
+      // ?.children as HTMLCollectionOf<HTMLElement>;
+      // if (elementsInfo!=null) {
+      //   for (let i = 0; i < elementsInfo.length; i+=1) {
+      //   var element = elementsInfo[i];
+      //   if (element.className.includes) {
 
-      _document = _document.text;
-      // console.log(_document);
-      onCrawlFinished(_document);
-      // getActualTags(_document);
-    }
-    function onCrawlFinished(doc: string) {
-      // console.log(bruh);
-      // console.log(downloaded);
-      // return downloaded;
-      let downloadedDocument: Document;
-      downloadedDocument = domparser.parseFromString(doc, 'text/html');
-      // if (downloadedDocument) {
-      getDownloadLink(downloadedDocument);
-      getActualTags(downloadedDocument);
+      //   }
+      //   }
       // }
-    }
+      generatePath();
 
+      return new Promise((resolve, reject) => {
+        if (tags.length > 0 && filePath.length > 0) {
+          resolve('OK');
+        } else {
+          reject(new Error("Couldn't get tags"));
+        }
+      });
+    }
     function getDownloadLink(_document: Document) {
       // console.log(
       //   downloadedDocument.getElementById('post-option-download').innerHTML
@@ -344,108 +415,85 @@ class GetTags {
       //   // } catch(err){console.log(err)}
       // }
     }
-    function getActualTags(_document: Document) {
-      // var elements = _document.getElementById('tag-list')
-      const elements = _document.getElementsByClassName(
-        'tag-list categorized-tag-list'
-      )[0]?.children as HTMLCollectionOf<HTMLElement>;
-      // console.log('OBROBIONY:');
-      if (elements != null) {
-        for (let i = 0; i < elements.length; i++) {
-          // console.log(i);
-          const element = elements[i];
-          if (
-            (element.className.includes('copyright-tag-list') ||
-              element.className.includes('character-tag-list') ||
-              element.className.includes('general-tag-list')) &&
-            !element.tagName.includes('H3')
-          ) {
-            // var obrobiony = element.innerText;
-
-            // console.log(element);
-
-            for (let j = 0; j < elements[i].childElementCount; j++) {
-              tags.push(elements[i].children[j].children[1]?.innerText);
-              // console.log(elements[i].children[j].children[1].innerText);
-              // console.log(el.children[1].innerText)
-            }
-
-            // var obrobiony = normalizeString(element.innerText);
-            // for (let j = 0; j < obrobiony.length; j++) {
-            //   tags.push(obrobiony[j]);
-            // }
-            // var obrobiony: string[] = normalizeString(element.innerText);
-          }
-        }
-      }
-
-      const elementRating = _document.getElementById('post-info-rating')
-        ?.innerText;
-      if (elementRating != null) {
-        // console.log(elementRating);
-        tags.push(elementRating);
-      }
-
-      // var elementsInfo = _document.getElementById('post-information')
-      // ?.children as HTMLCollectionOf<HTMLElement>;
-      // if (elementsInfo!=null) {
-      //   for (let i = 0; i < elementsInfo.length; i++) {
-      //   var element = elementsInfo[i];
-      //   if (element.className.includes) {
-
-      //   }
-      //   }
-      // }
-      generatePath();
-
-      return new Promise((resolve, reject) => {
-        if (tags.length > 0 && filePath.length > 0) {
-          resolve('OK');
-        } else {
-          reject('ERROR');
-        }
-      });
-    }
-
-    function normalizeString(input: string) {
-      const items = [];
-      // console.log(input);
-      const strings = input.split('?');
-      // console.log(strings);
-      for (let i = 1; i < strings.length; i++) {
-        // console.log(i);
-        let output = strings[i].replace(' ', '');
-        output = output.replace(/&#39;/g, "'");
-        output = output.replace(/ [0-9.]+ *k* *$/g, '');
-        // console.log(output);
-        items.push(output);
-      }
-      return items;
-    }
-    function generatePath() {
-      setFileName();
-      folderName = generateFolderName(tags);
-
-      filePath = path.join(
-        this.commonSettings.find((el) => el.key === 'workingPath').value,
-        folderName,
-        fileName
+    function onCrawlFinished(doc: string) {
+      // console.log(bruh);
+      // console.log(downloaded);
+      // return downloaded;
+      const downloadedDocument: Document = domparser.parseFromString(
+        doc,
+        'text/html'
       );
+      // if (downloadedDocument) {
+      getDownloadLink(downloadedDocument);
+      getActualTags(downloadedDocument);
+      // }
     }
-    function setFileName() {
-      const split = downloadLink.split('/');
-      fileName = split[split.length - 1];
+
+    async function getAllThings() {
+      // console.log('XD');
+
+      let documentDanbooru = await superagent.get(urlString);
+
+      documentDanbooru = documentDanbooru.text;
+      // console.log(_document);
+      onCrawlFinished(documentDanbooru);
+      // getActualTags(_document);
     }
+
+    // function normalizeString(input: string) {
+    //   const items = [];
+    //   // console.log(input);
+    //   const strings = input.split('?');
+    //   // console.log(strings);
+    //   for (let i = 1; i < strings.length; i += 1) {
+    //     // console.log(i);
+    //     let output = strings[i].replace(' ', '');
+    //     output = output.replace(/&#39;/g, "'");
+    //     output = output.replace(/ [0-9.]+ *k* *$/g, '');
+    //     // console.log(output);
+    //     items.push(output);
+    //   }
+    //   return items;
+    // }
+
+    getAllThings()
+      .then(
+        async () => {
+          this.tags = tags;
+          this.downloadLink = downloadLink;
+          this.fileName = fileName;
+          this.filePath = filePath;
+          this.folderName = folderName;
+          // console.log(this.tags);
+          // console.log(this.downloadLink);
+          // console.log(this.fileName);
+          // console.log(this.filePath);
+          this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+          // console.log(new Downloader(this.downloadLink, this.filePath));
+          await this.downloadAsync(this.downloadLink, this.filePath);
+          // console.log(test);
+          // return this.dl;
+          return true;
+        },
+        (err) => {
+          // console.log(err);
+          throw err;
+        }
+      )
+      .catch((error) => {
+        throw error;
+      });
   }
 
   generateFolderName(tags: string[]): string {
-    for (let i = 0; i < this.settingsTags.length; i++) {
+    for (let i = 0; i < this.settingsTags.length; i += 1) {
       if (!this.settingsTags[i].checkFolder) {
-        continue;
+        // continue;
+        i += 1;
       }
-      for (let j = 0; j < tags.length; j++) {
-        for (let k = 0; k < this.settingsTags[i].fromSite.length; k++) {
-          if (tags[j] == this.settingsTags[i].fromSite[k]) {
+      for (let j = 0; j < tags.length; j += 1) {
+        for (let k = 0; k < this.settingsTags[i].fromSite.length; k += 1) {
+          if (tags[j] === this.settingsTags[i].fromSite[k]) {
             return this.settingsTags[i].folder;
           }
         }
@@ -465,8 +513,8 @@ class GetTags {
     let fileName = '';
     let filePath = '';
     let folderName = '';
-    let postLink = '';
-    postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
+    // let postLink = '';
+    // const postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
     downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
     downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
     let tagsString = taggedUrlString.substring(
@@ -474,17 +522,18 @@ class GetTags {
     );
     tagsString = tagsString.replace('|Tags: ', '');
     tags = tagsString.split(', ');
-    generatePath();
+    const bindGeneratePath = generatePath.bind(this);
+    bindGeneratePath();
     this.tags = tags;
     this.downloadLink = downloadLink;
     this.fileName = fileName;
     this.filePath = filePath;
     this.folderName = folderName;
-    console.log(this.urlString);
+    // console.log(this.urlString);
     this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
 
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-    if (site == 'Pixiv') {
+    if (site === 'Pixiv') {
       fs.writeFile(
         filePath,
         await download(downloadLink, {
@@ -515,23 +564,11 @@ class GetTags {
         );
       });
     }
-
-    function generatePath() {
-      site == 'Twitter' ? setFileNameTwitter() : setFileNamePixiv();
-      folderName = generateFolderName(tags);
-
-      filePath = path.join(
-        this.commonSettings.find((el) => el.key === 'workingPath').value,
-        folderName,
-        fileName
-      );
-    }
-
     function setFileNamePixiv() {
       // let urlSplit = downloadLink.split('?format=');
-      console.log(downloadLink);
+      // console.log(downloadLink);
       const name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
-      console.log(name);
+      // console.log(name);
       // let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
       // let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
       fileName = name;
@@ -544,137 +581,39 @@ class GetTags {
       const ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
       fileName = `${name}.${ext}`;
     }
+    function generatePath() {
+      // site === 'Twitter' ? setFileNameTwitter() : setFileNamePixiv();
+      if (site === 'Twitter') {
+        setFileNameTwitter();
+      } else {
+        setFileNamePixiv();
+      }
+      folderName = generateFolderName(tags);
+
+      filePath = path.join(
+        this.commonSettings.find((el) => el.key === 'workingPath').value,
+        folderName,
+        fileName
+      );
+    }
   }
 
-  // async readPixivTags(taggedUrlString: string, generateFolderName: Function) {
-  //   var tags: string[] = [];
-  //   var downloadLink: string = '';
-  //   var fileName: string = '';
-  //   var filePath: string = '';
-  //   var folderName: string = '';
-  //   var postLink: string = '';
-  //   postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
-  //   downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
-  //   downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
-  //   let tagsString = taggedUrlString.substring(
-  //     taggedUrlString.indexOf('|Tags: ')
-  //   );
-  //   tagsString = tagsString.replace('|Tags: ', '');
-  //   tags = tagsString.split(', ');
-  //   generatePath();
-  //   this.tags = tags;
-  //   this.downloadLink = downloadLink;
-  //   this.fileName = fileName;
-  //   this.filePath = filePath;
-  //   this.folderName = folderName;
-  //   this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-  //   fs.writeFile(
-  //     filePath,
-  //     await download(downloadLink, {
-  //       headers: { Referer: 'https://app-api.pixiv.net/' },
-  //     }),
-  //     () => {
-  //       this.dl = true;
-  //     }
-  //   );
-
-  //   function generatePath() {
-  //     setFileName();
-  //     folderName = generateFolderName(tags);
-
-  //     filePath = path.join(
-  //       settings
-  //         .getSync('commonSettings')
-  //         .find((el) => el.key === 'workingPath').value,
-  //       folderName,
-  //       fileName
-  //     );
-  //   }
-  //   function setFileName() {
-  //     // let urlSplit = downloadLink.split('?format=');
-  //     console.log(downloadLink);
-  //     let name = downloadLink.substring(downloadLink.lastIndexOf('/') + 1);
-  //     console.log(name);
-  //     // let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
-  //     // let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
-  //     fileName = name;
-  //   }
-  // }
-
-  // async readTwitterTags(taggedUrlString: string, generateFolderName: Function) {
-  //   var tags: string[] = [];
-  //   var downloadLink: string = '';
-  //   var fileName: string = '';
-  //   var filePath: string = '';
-  //   var folderName: string = '';
-  //   var postLink: string = '';
-  //   postLink = taggedUrlString.substring(0, taggedUrlString.indexOf('|'));
-  //   downloadLink = taggedUrlString.substring(taggedUrlString.indexOf('|') + 1);
-  //   downloadLink = downloadLink.substring(0, downloadLink.indexOf('|'));
-  //   let tagsString = taggedUrlString.substring(
-  //     taggedUrlString.indexOf('|Tags: ')
-  //   );
-  //   tagsString = tagsString.replace('|Tags: ', '');
-  //   tags = tagsString.split(', ');
-  //   generatePath();
-  //   this.tags = tags;
-  //   this.downloadLink = downloadLink;
-  //   this.fileName = fileName;
-  //   this.filePath = filePath;
-  //   this.folderName = folderName;
-  //   this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
-  //   fs.writeFile(filePath, await download(downloadLink), (callback) => {
-  //     this.dl = true;
-  //   });
-
-  //   function generatePath() {
-  //     setFileName();
-  //     folderName = generateFolderName(tags);
-
-  //     filePath = path.join(
-  //       settings
-  //         .getSync('commonSettings')
-  //         .find((el) => el.key === 'workingPath').value,
-  //       folderName,
-  //       fileName
-  //     );
-  //   }
-  //   function setFileName() {
-  //     let urlSplit = downloadLink.split('?format=');
-
-  //     let name = urlSplit[0].substring(urlSplit[0].lastIndexOf('/') + 1);
-  //     let ext = urlSplit[1].substring(0, urlSplit[1].indexOf('&'));
-  //     fileName = name + '.' + ext;
-  //   }
-  // }
-  // async handeDatabaseConnection() {
-  //   this.sqlConnection = await mysql.createConnection({
-  //     host: 'localhost',
-  //     user: 'istir',
-  //     password: 'weebtoolspasswd',
-  //     database: 'weebtools',
-  //   });
-  //   this.sqlConnection.connect(function (err: any) {
-  //     if (err) {
-  //       console.log("Couldn't connect to database.");
-  //       throw err;
-  //     }
-  //     console.log('Connected to database');
-  //   });
-  // }
   async insertIntoDatabase(folder: string, file: string, tags: string[]) {
     const { sqlConnection } = this;
     // console.log(this.urlString);
-    const duplicate: boolean = (await checkIfExists('fileName', 'folder')) > 0;
-    if (!duplicate) {
-      insert(tags, this.urlString);
-    } else {
-      deleteAndUpdate(file, folder, this.urlString).then((ful: string[]) => {
-        // console.log(ful);
-        this.tags = ful;
-      });
+
+    function arrToString(tagArr: string[]) {
+      return tagArr.join(', ');
     }
-    // console.log(test);
+    function stringToArr(tagString: string) {
+      return tagString.split(', ');
+    }
+    async function insert(tagsToInsert: string[], url: string) {
+      const query = `INSERT INTO files(folder, fileName, tags, url) VALUES("${folder}","${file}","${arrToString(
+        tagsToInsert
+      )}","${url}")`;
+      await sqlConnection.query(query);
+    }
     async function checkIfExists(keyFile: string, keyFolder: string) {
       const query = `SELECT COUNT(*) as solution FROM files WHERE ${keyFile}="${file}" and ${keyFolder}="${folder}"`;
 
@@ -703,6 +642,19 @@ class GetTags {
           }
         });
       }
+      async function deleteRecord() {
+        const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
+        const [rows] = await sqlConnection.execute(queryDeleteRow);
+        // console.log(rows);
+        return new Promise((resolve, reject) => {
+          if (rows.affectedRows >= 1) {
+            // console.log('YEP');
+            resolve('Record Deleted');
+          } else {
+            reject(new Error("Couldn't delete record"));
+          }
+        });
+      }
       // var newTags = [];
       return getRecord().then((ful: string) => {
         // console.log(ful);
@@ -711,43 +663,39 @@ class GetTags {
         const allTags = oldTags.concat(tags);
         const newTags = [...new Set(allTags)];
 
-        deleteRecord().then((ful) => {
-          insert(newTags, urlString);
-        });
-        return new Promise((res) => {
-          res(newTags);
+        deleteRecord()
+          .then(() => {
+            insert(newTags, urlString);
+            return true;
+          })
+          .catch((err) => {
+            throw err;
+          });
+
+        return new Promise((resolve) => {
+          resolve(newTags);
         });
       });
 
-      async function deleteRecord() {
-        const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        const [rows] = await sqlConnection.execute(queryDeleteRow);
-        // console.log(rows);
-        return new Promise((resolved, rejected) => {
-          if (rows.affectedRows >= 1) {
-            // console.log('YEP');
-            resolved(true);
-          } else {
-            rejected(false);
-          }
-        });
-      }
       // console.log(newTags);
       // throw 'BREAK';
     }
 
-    async function insert(tagsToInsert: string[], url: string) {
-      const query = `INSERT INTO files(folder, fileName, tags, url) VALUES("${folder}","${file}","${arrToString(
-        tagsToInsert
-      )}","${url}")`;
-      await sqlConnection.query(query);
+    const duplicate: boolean = (await checkIfExists('fileName', 'folder')) > 0;
+    if (!duplicate) {
+      insert(tags, this.urlString);
+    } else {
+      deleteAndUpdate(file, folder, this.urlString)
+        .then((ful: string[]) => {
+          // console.log(ful);
+          this.tags = ful;
+          return true;
+        })
+        .catch((err) => {
+          throw err;
+        });
     }
-    function arrToString(tagArr: string[]) {
-      return tagArr.join(', ');
-    }
-    function stringToArr(tagString: string) {
-      return tagString.split(', ');
-    }
+    // console.log(test);
   }
 }
 export default GetTags;

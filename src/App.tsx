@@ -1,39 +1,21 @@
 import React from 'react';
-import { useTable } from 'react-table';
 // import Config from './config.json';
 import settings from 'electron-settings';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Checkbox } from '@material-ui/core';
-import SimpleBarReact from 'simplebar-react';
-import { refresh } from 'electron-debug';
-import { clipboard } from 'electron';
-import { FixedSizeList as List } from 'react-window';
 import ConfigButton from './ConfigDiv';
 import SearchButton from './Search';
 import Database from './Database';
-import GetTags from './GetTags';
-import Table from './Table';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
 // import { BrowserWindow } from 'electron/main';
 // import { shell } from 'electron/common';
-const { remote } = require('electron');
 
-const { dialog } = require('electron').remote;
-const { BrowserWindow } = require('electron').remote;
-const { shell } = require('electron');
 // import { Menu } from 'electron';
 // import 'simplebar/dist/simplebar.min.css';
-const fs = require('fs');
 
-const { ipcRenderer } = window.require('electron');
-const path = require('path');
 // var gettags;
 // const trash = require('trash');
-const currImage = '';
-const images: Record<string, unknown>[] = [];
-let database: any;
 let workingDirectory = settings.getSync('commonSettings');
 workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
   .value;
@@ -45,7 +27,7 @@ interface CheckBoxProps {
   shouldCheck: boolean;
 }
 
-const CheckboxComponent = function (props: CheckBoxProps) {
+function CheckboxComponent(props: CheckBoxProps) {
   return (
     <div>
       <Checkbox
@@ -57,7 +39,7 @@ const CheckboxComponent = function (props: CheckBoxProps) {
       <div className="checkboxText">{props.value}</div>
     </div>
   );
-};
+}
 
 interface TagPickerState {
   checked: string[];
@@ -69,6 +51,8 @@ interface TagPickerProps {
 }
 class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   checkboxes: JSX.Element[];
+
+  handleChangingBound: (e) => void;
 
   constructor(props: TagPickerProps) {
     super(props);
@@ -197,7 +181,6 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     for (let i = 0; i < this.props.tags.length; i += 1) {
       const value = this.props.tags[i];
       let check = false;
-      // console.log(value);
       if (this.state.checked.length > 0) {
         for (let j = 0; j < value[1].length; j += 1) {
           // console.log(value[0] + " '" + value[1][j] + "'");
@@ -230,6 +213,18 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
 // var tagPicker = <TagPicker />;
 
 class App extends React.Component {
+  refreshTagsBound: () => void;
+
+  setSearchBound: (value: string) => void;
+
+  clickFullscreenImageBound: (value: boolean) => void;
+
+  handleTableClickBound: (id: number, imageData) => void;
+
+  refreshBound: () => void;
+
+  setProgressBarPercentageBound: (value: number) => void;
+
   constructor(props) {
     super(props);
 
@@ -246,23 +241,35 @@ class App extends React.Component {
       progressBarPercentage: 0,
       progressShouldMinimize: false,
     };
+
+    this.refreshTagsBound = this.refreshTags.bind(this);
+    this.setSearchBound = this.setSearch.bind(this);
+    this.clickFullscreenImageBound = this.clickFullscreenImage.bind(this);
+    this.handleTableClickBound = this.handleTableClick.bind(this);
+    this.refreshBound = this.refresh.bind(this);
+    this.setProgressBarPercentageBound = this.setProgressBarPercentage.bind(
+      this
+    );
   }
 
   componentDidMount() {
     Database()
       .then(
         (ful: any) => {
+          // eslint-disable-next-line no-console
           console.log('connected');
           // console.log(ful);
           this.setState({ database: ful });
           return ful;
         },
         (rej: any) => {
+          // eslint-disable-next-line no-console
           console.log('error');
           return rej;
         }
       )
       .catch((error) => {
+        // eslint-disable-next-line no-console
         console.error(error);
       });
   }
@@ -303,26 +310,27 @@ class App extends React.Component {
     return tempTags;
   }
 
-  setSearch(value) {
+  setSearch(value: string) {
     this.setState({ searchFor: value });
     // console.log(this.state.searchFor);
   }
 
   setProgressBarPercentage(value: number) {
-    if (value > 1) {
-      value = 1;
-    } else if (value < 0) {
-      value = 0;
+    let currentValue: number = value;
+    if (currentValue > 1) {
+      currentValue = 1;
+    } else if (currentValue < 0) {
+      currentValue = 0;
     }
-    const newValue = Math.round(value * 100);
+    const newValue = Math.round(currentValue * 100);
     if (this.state.progressShouldMinimize) {
       this.setState({ progressShouldMinimize: false });
     }
 
     if (
       Math.abs(newValue - this.state.progressBarPercentage) > 10 ||
-      (newValue < 1 && newValue != this.state.progressBarPercentage) ||
-      newValue == 100
+      (newValue < 1 && newValue !== this.state.progressBarPercentage) ||
+      newValue === 100
     ) {
       // console.log(newValue);
       if (this.timerID) {
@@ -330,7 +338,7 @@ class App extends React.Component {
       }
       this.setState({ progressBarPercentage: newValue });
     }
-    if (newValue == 100) {
+    if (newValue === 100) {
       this.timerID = setTimeout(() => {
         // this.setState({ currWidth: 0 });
         this.setState({ progressShouldMinimize: true });
@@ -349,8 +357,8 @@ class App extends React.Component {
     this.forceUpdate();
   }
 
-  handleTableClick(id, imageData) {
-    // this.setState({ currRowID: id });
+  handleTableClick(id: number, imageData: any) {
+    this.setState({ currRowID: id });
     this.setState({ currRow: imageData });
   }
 
@@ -366,10 +374,10 @@ class App extends React.Component {
       <div>
         {/* <div className="icon">
           {' '} */}
-        <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
+        <ConfigButton forceUpdate={this.refreshTagsBound} />
         <SearchButton
           currentSearch={this.state.searchFor}
-          setSearch={this.setSearch.bind(this)}
+          setSearch={this.setSearchBound}
         />
         {/* </div> */}
         <ProgressBar
@@ -385,7 +393,7 @@ class App extends React.Component {
         /> */}
         <FullscreenImage
           show={this.state.showFullscreen}
-          shouldShow={this.clickFullscreenImage.bind(this)}
+          shouldShow={this.clickFullscreenImageBound}
           // image={
           //   'E:\\istir\\Drive\\Media\\reddit\\qt\\azur lane\\__z46_and_z46_azur_lane_drawn_by_semimarusemi__e4e5e92bef5190c1f8c72c61dfab5b70.png'
           // }
@@ -398,23 +406,23 @@ class App extends React.Component {
           showableTags2={this.state.tagDictionary}
         /> */}
         <Pages
-          handleClick={this.handleTableClick.bind(this)}
+          handleClick={this.handleTableClickBound}
           // imageData={this.state.images}
-          doubleClick={this.clickFullscreenImage.bind(this)}
+          doubleClick={this.clickFullscreenImageBound}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
           database={this.state.database}
           workingDir={workingDirectory}
           searchFor={this.state.searchFor}
-          refresh={this.refresh.bind(this)}
-          setProgressBarPercentage={this.setProgressBarPercentage.bind(this)}
+          refresh={this.refreshBound}
+          setProgressBarPercentage={this.setProgressBarPercentageBound}
         />
         <TagPicker
           tags={this.state.tags}
           tagsDictionary={this.state.tagDictionary}
           row={this.state.currRow}
           database={this.state.database}
-          refresh={this.refresh.bind(this)}
+          refresh={this.refreshBound}
         />
       </div>
     );

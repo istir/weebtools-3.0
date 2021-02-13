@@ -2,13 +2,16 @@ import React from 'react';
 import SimpleBarReact from 'simplebar-react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { useTable } from 'react-table';
+
 const { remote } = require('electron');
+
 const { Menu, MenuItem } = remote;
 const { BrowserWindow } = require('electron').remote;
 const { shell } = require('electron');
+
 function Table(props: any) {
   // const [selected, setSelected] = useState(null);
-  //initialize columns, probably could just not add it later on
+  // initialize columns, probably could just not add it later on
   const columns = React.useMemo(
     () => [
       {
@@ -22,9 +25,9 @@ function Table(props: any) {
     ],
     []
   );
-  //initialize data from imageData from props
+  // initialize data from imageData from props
   function normalizeName(arr: string[]) {
-    let tempArr = [];
+    const tempArr = [];
     for (let i = 0; i < props.showableTags2.length; i++) {
       const element = props.showableTags2[i];
       if (element.shown) {
@@ -83,7 +86,7 @@ function Table(props: any) {
       ),
     undefined
   );
-  //row onclick -> prop callback
+  // row onclick -> prop callback
 
   function handleRowClick(e: any) {
     for (
@@ -101,7 +104,7 @@ function Table(props: any) {
     props.handleClick(e);
   }
 
-  //initialize table and render it
+  // initialize table and render it
   const { getTableProps, getTableBodyProps, rows, prepareRow } = useTable({
     columns,
     data,
@@ -168,7 +171,7 @@ function Table(props: any) {
                       handleRowClick(row);
                     }}
                     onDoubleClick={() => {
-                      //TODO
+                      // TODO
                       // currImage = props.imageData[row.id].pathName;
                       props.doubleClick(true);
                       // <FullscreenImage image={images[row.id].pathName} />;
@@ -215,7 +218,7 @@ function Table(props: any) {
                             //   await trash('E:/test.txt');
                             // })();
                             return 0;
-                            let response = dialog
+                            const response = dialog
                               .showMessageBox(
                                 BrowserWindow.getFocusedWindow(),
                                 {

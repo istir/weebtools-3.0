@@ -2,19 +2,13 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faTimes } from '@fortawesome/free-solid-svg-icons';
 import settings from 'electron-settings';
-// import Config from './config.json';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
-import { Console } from 'console';
 import { CSSTransition } from 'react-transition-group';
-import { common } from '@material-ui/core/colors';
-import Popup from 'reactjs-popup';
-
-import onClickOutside from 'react-onclickoutside';
 
 settings.configure({ prettify: true });
 
-/*INTERFACES*/
+/* INTERFACES */
 interface ConfigPaneState {
   listObjects: any;
   changedListObject: any;
@@ -34,7 +28,7 @@ interface ConfigToSave {
   visible: boolean;
   checkFolder: boolean;
 }
-interface ConfigToSaveList extends Array<ConfigToSave> {}
+type ConfigToSaveList = Array<ConfigToSave>;
 
 interface PopupPanelProps {
   contents: React.FC;
@@ -82,7 +76,7 @@ interface ConfigButtonState {
 }
 interface ConfigButtonProps {}
 
-/*COMPONENTS*/
+/* COMPONENTS */
 
 class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   constructor(props) {
@@ -95,14 +89,16 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
       showModal: false,
     };
   }
+
   tagToDelete(e) {
-    let obj = this.state.changedListObject;
-    var found = obj.tags.find((el) => el.key === e);
+    const obj = this.state.changedListObject;
+    const found = obj.tags.find((el) => el.key === e);
     obj.tags.splice(obj.tags.indexOf(found), 1);
   }
+
   componentDidMount() {
     if (settings.hasSync('tags')) {
-      let obj = settings.getSync('tags').map((value) => (
+      const obj = settings.getSync('tags').map((value) => (
         <Tag
           key={value.key}
           keyProp={value.key}
@@ -118,13 +114,13 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
         />
       ));
 
-      var changedTags: ConfigToSaveList = [];
-      var commonSettings = [];
+      const changedTags: ConfigToSaveList = [];
+      const commonSettings = [];
 
       if (settings.hasSync('commonSettings')) {
-        var commonKey = settings.getSync('commonSettings');
+        const commonKey = settings.getSync('commonSettings');
 
-        var objCommon = commonKey.map((value) => (
+        const objCommon = commonKey.map((value) => (
           <SettingsItem
             name={value.name}
             key={value.key}
@@ -155,7 +151,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
           for (let i = 0; i < settings.getSync('commonSettings').length; i++) {
             var value = settings.getSync('commonSettings')[i];
-            let obj: ConfigToSave = {
+            const obj: ConfigToSave = {
               key: value.key,
               name: value.name,
               value: value.value,
@@ -165,7 +161,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
           for (let i = 0; i < settings.getSync('tags').length; i++) {
             var value = settings.getSync('tags')[i];
-            let obj: ConfigToSave = {
+            const obj: ConfigToSave = {
               key: value.key,
               toReturn: value.toReturn,
               fromSite: value.fromSite,
@@ -175,7 +171,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
             };
             changedTags.push(obj);
           }
-          var something = { commonSettings: commonSettings, tags: changedTags };
+          const something = { commonSettings, tags: changedTags };
           // something.push({ tags: changedObj });
           // console.log(something);
           // let changedObj = Config.tags.map((value) => {
@@ -217,7 +213,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   }
 
   closePane(): void {
-    //ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
+    // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
     this.props.forceUpdate();
     this.props.setVisibility(false);
   }
@@ -241,7 +237,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     // console.log(masterKey);
     // console.log(this.state.changedListObject[masterKey]);
     // console.log(this.state.changedListObject[masterKey]);
-    var found = this.state.changedListObject[masterKey].find(
+    const found = this.state.changedListObject[masterKey].find(
       // (element) => console.log(element)
       (element) => element.key === key
     );
@@ -253,9 +249,10 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
       found[name] = value;
     }
   }
+
   addObject(value) {
     // console.log(value);
-    var listObject = this.state.listObjects;
+    const listObject = this.state.listObjects;
     // listObject.splice(2, 1);
     listObject.push(
       <Tag
@@ -272,7 +269,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
       />
       // <div>TEST</div>
     );
-    var listObj = this.state.changedListObject;
+    const listObj = this.state.changedListObject;
     listObj.tags.push({
       key: value.key,
       toReturn: value.toReturn,
@@ -288,6 +285,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   showAdd() {
     this.setState({ showModal: true });
   }
+
   hideAdd() {
     this.setState({ showModal: false });
   }
@@ -385,6 +383,7 @@ class SettingsItem extends React.Component<SettingsItemProps> {
       e.target.value
     );
   }
+
   render() {
     return (
       <div>
@@ -395,7 +394,7 @@ class SettingsItem extends React.Component<SettingsItemProps> {
           type="text"
           defaultValue={this.props.value}
           onChange={this.itemChange.bind(this)}
-        ></input>{' '}
+        />{' '}
       </div>
     );
   }
@@ -416,6 +415,7 @@ class Tag extends React.Component<TagProps> {
       e.target.value
     );
   }
+
   checkedChanged(e) {
     // console.log(e.target.checked);
     this.props.itemChanged(
@@ -425,11 +425,13 @@ class Tag extends React.Component<TagProps> {
       e.target.checked
     );
   }
+
   toDelete(e) {
     this.setState({ render: false });
     // console.log(this.props.keyProp);
     this.props.toDelete(this.props.keyProp);
   }
+
   render() {
     return this.state.render ? (
       <div className="settingTag">
@@ -440,44 +442,44 @@ class Tag extends React.Component<TagProps> {
           <div>Key</div>
           <input
             className="settingTagInput"
-            name={'key'}
+            name="key"
             type="text"
-            readOnly={true}
+            readOnly
             defaultValue={this.props.keyProp}
             onChange={this.textChanged.bind(this)}
-          ></input>{' '}
+          />{' '}
           <div className="toReturnSetting">To Return</div>
           <input
             className="settingTagInput"
-            name={'toReturn'}
+            name="toReturn"
             type="text"
             defaultValue={this.props.toReturn}
             onChange={this.textChanged.bind(this)}
-          ></input>{' '}
+          />{' '}
           <div>From Site</div>
           <input
             className="settingTagInput"
-            name={'fromSite'}
+            name="fromSite"
             type="text"
             defaultValue={this.props.fromSite.join(', ')}
             onChange={this.textChanged.bind(this)}
-          ></input>{' '}
+          />{' '}
           <div>Folder</div>
           <input
             className="settingTagInput"
-            name={'folder'}
+            name="folder"
             type="text"
             defaultValue={this.props.folder}
             onChange={this.textChanged.bind(this)}
-          ></input>{' '}
+          />{' '}
           <div>Visible</div>
           <Checkbox
             // className="settingTagCheckbox"
-            name={'visible'}
+            name="visible"
             type="checkbox"
             defaultChecked={this.props.visible}
             onChange={this.checkedChanged.bind(this)}
-          ></Checkbox>{' '}
+          />{' '}
           <div>Check Folder</div>
           <Checkbox
             // className="settingTagCheckbox"
@@ -485,11 +487,11 @@ class Tag extends React.Component<TagProps> {
             // classes={{
             //   root: 'klasaTest', // class name, e.g. `classes-nesting-root-x`
             // }}
-            name={'checkFolder'}
+            name="checkFolder"
             type="checkbox"
             defaultChecked={this.props.checkFolder}
             onChange={this.checkedChanged.bind(this)}
-          ></Checkbox>{' '}
+          />{' '}
         </div>
       </div>
     ) : (
@@ -535,8 +537,9 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
       },
     };
   }
+
   onSave() {
-    let value = this.state.value;
+    const { value } = this.state;
     // console.log(value);
     if (value.fromSite.includes(', ')) {
       value.fromSite = value.fromSite.split(', ');
@@ -544,21 +547,23 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
       value.fromSite = [value.fromSite];
     }
 
-    this.setState({ value: value });
+    this.setState({ value });
     // console.log(this.state.value);
     // console.log(value);
     this.props.onSave(this.state.value);
   }
+
   onChangeText(e) {
-    let obj = this.state.value;
+    const obj = this.state.value;
     // console.log(obj[e.target.name]);
     obj[e.target.name] = e.target.value;
     this.setState({ value: obj });
     // console.log(e.target.value, e.target.name);
     // console.log(this.state.value);
   }
+
   onChangeCheckbox(e) {
-    let obj = this.state.value;
+    const obj = this.state.value;
     // console.log(obj[e.target.name]);
     obj[e.target.name] = e.target.checked;
     this.setState({ value: obj });
@@ -571,53 +576,53 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
       <div className="tagToAddModal">
         <div>Key</div>
         <input
-          name={'key'}
+          name="key"
           type="text"
           onChange={this.onChangeText.bind(this)}
           // readOnly={true}
           // defaultValue={this.props.keyProp}
           // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <div className="toReturnSetting">To Return</div>
         <input
-          name={'toReturn'}
+          name="toReturn"
           type="text"
           onChange={this.onChangeText.bind(this)}
           // defaultValue={this.props.toReturn}
           // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <div>From Site</div>
         <input
-          name={'fromSite'}
+          name="fromSite"
           type="text"
           onChange={this.onChangeText.bind(this)}
           // defaultValue={this.props.fromSite.join(', ')}
           // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <div>Folder</div>
         <input
-          name={'folder'}
+          name="folder"
           type="text"
           onChange={this.onChangeText.bind(this)}
           // defaultValue={this.props.folder}
           // onChange={this.textChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <div>Visible</div>
         <input
-          name={'visible'}
+          name="visible"
           type="checkbox"
           onChange={this.onChangeCheckbox.bind(this)}
           // defaultChecked={this.props.visible}
           // onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <div>Check Folder</div>
         <input
-          name={'checkFolder'}
+          name="checkFolder"
           type="checkbox"
           onChange={this.onChangeCheckbox.bind(this)}
           // defaultChecked={this.props.checkFolder}
           // onChange={this.checkedChanged.bind(this)}
-        ></input>{' '}
+        />{' '}
         <button onClick={this.onSave.bind(this)}>Save</button>
       </div>
     );
@@ -631,9 +636,11 @@ class ConfigButton extends React.Component<
     super(props);
     this.state = { shown: false, popupShown: true };
   }
+
   show() {
     this.setVisibility(true);
   }
+
   setVisibility(isVisible: boolean): void {
     this.setState({ shown: isVisible });
   }

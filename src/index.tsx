@@ -1,14 +1,14 @@
 import React from 'react';
 import { render } from 'react-dom';
+import { Titlebar, Color } from 'custom-electron-titlebar';
 import App from './App';
 import './App.global.css';
+
 // import 'simplebar/dist/simplebar.min.css';
 // const customTitlebar = require('simplebar/dist/simplebar.min.css');
 
-<link rel="stylesheet" href="css/perfect-scrollbar.css"></link>;
-
-import { Titlebar, Color } from 'custom-electron-titlebar';
-var titlebar = new Titlebar({
+<link rel="stylesheet" href="css/perfect-scrollbar.css" />;
+const titlebar = new Titlebar({
   backgroundColor: Color.TRANSPARENT,
   // backgroundColor: customTitlebar.Color.fromRgba('0,0,0,0.7'),
 });
