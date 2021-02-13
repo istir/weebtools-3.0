@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-use-before-define
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -12,16 +13,23 @@ settings.configure({ prettify: true });
 interface ConfigPaneState {
   listObjects: any;
   changedListObject: any;
-  workingPathState: string;
+  // workingPathState: string;
   commonSettingItems: any;
   showModal: boolean;
 }
 interface ConfigPaneProps {
   // shown: boolean;
-  setVisibility(isVisible: boolean): void;
+  setVisibility: (isVisible: boolean) => void;
+  forceUpdate: () => void;
+  settings;
+}
+interface CommonConfigToSave {
+  name: string;
+  value: string;
 }
 interface ConfigToSave {
   key: string;
+
   toReturn: string;
   fromSite: string[];
   folder: string;
@@ -31,16 +39,25 @@ interface ConfigToSave {
 type ConfigToSaveList = Array<ConfigToSave>;
 
 interface PopupPanelProps {
-  contents: React.FC;
+  // eslint-disable-next-line no-use-before-define
+  contents: TagToAdd;
+  hide: () => void;
 }
 interface SettingsItemProps {
   name: string;
   // valueToSetTo: string;
+  keyProp;
   value: string;
+  itemChanged: (
+    masterKey: string,
+    key: string,
+    name: string,
+    value: string[]
+  ) => void;
 }
 
 interface TagToAddProps {
-  onSave(value): Function;
+  onSave: (value) => void;
 }
 interface TagToAddState {
   value: {
@@ -61,308 +78,26 @@ interface TagProps {
   checkFolder: boolean;
   // checkedChanged(event: any): Function;
   // textChanged(event: any): Function;
-  itemChanged(
+  itemChanged: (
     masterKey: string,
     key: string,
     name: string,
     value: string[]
-  ): Function;
-  toDelete(value: any): Function;
+  ) => void;
+  toDelete: (value) => void;
 }
-
+interface TagState {
+  render: boolean;
+}
 interface ConfigButtonState {
   shown: boolean;
-  popupShown: boolean;
 }
-interface ConfigButtonProps {}
+interface ConfigButtonProps {
+  settings;
+  forceUpdate: () => void;
+}
 
 /* COMPONENTS */
-
-class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      listObjects: null,
-      changedListObject: null,
-      workingPathState: '',
-      commonSettingItems: null,
-      showModal: false,
-    };
-  }
-
-  tagToDelete(e) {
-    const obj = this.state.changedListObject;
-    const found = obj.tags.find((el) => el.key === e);
-    obj.tags.splice(obj.tags.indexOf(found), 1);
-  }
-
-  componentDidMount() {
-    if (settings.hasSync('tags')) {
-      const obj = settings.getSync('tags').map((value) => (
-        <Tag
-          key={value.key}
-          keyProp={value.key}
-          toReturn={value.toReturn}
-          fromSite={value.fromSite}
-          folder={value.folder}
-          visible={value.visible}
-          checkFolder={value.checkFolder}
-          // checkedChanged={this.checkedChanged.bind(this)}
-          // textChanged={this.textChanged.bind(this)}
-          itemChanged={this.itemChanged.bind(this)}
-          toDelete={this.tagToDelete.bind(this)}
-        />
-      ));
-
-      const changedTags: ConfigToSaveList = [];
-      const commonSettings = [];
-
-      if (settings.hasSync('commonSettings')) {
-        const commonKey = settings.getSync('commonSettings');
-
-        const objCommon = commonKey.map((value) => (
-          <SettingsItem
-            name={value.name}
-            key={value.key}
-            keyProp={value.key}
-            // value={this.state.workingPathState}
-            value={value.value}
-            itemChanged={this.itemChanged.bind(this)}
-          />
-        ));
-
-        // if (settings.hasSync('commonSettings.workingPath')) {
-        // } else {
-        //   throw 'no workingPath';
-        // }
-        // this.setState({
-        //   workingPath: commonKey.find((el) => el.key === 'workingPath').value,
-        // });
-
-        // var workingPath = commonKey.find((el) => el.key === 'workingPath');
-        // console.log(workingPath);
-        // this.TEST = workingPath.value;
-        // console.log(this.state.workingPathState);
-        // console.log(thi);
-        try {
-          // var commonSettings = [
-          //   { key: 'workingPath', value: this.state.workingPathState },
-          // ];
-
-          for (let i = 0; i < settings.getSync('commonSettings').length; i++) {
-            var value = settings.getSync('commonSettings')[i];
-            const obj: ConfigToSave = {
-              key: value.key,
-              name: value.name,
-              value: value.value,
-            };
-            commonSettings.push(obj);
-          }
-
-          for (let i = 0; i < settings.getSync('tags').length; i++) {
-            var value = settings.getSync('tags')[i];
-            const obj: ConfigToSave = {
-              key: value.key,
-              toReturn: value.toReturn,
-              fromSite: value.fromSite,
-              folder: value.folder,
-              visible: value.visible,
-              checkFolder: value.checkFolder,
-            };
-            changedTags.push(obj);
-          }
-          const something = { commonSettings, tags: changedTags };
-          // something.push({ tags: changedObj });
-          // console.log(something);
-          // let changedObj = Config.tags.map((value) => {
-          //   {
-          //     key: value.toReturn;
-          //     toReturn: value.toReturn;
-          //     fromSite: value.fromSite;
-          //     folder: value.folder;
-          //     visible: value.visible;
-          //     checkFolder: value.checkFolder;
-          //   }
-          // });
-          // this.setState({ workingPathState: workingPath.value });
-          // console.log(this.state.workingPathState);
-          this.setState({ changedListObject: something });
-          this.setState({ commonSettingItems: objCommon });
-          // console.log(this.state.changedListObject);
-          // let obj = Object.keys(Config).map((value) => (
-          //   // console.log(value);
-          //   <li>{value}</li>
-          // ));
-
-          this.setState({ listObjects: obj });
-
-          // console.log(workingPath);
-        } catch (err) {
-          throw err;
-        }
-      } else {
-        throw 'no commonSettings';
-      }
-
-      // if (!settings.hasSync('workingPath')) {
-      //   throw 'XD';
-      // }
-    } else {
-      throw 'NO TAGS';
-    }
-  }
-
-  closePane(): void {
-    // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
-    this.props.forceUpdate();
-    this.props.setVisibility(false);
-  }
-
-  saveConfig(): void {
-    console.log('SAVED!\nNew Config:', this.state.changedListObject);
-    // console.log(settings.file());
-    settings.setSync(this.state.changedListObject);
-  }
-
-  itemChanged(
-    masterKey: string,
-    key: string,
-    name: string,
-    value: string[]
-  ): void {
-    // console.log(key, name, value);
-
-    // console.log(Object.entries(this.state.changedListObject));
-    // console.log(this.state.changedListObject['tags']);
-    // console.log(masterKey);
-    // console.log(this.state.changedListObject[masterKey]);
-    // console.log(this.state.changedListObject[masterKey]);
-    const found = this.state.changedListObject[masterKey].find(
-      // (element) => console.log(element)
-      (element) => element.key === key
-    );
-    // console.log(found);
-    // console.log(value);
-    if (name == 'fromSite') {
-      found[name] = value.split(', ');
-    } else {
-      found[name] = value;
-    }
-  }
-
-  addObject(value) {
-    // console.log(value);
-    const listObject = this.state.listObjects;
-    // listObject.splice(2, 1);
-    listObject.push(
-      <Tag
-        keyProp={value.key}
-        toReturn={value.toReturn}
-        fromSite={value.fromSite}
-        folder={value.folder}
-        visible={value.visible}
-        checkFolder={value.checkFolder}
-        toDelete={this.toDelete}
-        // checkedChanged={this.checkedChanged.bind(this)}
-        // textChanged={this.textChanged.bind(this)}
-        itemChanged={this.itemChanged.bind(this)}
-      />
-      // <div>TEST</div>
-    );
-    const listObj = this.state.changedListObject;
-    listObj.tags.push({
-      key: value.key,
-      toReturn: value.toReturn,
-      fromSite: value.fromSite,
-      folder: value.folder,
-      visible: value.visible,
-      checkFolder: value.checkFolder,
-    });
-    this.setState({ listObjects: listObject });
-    this.setState({ changedListObject: listObj });
-  }
-
-  showAdd() {
-    this.setState({ showModal: true });
-  }
-
-  hideAdd() {
-    this.setState({ showModal: false });
-  }
-
-  render() {
-    return (
-      <div
-        // className={`settingsBG ${this.props.shown ? '' : 'hidden'}`}
-        className="settingsBG"
-        // onClick={this.closePane.bind(this)}
-        // onClick={this.closePane.bind(this)}
-      >
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="settingsPane"
-        >
-          <CSSTransition
-            in={this.state.showModal}
-            timeout={200}
-            classNames="tagToAddModalContent"
-            unmountOnExit
-          >
-            <PopupPanel
-              contents={<TagToAdd onSave={this.addObject.bind(this)} />}
-              hide={this.hideAdd.bind(this)}
-            />
-          </CSSTransition>
-          <button
-            className="closeButtonPane"
-            onClick={this.closePane.bind(this)}
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-          <SimpleBarReact
-            style={{
-              maxHeight: '100%',
-              width: '100%',
-              borderRadius: '15px',
-              padding: '10px',
-            }}
-          >
-            <div className="settingsList">
-              {this.state.commonSettingItems}
-              <h3 style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>Tags</h3>
-              <div className="tagObj">{this.state.listObjects}</div>
-              <button
-                className="saveButton"
-                style={{ gridColumnStart: 2, gridColumnEnd: 5 }}
-                onClick={this.saveConfig.bind(this)}
-              >
-                Save
-              </button>
-
-              {/* <CSSTransition
-                in={this.state.shown}
-                timeout={200}
-                classNames="settingPane"
-                unmountOnExit
-              > */}
-
-              {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
-
-              {/* <button onClick={this.setState({ showModal: true })}>Add</button> */}
-              <button onClick={this.showAdd.bind(this)}>Add</button>
-
-              {/* <Popup trigger={<button> Add </button>} modal> */}
-
-              {/* </Popup> */}
-            </div>
-          </SimpleBarReact>
-        </div>
-      </div>
-    );
-  }
-}
 class SettingsItem extends React.Component<SettingsItemProps> {
   constructor(props) {
     super(props);
@@ -399,11 +134,13 @@ class SettingsItem extends React.Component<SettingsItemProps> {
     );
   }
 }
+class Tag extends React.Component<TagProps, TagState> {
+  checkedChangedBound: (value) => void;
 
-class Tag extends React.Component<TagProps> {
   constructor(props) {
     super(props);
     this.state = { render: true };
+    this.checkedChangedBound = this.checkedChanged.bind(this);
   }
 
   textChanged(e) {
@@ -435,7 +172,11 @@ class Tag extends React.Component<TagProps> {
   render() {
     return this.state.render ? (
       <div className="settingTag">
-        <button onClick={this.toDelete.bind(this)} className="tagDelete">
+        <button
+          type="button"
+          onClick={this.toDelete.bind(this)}
+          className="tagDelete"
+        >
           <FontAwesomeIcon icon={faTimes} />
         </button>
         <div>
@@ -476,21 +217,16 @@ class Tag extends React.Component<TagProps> {
           <Checkbox
             // className="settingTagCheckbox"
             name="visible"
-            type="checkbox"
+            // type="checkbox"
             defaultChecked={this.props.visible}
-            onChange={this.checkedChanged.bind(this)}
+            onChange={this.checkedChangedBound}
           />{' '}
           <div>Check Folder</div>
           <Checkbox
-            // className="settingTagCheckbox"
-            // classes={{root:}}
-            // classes={{
-            //   root: 'klasaTest', // class name, e.g. `classes-nesting-root-x`
-            // }}
             name="checkFolder"
-            type="checkbox"
+            // type="checkbox"
             defaultChecked={this.props.checkFolder}
-            onChange={this.checkedChanged.bind(this)}
+            onChange={this.checkedChangedBound}
           />{' '}
         </div>
       </div>
@@ -499,18 +235,332 @@ class Tag extends React.Component<TagProps> {
     );
   }
 }
-class PopupPanel extends React.Component<PopupPanelProps> {
+function PopupPanel(props: PopupPanelProps) {
+  // class PopupPanel extends React.Component<PopupPanelProps> {
+  // constructor(props) {
+  // super(props);
+  // }
+
+  // render() {
+  return (
+    <div className="popupPanel">
+      <button type="button" className="closeAddModal" onClick={props.hide}>
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
+      <div>{props.contents}</div>
+    </div>
+  );
+  // }
+}
+
+class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
+  itemChangedBound: (
+    masterKey: string,
+    key: string,
+    name: string,
+    value: string[]
+  ) => void;
+
+  tagToDeleteBound: (e) => void;
+
+  commonSettings;
+
+  addObjectBound: (value) => void;
+
+  hideAddBound: () => void;
+
   constructor(props) {
     super(props);
+    this.commonSettings = settings.getSync('commonSettings');
+    this.state = {
+      listObjects: null,
+      changedListObject: null,
+      // workingPathState: '',
+      commonSettingItems: null,
+      showModal: false,
+    };
+    this.itemChangedBound = this.itemChanged.bind(this);
+    this.tagToDeleteBound = this.tagToDelete.bind(this);
+    this.addObjectBound = this.addObject.bind(this);
+    this.hideAddBound = this.hideAdd.bind(this);
+  }
+
+  componentDidMount() {
+    if (this.props.settings) {
+      const obj = this.props.settings.map((value) => (
+        <Tag
+          key={value.key}
+          keyProp={value.key}
+          toReturn={value.toReturn}
+          fromSite={value.fromSite}
+          folder={value.folder}
+          visible={value.visible}
+          checkFolder={value.checkFolder}
+          // checkedChanged={this.checkedChanged.bind(this)}
+          // textChanged={this.textChanged.bind(this)}
+          itemChanged={this.itemChangedBound}
+          toDelete={this.tagToDeleteBound}
+        />
+      ));
+
+      const changedTags: ConfigToSaveList = [];
+      const commonSettings = [];
+
+      if (this.commonSettings) {
+        const objCommon = this.commonSettings.map((value) => (
+          <SettingsItem
+            name={value.name}
+            key={value.key}
+            keyProp={value.key}
+            // value={this.state.workingPathState}
+            value={value.value}
+            itemChanged={this.itemChangedBound}
+          />
+        ));
+
+        // if (settings.hasSync('commonSettings.workingPath')) {
+        // } else {
+        //   throw 'no workingPath';
+        // }
+        // this.setState({
+        //   workingPath: commonKey.find((el) => el.key === 'workingPath').value,
+        // });
+
+        // var workingPath = commonKey.find((el) => el.key === 'workingPath');
+        // console.log(workingPath);
+        // this.TEST = workingPath.value;
+        // console.log(this.state.workingPathState);
+        // console.log(thi);
+        try {
+          // var commonSettings = [
+          //   { key: 'workingPath', value: this.state.workingPathState },
+          // ];
+
+          for (let i = 0; i < this.commonSettings.length; i += 1) {
+            const value = this.commonSettings[i];
+            // const obj: CommonConfigToSave = {
+            //   key: value.key,
+            //   name: value.name,
+            //   value: value.value,
+            // };
+            commonSettings.push({
+              key: value.key,
+              name: value.name,
+              value: value.value,
+            });
+          }
+          for (let i = 0; i < this.props.settings.length; i += 1) {
+            const value = this.props.settings[i];
+            // const obj: ConfigToSave = {
+            //   key: value.key,
+            //   toReturn: value.toReturn,
+            //   fromSite: value.fromSite,
+            //   folder: value.folder,
+            //   visible: value.visible,
+            //   checkFolder: value.checkFolder,
+            // };
+            changedTags.push({
+              key: value.key,
+              toReturn: value.toReturn,
+              fromSite: value.fromSite,
+              folder: value.folder,
+              visible: value.visible,
+              checkFolder: value.checkFolder,
+            });
+          }
+          const something = { commonSettings, tags: changedTags };
+          // something.push({ tags: changedObj });
+          // console.log(something);
+          // let changedObj = Config.tags.map((value) => {
+          //   {
+          //     key: value.toReturn;
+          //     toReturn: value.toReturn;
+          //     fromSite: value.fromSite;
+          //     folder: value.folder;
+          //     visible: value.visible;
+          //     checkFolder: value.checkFolder;
+          //   }
+          // });
+          // this.setState({ workingPathState: workingPath.value });
+          // console.log(this.state.workingPathState);
+          this.setState({ changedListObject: something });
+          this.setState({ commonSettingItems: objCommon });
+          // console.log(this.state.changedListObject);
+          // let obj = Object.keys(Config).map((value) => (
+          //   // console.log(value);
+          //   <li>{value}</li>
+          // ));
+
+          this.setState({ listObjects: obj });
+
+          // console.log(workingPath);
+        } catch (err) {
+          throw err;
+        }
+      } else {
+        throw new Error('no commonSettings');
+      }
+
+      // if (!settings.hasSync('workingPath')) {
+      //   throw 'XD';
+      // }
+    } else {
+      throw new Error('NO TAGS');
+    }
+  }
+
+  tagToDelete(e) {
+    const obj = this.state.changedListObject;
+    const found = obj.tags.find((el) => el.key === e);
+    obj.tags.splice(obj.tags.indexOf(found), 1);
+  }
+
+  closePane(): void {
+    // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
+    this.props.forceUpdate();
+    this.props.setVisibility(false);
+  }
+
+  saveConfig(): void {
+    console.log('SAVED!\nNew Config:', this.state.changedListObject);
+    // console.log(settings.file());
+    settings.setSync(this.state.changedListObject);
+  }
+
+  itemChanged(
+    masterKey: string,
+    key: string,
+    name: string,
+    value: string[]
+  ): void {
+    const found = this.state.changedListObject[masterKey].find(
+      (element) => element.key === key
+    );
+
+    if (name === 'fromSite') {
+      found[name] = value.split(', ');
+    } else {
+      found[name] = value;
+    }
+  }
+
+  addObject(value) {
+    // console.log(value);
+    const listObject = this.state.listObjects;
+    // listObject.splice(2, 1);
+    listObject.push(
+      <Tag
+        keyProp={value.key}
+        toReturn={value.toReturn}
+        fromSite={value.fromSite}
+        folder={value.folder}
+        visible={value.visible}
+        checkFolder={value.checkFolder}
+        toDelete={this.toDelete}
+        // checkedChanged={this.checkedChanged.bind(this)}
+        // textChanged={this.textChanged.bind(this)}
+        itemChanged={this.itemChangedBound}
+      />
+      // <div>TEST</div>
+    );
+    const listObj = this.state.changedListObject;
+    listObj.tags.push({
+      key: value.key,
+      toReturn: value.toReturn,
+      fromSite: value.fromSite,
+      folder: value.folder,
+      visible: value.visible,
+      checkFolder: value.checkFolder,
+    });
+    this.setState({ listObjects: listObject });
+    this.setState({ changedListObject: listObj });
+  }
+
+  showAdd() {
+    this.setState({ showModal: true });
+  }
+
+  hideAdd() {
+    this.setState({ showModal: false });
   }
 
   render() {
     return (
-      <div className="popupPanel">
-        <button className="closeAddModal" onClick={this.props.hide}>
-          <FontAwesomeIcon icon={faTimes} />
-        </button>
-        <div>{this.props.contents}</div>
+      <div
+        // className={`settingsBG ${this.props.shown ? '' : 'hidden'}`}
+        className="settingsBG"
+        // onClick={this.closePane.bind(this)}
+        // onClick={this.closePane.bind(this)}
+      >
+        <div
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
+          role="none"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="settingsPane"
+        >
+          <CSSTransition
+            in={this.state.showModal}
+            timeout={200}
+            classNames="tagToAddModalContent"
+            unmountOnExit
+          >
+            <PopupPanel
+              contents={<TagToAdd onSave={this.addObjectBound} />}
+              hide={this.hideAddBound}
+            />
+          </CSSTransition>
+          <button
+            type="button"
+            className="closeButtonPane"
+            onClick={this.closePane.bind(this)}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+          <SimpleBarReact
+            style={{
+              maxHeight: '100%',
+              width: '100%',
+              borderRadius: '15px',
+              padding: '10px',
+            }}
+          >
+            <div className="settingsList">
+              {this.state.commonSettingItems}
+              <h3 style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>Tags</h3>
+              <div className="tagObj">{this.state.listObjects}</div>
+              <button
+                type="button"
+                className="saveButton"
+                style={{ gridColumnStart: 2, gridColumnEnd: 5 }}
+                onClick={this.saveConfig.bind(this)}
+              >
+                Save
+              </button>
+
+              {/* <CSSTransition
+                in={this.state.shown}
+                timeout={200}
+                classNames="settingPane"
+                unmountOnExit
+              > */}
+
+              {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
+
+              {/* <button onClick={this.setState({ showModal: true })}>Add</button> */}
+              <button type="button" onClick={this.showAdd.bind(this)}>
+                Add
+              </button>
+
+              {/* <Popup trigger={<button> Add </button>} modal> */}
+
+              {/* </Popup> */}
+            </div>
+          </SimpleBarReact>
+        </div>
       </div>
     );
   }
@@ -623,7 +673,9 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
           // defaultChecked={this.props.checkFolder}
           // onChange={this.checkedChanged.bind(this)}
         />{' '}
-        <button onClick={this.onSave.bind(this)}>Save</button>
+        <button type="button" onClick={this.onSave.bind(this)}>
+          Save
+        </button>
       </div>
     );
   }
@@ -632,34 +684,32 @@ class ConfigButton extends React.Component<
   ConfigButtonProps,
   ConfigButtonState
 > {
+  setVisibilityBound: (value: boolean) => void;
+
   constructor(props) {
     super(props);
-    this.state = { shown: false, popupShown: true };
-  }
-
-  show() {
-    this.setVisibility(true);
+    this.state = { shown: false };
+    this.setVisibilityBound = this.setVisibility.bind(this);
   }
 
   setVisibility(isVisible: boolean): void {
     this.setState({ shown: isVisible });
   }
 
+  show() {
+    this.setVisibility(true);
+  }
+
   render() {
     return (
       <div>
-        <button onClick={this.show.bind(this)} className="settingsIcon">
+        <button
+          type="button"
+          onClick={this.show.bind(this)}
+          className="settingsIcon"
+        >
           <FontAwesomeIcon icon={faCog} />
         </button>
-        {/* 
-        <CSSTransition
-          in={this.state.popupShown}
-          timeout={200}
-          classNames="popupPanel"
-          unmountOnExit
-        >
-          <PopupPanel contents={<TagToAdd />} />
-        </CSSTransition> */}
 
         <CSSTransition
           in={this.state.shown}
@@ -668,7 +718,8 @@ class ConfigButton extends React.Component<
           unmountOnExit
         >
           <ConfigPane
-            setVisibility={this.setVisibility.bind(this)}
+            settings={this.props.settings}
+            setVisibility={this.setVisibilityBound}
             forceUpdate={this.props.forceUpdate}
           />
         </CSSTransition>

@@ -225,9 +225,11 @@ class App extends React.Component {
 
   setProgressBarPercentageBound: (value: number) => void;
 
+  settingsTags;
+
   constructor(props) {
     super(props);
-
+    this.settingsTags = settings.getSync('tags');
     this.state = {
       tags: this.getTags(),
       currRow: null,
@@ -257,7 +259,7 @@ class App extends React.Component {
       .then(
         (ful: any) => {
           // eslint-disable-next-line no-console
-          console.log('connected');
+          // console.log('connected');
           // console.log(ful);
           this.setState({ database: ful });
           return ful;
@@ -276,13 +278,12 @@ class App extends React.Component {
 
   getTagDictionary() {
     const tagObj = [];
-    const stt = settings.getSync('tags');
-    for (let i = 0; i < stt.length; i += 1) {
-      for (let j = 0; j < stt[i].fromSite.length; j += 1) {
+    for (let i = 0; i < this.settingsTags.length; i += 1) {
+      for (let j = 0; j < this.settingsTags[i].fromSite.length; j += 1) {
         tagObj.push({
-          fromSite: stt[i].fromSite[j],
-          returnValue: stt[i].toReturn,
-          shown: stt[i].visible,
+          fromSite: this.settingsTags[i].fromSite[j],
+          returnValue: this.settingsTags[i].toReturn,
+          shown: this.settingsTags[i].visible,
         });
         // console.log(stt[i].fromSite[j] + ' ' + stt[i].toReturn);
       }
@@ -292,16 +293,12 @@ class App extends React.Component {
 
   getTags() {
     const tempTags = [];
-    for (let i = 0; i < settings.getSync('tags').length; i += 1) {
-      if (settings.getSync('tags')[i].visible) {
-        const test = [settings.getSync('tags')[i].toReturn];
+    for (let i = 0; i < this.settingsTags.length; i += 1) {
+      if (this.settingsTags[i].visible) {
+        const test = [this.settingsTags[i].toReturn];
         const test1 = [];
-        for (
-          let j = 0;
-          j < settings.getSync('tags')[i].fromSite.length;
-          j += 1
-        ) {
-          test1.push(settings.getSync('tags')[i].fromSite[j]);
+        for (let j = 0; j < this.settingsTags[i].fromSite.length; j += 1) {
+          test1.push(this.settingsTags[i].fromSite[j]);
         }
         test.push(test1);
         tempTags.push(test);
@@ -374,7 +371,10 @@ class App extends React.Component {
       <div>
         {/* <div className="icon">
           {' '} */}
-        <ConfigButton forceUpdate={this.refreshTagsBound} />
+        <ConfigButton
+          settings={this.settingsTags}
+          forceUpdate={this.refreshTagsBound}
+        />
         <SearchButton
           currentSearch={this.state.searchFor}
           setSearch={this.setSearchBound}

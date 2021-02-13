@@ -574,6 +574,7 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
 .checkboxText {
   margin-top: auto;
   margin-bottom: auto;
@@ -624,7 +625,8 @@ a:hover {
   margin-top: 30px;
   pointer-events: none;
 }
-.fullscreenDiv.visible {
+.fullscreenDiv {
+  transition: 0.3s;
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
@@ -633,7 +635,19 @@ a:hover {
   z-index: 8;
   margin-top: 30px;
   cursor: pointer;
+}
+.fullscreenDiv.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.fullscreenDiv.visible {
+  opacity: 1;
+  visibility: visible;
+
   /* position: relative; */
+}
+.fullscreenDiv.visible:focus {
+  outline: none;
 }
 /* simplebar because something is not loading???? */
 [data-simplebar] {

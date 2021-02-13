@@ -7,6 +7,8 @@ module.exports = {
     'max-classes-per-file': 'off',
     'class-methods-use-this': 'off',
     'no-use-before-define': ['error', { functions: false, classes: false }],
+    'no-useless-catch': 'off',
+    '@typescript-eslint/no-useless-constructor': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

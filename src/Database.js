@@ -7,17 +7,14 @@ async function Database() {
     password: 'weebtoolspasswd',
     database: 'weebtools',
   });
-  const connectionPromise = await sqlConnection.connect(function (err) {
+  await sqlConnection.connect((err) => {
     if (err) {
-      console.log("Couldn't connect to database.");
       throw err;
     }
-    console.log('Connected to database');
   });
   return new Promise((resolve, reject) => {
     resolve(sqlConnection);
-    reject("Couldn't resolve database connection");
-    // reject('NOTOK');
+    reject(new Error("Couldn't resolve database connection"));
   });
 }
 
