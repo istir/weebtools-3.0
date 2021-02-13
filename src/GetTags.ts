@@ -461,7 +461,9 @@ class GetTags {
     );
     tagsString = tagsString.replace('|Tags: ', '');
     tags = tagsString.split(', ');
-    generatePath();
+    var bindGeneratePath = generatePath.bind(this);
+    bindGeneratePath();
+    // generatePath();
     this.tags = tags;
     this.downloadLink = downloadLink;
     this.fileName = fileName;
@@ -469,7 +471,6 @@ class GetTags {
     this.folderName = folderName;
     console.log(this.urlString);
     this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
-
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
     if (site == 'Pixiv') {
       fs.writeFile(
