@@ -17,7 +17,7 @@ function Pagination(props: PaginationProps) {
   return (
     <tr className="loadMore">
       <td>
-        <button type="button" onClick={props.loadItems}>
+        <button tabIndex={-1} type="button" onClick={props.loadItems}>
           Load More
         </button>
       </td>
@@ -60,9 +60,11 @@ class Pages extends React.Component<Props, State> {
 
   loadItemsBound: (search: any) => Promise<void>;
 
+  deleteItemFromDatabaseBound: (fileName: string, folderName: string) => void;
+
   constructor(props) {
     super(props);
-
+    this.deleteItemFromDatabaseBound = this.deleteItemFromDatabase.bind(this);
     this.handleTableClickBound = this.handleTableClick.bind(this);
     this.loadItemsBound = this.loadItems.bind(this);
     // this.props.database.execute(query) <= zmiana strony
@@ -363,6 +365,22 @@ class Pages extends React.Component<Props, State> {
     }
   }
 
+  deleteItemFromDatabase(fileName: string, folderName: string) {
+    //  async function deleteRecord() {
+    const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
+    this.props.database.execute(queryDeleteRow);
+    // console.log(rows);
+    //   return new Promise((resolved, rejected) => {
+    //     if (rows.affectedRows >= 1) {
+    //       // console.log('YEP');
+    //       resolved(true);
+    //     } else {
+    //       rejected(false);
+    //     }
+    //   });
+    // }
+  }
+
   render() {
     return this.state.pageItems === null ? (
       ''
@@ -379,6 +397,7 @@ class Pages extends React.Component<Props, State> {
           showableTags={this.props.showableTags}
           showableTags2={this.props.showableTags2}
           doubleClick={this.props.doubleClick}
+          delete={this.deleteItemFromDatabaseBound}
           loadMore={<Pagination loadItems={this.loadItemsBound} />}
         >
           {/* <Pagination /> */}

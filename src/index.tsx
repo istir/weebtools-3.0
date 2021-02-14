@@ -10,6 +10,7 @@ import './App.global.css';
 <link rel="stylesheet" href="css/perfect-scrollbar.css" />;
 const titlebar = new Titlebar({
   backgroundColor: Color.TRANSPARENT,
+  menu: null,
   // backgroundColor: customTitlebar.Color.fromRgba('0,0,0,0.7'),
 });
 // titlebar.updateItemBGColor(Color.TRANSPARENT);

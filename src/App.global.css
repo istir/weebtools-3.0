@@ -36,8 +36,13 @@
     background-position: 83% 0%;
   }
 }
+
+::selection {
+  /* filter: invert(1); */
+  color: #ff9393;
+}
 * {
-  user-select: none;
+  /* user-select: none; */
 }
 body {
   /* position: relative; */
@@ -66,7 +71,26 @@ body {
   margin: 0px;
   background-attachment: fixed;
 }
-
+/* .tagPicker > span {
+  outline: olive;
+} */
+:focus {
+  outline: none;
+  /* filter: invert(0.2); */
+}
+:focus:hover {
+  /* background: #000; */
+  /* outline: none; */
+}
+.cursorPointer {
+  cursor: pointer;
+}
+.cursorNormal {
+  cursor: default;
+}
+.notSelectable {
+  user-select: none;
+}
 .fileName {
   font-weight: 500;
   margin-bottom: 10px;

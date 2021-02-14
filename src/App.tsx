@@ -2,13 +2,14 @@
 import React from 'react';
 // import Config from './config.json';
 import settings from 'electron-settings';
-import { Checkbox } from '@material-ui/core';
+import { Checkbox, Modal } from '@material-ui/core';
 import ConfigButton from './ConfigDiv';
 import SearchButton from './Search';
 import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
+import ModalOwn from './Modal';
 
 interface IcommonSettings {
   key: string;
@@ -38,10 +39,23 @@ interface CheckBoxProps {
 }
 
 function CheckboxComponent(props: CheckBoxProps) {
+  function toggle() {
+    props.change(props.value, props.shouldCheck);
+  }
   return (
-    <div>
+    <div
+      onKeyPress={() => {}}
+      role="button"
+      // tabIndex={0}
+      className="notSelectable cursorPointer tagPicker"
+      style={{ width: 'fit-content' }}
+      onClick={toggle}
+      tabIndex={-1}
+    >
       <Checkbox
-        onChange={props.change}
+        tabIndex={0}
+        onKeyPress={() => {}}
+        // onChange={props.change}
         key="input"
         value={props.value}
         checked={props.shouldCheck}
@@ -77,7 +91,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     this.state = { checked: [''], row: this.props.row };
     // initialize list of <Checkbox/>
     this.checkboxes = [];
-    this.handleChangingBound = this.handleChanging.bind(this);
+    this.handleChangingBound = this.handleChangingNew.bind(this);
   }
 
   componentDidUpdate() {
@@ -88,13 +102,14 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     }
   }
 
-  handleChanging(e: { target: { value: any; checked: any } }) {
+  handleChangingNew(tagToToggle: string, isChecked: boolean) {
     // console.log(e);
     if (this.props.row != null) {
       const currTag = [];
       for (let i = 0; i < this.props.tagsDictionary.length; i += 1) {
         const element = this.props.tagsDictionary[i];
-        if (element.returnValue === e.target.value && element.shown) {
+
+        if (element.returnValue === tagToToggle && element.shown) {
           if (!currTag.includes(element.fromSite)) {
             currTag.push(element.fromSite);
           }
@@ -102,9 +117,9 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
       }
 
       const foundTag = this.props.tagsDictionary.find(
-        (el) => el.returnValue === e.target.value
+        (el) => el.returnValue === tagToToggle
       );
-      if (!e.target.checked) {
+      if (isChecked) {
         // TODO: make it so currTag is an array and newState removes that array from itself
         for (let i = 0; i < currTag.length; i += 1) {
           if (this.state.checked.includes(currTag[i])) {
@@ -127,7 +142,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           // here is almost the same but if item isn't togged I add it to "checked" state
         }
       }
-      if (e.target.checked) {
+      if (!isChecked) {
         if (!this.state.checked.includes(foundTag.fromSite)) {
           // this.setState(function (prevState) {
           //   const newState = prevState.checked;
@@ -175,22 +190,6 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     await this.props.database.query(query);
   }
 
-  deleteItemFromDatabase(fileName: string, folderName: string) {
-    //  async function deleteRecord() {
-    const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-    this.props.database.execute(queryDeleteRow);
-    // console.log(rows);
-    //   return new Promise((resolved, rejected) => {
-    //     if (rows.affectedRows >= 1) {
-    //       // console.log('YEP');
-    //       resolved(true);
-    //     } else {
-    //       rejected(false);
-    //     }
-    //   });
-    // }
-  }
-
   render() {
     // fill <Checkbox/> list
 
@@ -211,14 +210,8 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
       this.checkboxes.push(
         <CheckboxComponent
           key={value[1]}
-          // shouldCheck={
-          //   this.state.checked.length > 0
-          //     ? this.state.checked.includes(value[1][0])
-          //     : false
-          // }
           shouldCheck={check}
           value={value[0]}
-          // text={value[1][0]}
           change={this.handleChangingBound}
         />
       );
@@ -405,6 +398,7 @@ class App extends React.Component<IAppProps, IAppState> {
       <div>
         {/* <div className="icon">
           {' '} */}
+
         <ConfigButton
           settings={this.settingsTags}
           forceUpdate={this.refreshTagsBound}
@@ -432,6 +426,7 @@ class App extends React.Component<IAppProps, IAppState> {
           showableTags2={this.state.tagDictionary}
           database={this.state.database}
           workingDir={workingDirectory}
+          // deleteFromDatabase={this.deleteite}
           searchFor={this.state.searchFor}
           refresh={this.refreshBound}
           setProgressBarPercentage={this.setProgressBarPercentageBound}

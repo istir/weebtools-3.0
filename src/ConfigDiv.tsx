@@ -122,9 +122,9 @@ class SettingsItem extends React.Component<SettingsItemProps> {
   render() {
     return (
       <div>
-        <div>{this.props.name}</div>
+        <div className="cursorNormal notSelectable">{this.props.name}</div>
         <input
-          className="settingTagInput"
+          className="settingTagInput "
           key={this.props.name}
           type="text"
           defaultValue={this.props.value}
@@ -180,7 +180,7 @@ class Tag extends React.Component<TagProps, TagState> {
           <FontAwesomeIcon icon={faTimes} />
         </button>
         <div>
-          <div>Key</div>
+          <div className="cursorNormal notSelectable">Key</div>
           <input
             className="settingTagInput"
             name="key"
@@ -189,7 +189,9 @@ class Tag extends React.Component<TagProps, TagState> {
             defaultValue={this.props.keyProp}
             onChange={this.textChanged.bind(this)}
           />{' '}
-          <div className="toReturnSetting">To Return</div>
+          <div className="toReturnSetting cursorNormal notSelectable">
+            To Return
+          </div>
           <input
             className="settingTagInput"
             name="toReturn"
@@ -197,7 +199,7 @@ class Tag extends React.Component<TagProps, TagState> {
             defaultValue={this.props.toReturn}
             onChange={this.textChanged.bind(this)}
           />{' '}
-          <div>From Site</div>
+          <div className="cursorNormal notSelectable">From Site</div>
           <input
             className="settingTagInput"
             name="fromSite"
@@ -205,7 +207,7 @@ class Tag extends React.Component<TagProps, TagState> {
             defaultValue={this.props.fromSite.join(', ')}
             onChange={this.textChanged.bind(this)}
           />{' '}
-          <div>Folder</div>
+          <div className="cursorNormal notSelectable">Folder</div>
           <input
             className="settingTagInput"
             name="folder"
@@ -213,7 +215,7 @@ class Tag extends React.Component<TagProps, TagState> {
             defaultValue={this.props.folder}
             onChange={this.textChanged.bind(this)}
           />{' '}
-          <div>Visible</div>
+          <div className="cursorNormal notSelectable">Visible</div>
           <Checkbox
             // className="settingTagCheckbox"
             name="visible"
@@ -221,7 +223,7 @@ class Tag extends React.Component<TagProps, TagState> {
             defaultChecked={this.props.visible}
             onChange={this.checkedChangedBound}
           />{' '}
-          <div>Check Folder</div>
+          <div className="cursorNormal notSelectable">Check Folder</div>
           <Checkbox
             name="checkFolder"
             // type="checkbox"
@@ -530,7 +532,12 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
           >
             <div className="settingsList">
               {this.state.commonSettingItems}
-              <h3 style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>Tags</h3>
+              <h3
+                className="cursorNormal notSelectable"
+                style={{ gridColumnStart: 1, gridColumnEnd: 2 }}
+              >
+                Tags
+              </h3>
               <div className="tagObj">{this.state.listObjects}</div>
               <button
                 type="button"
