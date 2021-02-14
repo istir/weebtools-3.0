@@ -60,6 +60,7 @@ class SearchButton extends React.Component<Props> {
             onClick={() => {
               // console.log(e);
               this.props.setSearch('');
+              this.input.current.value = '';
               this.input.current.blur();
               this.button.current.blur();
             }}

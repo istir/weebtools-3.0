@@ -487,14 +487,14 @@ class GetTags {
 
   generateFolderName(tags: string[]): string {
     for (let i = 0; i < this.settingsTags.length; i += 1) {
-      if (!this.settingsTags[i].checkFolder) {
+      if (this.settingsTags[i].checkFolder) {
         // continue;
-        i += 1;
-      }
-      for (let j = 0; j < tags.length; j += 1) {
-        for (let k = 0; k < this.settingsTags[i].fromSite.length; k += 1) {
-          if (tags[j] === this.settingsTags[i].fromSite[k]) {
-            return this.settingsTags[i].folder;
+        // i += 1;
+        for (let j = 0; j < tags.length; j += 1) {
+          for (let k = 0; k < this.settingsTags[i].fromSite.length; k += 1) {
+            if (tags[j] === this.settingsTags[i].fromSite[k]) {
+              return this.settingsTags[i].folder;
+            }
           }
         }
       }
