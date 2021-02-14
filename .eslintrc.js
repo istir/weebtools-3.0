@@ -9,6 +9,7 @@ module.exports = {
     'no-use-before-define': ['error', { functions: false, classes: false }],
     'no-useless-catch': 'off',
     '@typescript-eslint/no-useless-constructor': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

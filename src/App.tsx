@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-use-before-define
 import React from 'react';
 // import Config from './config.json';
 import settings from 'electron-settings';
@@ -8,22 +9,31 @@ import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
-// import { BrowserWindow } from 'electron/main';
-// import { shell } from 'electron/common';
 
-// import { Menu } from 'electron';
-// import 'simplebar/dist/simplebar.min.css';
+interface IcommonSettings {
+  key: string;
+  name: string;
+  value: string;
+}
 
-// var gettags;
-// const trash = require('trash');
 let workingDirectory = settings.getSync('commonSettings');
+
 workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
   .value;
+
+interface TagProps {
+  key: string;
+  returnValue: string;
+  fromSite: string;
+  folder: string;
+  shown: boolean;
+  checkFolder: boolean;
+}
 
 interface CheckBoxProps {
   change: any;
   value: string;
-  text: string;
+  // text: string;
   shouldCheck: boolean;
 }
 
@@ -40,7 +50,11 @@ function CheckboxComponent(props: CheckBoxProps) {
     </div>
   );
 }
-
+interface IShortTagObj {
+  fromSite: string;
+  returnValue: string;
+  shown: boolean;
+}
 interface TagPickerState {
   checked: string[];
   row: any;
@@ -48,6 +62,9 @@ interface TagPickerState {
 interface TagPickerProps {
   row: any;
   tags: string[];
+  tagsDictionary: IShortTagObj[];
+  refresh: () => void;
+  database: import('mysql2/promise').Connection;
 }
 class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   checkboxes: JSX.Element[];
@@ -201,7 +218,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
           // }
           shouldCheck={check}
           value={value[0]}
-          text={value[1][0]}
+          // text={value[1][0]}
           change={this.handleChangingBound}
         />
       );
@@ -212,7 +229,25 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
 }
 // var tagPicker = <TagPicker />;
 
-class App extends React.Component {
+interface IAppProps {}
+interface IAppState {
+  tags: string[];
+  currRow: {
+    fileName: string;
+    pathName: string;
+    tags: string[];
+    folder: string;
+    url: string;
+  };
+  tagDictionary: IShortTagObj[];
+  database: import('mysql2/promise').Connection;
+  showFullscreen: boolean;
+  searchFor: string;
+  progressBarPercentage: number;
+  progressShouldMinimize: boolean;
+}
+
+class App extends React.Component<IAppProps, IAppState> {
   refreshTagsBound: () => void;
 
   setSearchBound: (value: string) => void;
@@ -227,15 +262,14 @@ class App extends React.Component {
 
   settingsTags;
 
+  timerID: NodeJS.Timeout;
+
   constructor(props) {
     super(props);
     this.settingsTags = settings.getSync('tags');
     this.state = {
       tags: this.getTags(),
       currRow: null,
-      // images,
-      // imgCount: 0,
-      // currRowID: -1,
       tagDictionary: this.getTagDictionary(),
       database: null,
       showFullscreen: false,
@@ -277,7 +311,7 @@ class App extends React.Component {
   }
 
   getTagDictionary() {
-    const tagObj = [];
+    const tagObj: IShortTagObj[] = [];
     for (let i = 0; i < this.settingsTags.length; i += 1) {
       for (let j = 0; j < this.settingsTags[i].fromSite.length; j += 1) {
         tagObj.push({
@@ -355,7 +389,7 @@ class App extends React.Component {
   }
 
   handleTableClick(id: number, imageData: any) {
-    this.setState({ currRowID: id });
+    // this.setState({ currRowID: id });
     this.setState({ currRow: imageData });
   }
 
@@ -381,33 +415,18 @@ class App extends React.Component {
         />
         {/* </div> */}
         <ProgressBar
-          maxWidth={200}
           shouldStop={this.state.progressShouldMinimize}
           percentage={this.state.progressBarPercentage}
         />
-        {/* <Line
-          className="progress parent"
-          percent={this.state.progressBarPercentage}
-          strokeWidth="4"
-          strokeColor="#D3D3D3"
-        /> */}
+
         <FullscreenImage
           show={this.state.showFullscreen}
           shouldShow={this.clickFullscreenImageBound}
-          // image={
-          //   'E:\\istir\\Drive\\Media\\reddit\\qt\\azur lane\\__z46_and_z46_azur_lane_drawn_by_semimarusemi__e4e5e92bef5190c1f8c72c61dfab5b70.png'
-          // }
           image={this.state.currRow?.pathName}
         />
-        {/* <Table
-          handleClick={this.handleTableClick.bind(this)}
-          imageData={this.state.images}
-          showableTags={this.state.tags}
-          showableTags2={this.state.tagDictionary}
-        /> */}
+
         <Pages
           handleClick={this.handleTableClickBound}
-          // imageData={this.state.images}
           doubleClick={this.clickFullscreenImageBound}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}

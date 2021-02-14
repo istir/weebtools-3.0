@@ -538,7 +538,15 @@ class GetTags {
         filePath,
         await download(downloadLink, {
           headers: { Referer: 'https://app-api.pixiv.net/' },
-        }),
+        })
+          .on('downloadProgress', (progress) => {
+            // console.log(progress);
+            this.setProgressBarPercentage(progress.percent);
+          })
+          .on('end', () => {
+            // console.log('END');
+            this.setProgressBarPercentage(1);
+          }),
         () => {
           // this.dl = true;
           this.downloadedCallback(
@@ -552,17 +560,29 @@ class GetTags {
         }
       );
     } else {
-      fs.writeFile(filePath, await download(downloadLink), () => {
-        // this.dl = true;
-        this.downloadedCallback(
-          true,
-          this.filePath,
-          this.fileName,
-          this.tags,
-          this.folderName,
-          this.urlString
-        );
-      });
+      fs.writeFile(
+        filePath,
+        await download(downloadLink)
+          .on('downloadProgress', (progress) => {
+            // console.log(progress);
+            this.setProgressBarPercentage(progress.percent);
+          })
+          .on('end', () => {
+            // console.log('END');
+            this.setProgressBarPercentage(1);
+          }),
+        () => {
+          // this.dl = true;
+          this.downloadedCallback(
+            true,
+            this.filePath,
+            this.fileName,
+            this.tags,
+            this.folderName,
+            this.urlString
+          );
+        }
+      );
     }
     function setFileNamePixiv() {
       // let urlSplit = downloadLink.split('?format=');
