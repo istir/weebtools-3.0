@@ -68,7 +68,6 @@ class GetTags {
     if (patternBooru.exec(urlString)) {
       this.site = 'Danbooru';
       this.urlString = urlString;
-      console.log('Danbooru');
       // this.handeDatabaseConnection();
       // var test = await this.readBooruTags(urlString, this.generateFolderName);
       if (
@@ -90,7 +89,6 @@ class GetTags {
     }
     if (patternTwitter.exec(urlString)) {
       this.urlString = urlString;
-      console.log('Twitter');
       this.site = 'Twitter';
       await this.handleDownloadingPixivTwitter(
         urlString,
