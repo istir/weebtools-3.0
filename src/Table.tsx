@@ -2,13 +2,28 @@ import React from 'react';
 import SimpleBarReact from 'simplebar-react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { useTable } from 'react-table';
+import fs from 'fs';
+import { clipboard } from 'electron';
+import ModalOwn from './Modal';
+
 const { remote } = require('electron');
+
 const { Menu, MenuItem } = remote;
 const { BrowserWindow } = require('electron').remote;
 const { shell } = require('electron');
+
 function Table(props: any) {
+  const [show, setShow] = React.useState(false);
+  const [render, setRender] = React.useState(false);
+  const [context, setContext] = React.useState(null);
+  const [workingElement, setWorkingElement] = React.useState(null);
+  const [title, setTitle] = React.useState('');
+  const [message, setMessage] = React.useState('');
+  const [buttons, setButtons] = React.useState(['OK']);
+  const context1 = null;
+  // console.log(show);
   // const [selected, setSelected] = useState(null);
-  //initialize columns, probably could just not add it later on
+  // initialize columns, probably could just not add it later on
   const columns = React.useMemo(
     () => [
       {
@@ -22,9 +37,133 @@ function Table(props: any) {
     ],
     []
   );
-  //initialize data from imageData from props
+
+  async function contextShow(value: {
+    context?: (value: boolean) => void;
+    title?: string;
+    message: string;
+    buttons: string[];
+  }) {
+    if (!value.context) {
+      setContext(null);
+    } else {
+      setContext(value.context);
+    }
+    if (!value.title) {
+      setTitle('');
+    } else {
+      setTitle(value.title);
+    }
+    setButtons(value.buttons);
+    setMessage(value.message);
+
+    setShow(true);
+  }
+  function contextClose() {
+    setShow(false);
+    // setTimeout
+  }
+  function response(value: boolean) {
+    // I ran out of ideas, don't cringe if you're reading this code, I couldn't pass a function to state and that state to <Modal/> as a prop so it is what it is
+    if (value) {
+      switch (context) {
+        case 'delete':
+          contextDelete();
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+  function contextDelete() {
+    fs.unlink(props.imageData[workingElement].pathName, (err) => {
+      if (err) throw err;
+    });
+    props.delete(
+      props.imageData[workingElement].fileName,
+      props.imageData[workingElement].folder
+    );
+    props.imageData.splice(workingElement, 1);
+  }
+
+  function contextMenu(row) {
+    handleRowClick(row);
+    const menu = new Menu();
+    menu.append(
+      new MenuItem({
+        label: 'Show in Explorer',
+        click: () => {
+          // clipboard.writeImage(images[row.id].pathName);
+          shell.showItemInFolder(props.imageData[row.id].pathName);
+        },
+      })
+    );
+    menu.append(
+      new MenuItem({
+        label: 'Copy image',
+        click: () => {
+          clipboard.writeImage(props.imageData[row.id].pathName);
+        },
+      })
+    );
+    menu.append(
+      new MenuItem({
+        label: 'Show all Tags',
+        click: () => {
+          contextShow({
+            title: 'Tags',
+            message: props.imageData[row.id].tags.join(', '),
+            buttons: ['OK'],
+          });
+          // setShow(true);
+          // setContext(null);
+          // response = callback()?
+          // clipboard.writeImage(images[row.id].pathName);
+          // shell.showItemInFolder(images[row.id].pathName);
+        },
+      })
+    );
+    menu.append(
+      new MenuItem({
+        label: 'Delete',
+        click: () => {
+          setWorkingElement(row.id);
+          contextShow({
+            title: 'Delete?',
+            context: 'delete',
+            message: `This action will delete \n ${
+              props.imageData[row.id].fileName
+            }`,
+            buttons: ['Delete', 'Cancel'],
+          });
+
+          // console.log(images);
+          // (async () => {
+          //   await trash('E:/test.txt');
+          // })();
+        },
+      })
+    );
+    menu.append(
+      new MenuItem({
+        label: 'Open site',
+        click: () => {
+          if (props.imageData[row.id].url != '') {
+            // console.log(props.imageData[row.id].url);
+            shell.openExternal(props.imageData[row.id].url);
+          }
+          // clipboard.writeImage(images[row.id].pathName);
+          // shell.showItemInFolder(images[row.id].pathName);
+        },
+      })
+    );
+    menu.popup();
+  }
+
+  // initialize data from imageData from props
   function normalizeName(arr: string[]) {
-    let tempArr = [];
+    const tempArr = [];
     for (let i = 0; i < props.showableTags2.length; i++) {
       const element = props.showableTags2[i];
       if (element.shown) {
@@ -37,21 +176,7 @@ function Table(props: any) {
       }
       // console.log(element);
     }
-    // console.log(arr);
-    // console.log(arr);
-    // console.log(props.showableTags);
-    // let tempArr = [];
-    // for (let i = 0; i < props.showableTags.length; i++) {
-    //   // console.log(props.showableTags[i]);
-    //   for (let j = 0; j < props.showableTags[i][1].length; j++) {
-    //     // console.log(props.showableTags[i][1][j]);
-    //     if (arr.includes(props.showableTags[i][1][j])) {
-    //       tempArr.push(props.showableTags[i][1][j]);
-    //       // tempArr.push(arr[arr.indexOf(props.showableTags[i][1][j])]);
-    //     }
-    //   }
-    // }
-    // tempArr.length == 0 ? tempArr.push('other') : '';
+    0 ? tempArr.push('other') : '';
     return tempArr.join(', ');
   }
 
@@ -65,7 +190,10 @@ function Table(props: any) {
           folder: React.ReactNode;
         }) => ({
           col1: (
-            <LazyLoadImage className="tableImg" src={item.pathName} />
+            <LazyLoadImage
+              className="tableImg notSelectable"
+              src={item.pathName}
+            />
             // <div>
             //   <LazyLoadImage className="tableImgBg" src={item.pathName} />
             // </div>
@@ -83,7 +211,7 @@ function Table(props: any) {
       ),
     undefined
   );
-  //row onclick -> prop callback
+  // row onclick -> prop callback
 
   function handleRowClick(e: any) {
     for (
@@ -101,7 +229,7 @@ function Table(props: any) {
     props.handleClick(e);
   }
 
-  //initialize table and render it
+  // initialize table and render it
   const { getTableProps, getTableBodyProps, rows, prepareRow } = useTable({
     columns,
     data,
@@ -133,7 +261,7 @@ function Table(props: any) {
               Some content
             </p>
           ))} */
-    <div className="divbeforetabletemp">
+    <div className="divbeforetabletemp ">
       <SimpleBarReact
         style={{
           top: 30,
@@ -149,7 +277,7 @@ function Table(props: any) {
             {Row}
           </List> */}
 
-        <table className="globalTable" {...getTableProps()}>
+        <table className="globalTable  cursorPointer" {...getTableProps()}>
           <tbody {...getTableBodyProps()}>
             {rows.map(
               (row: {
@@ -160,113 +288,23 @@ function Table(props: any) {
               }) => {
                 // Prepare the row for display
                 prepareRow(row);
+                // console.log(row);
                 return (
                   // Apply the row props
                   <tr
+                    key={row.id}
                     className="tableRow"
                     onClick={() => {
                       handleRowClick(row);
                     }}
                     onDoubleClick={() => {
-                      //TODO
+                      // TODO
                       // currImage = props.imageData[row.id].pathName;
                       props.doubleClick(true);
                       // <FullscreenImage image={images[row.id].pathName} />;
                     }}
                     onContextMenu={() => {
-                      handleRowClick(row);
-                      const menu = new Menu();
-                      menu.append(
-                        new MenuItem({
-                          label: 'Show in Explorer',
-                          click: () => {
-                            // clipboard.writeImage(images[row.id].pathName);
-                            shell.showItemInFolder(
-                              props.imageData[row.id].pathName
-                            );
-                          },
-                        })
-                      );
-                      menu.append(
-                        new MenuItem({
-                          label: 'Copy image',
-                          click: () => {
-                            clipboard.writeImage(
-                              props.imageData[row.id].pathName
-                            );
-                          },
-                        })
-                      );
-                      menu.append(
-                        new MenuItem({
-                          label: 'Show all Tags',
-                          click: () => {
-                            // clipboard.writeImage(images[row.id].pathName);
-                            // shell.showItemInFolder(images[row.id].pathName);
-                          },
-                        })
-                      );
-                      menu.append(
-                        new MenuItem({
-                          label: 'Delete',
-                          click: () => {
-                            // console.log(images);
-                            // (async () => {
-                            //   await trash('E:/test.txt');
-                            // })();
-                            return 0;
-                            let response = dialog
-                              .showMessageBox(
-                                BrowserWindow.getFocusedWindow(),
-                                {
-                                  buttons: ['Yes', 'No'],
-                                  message: 'Delete?',
-                                  title: 'Are you sure?',
-                                }
-                              )
-                              .then((result) => {
-                                if (result.response === 0) {
-                                  fs.unlink(
-                                    props.imageData[row.id].pathName,
-                                    (err) => {
-                                      throw err;
-                                    }
-                                  );
-                                  deleteItemFromDatabase(
-                                    props.imageData[row.id].fileName,
-                                    props.imageData[row.id].folder
-                                  );
-                                  props.imageData.splice(row.id, 1);
-                                }
-                              });
-                            // if (response == 0) {
-                            //   console.log('XD');
-                            // }
-                            // console.log(response);
-
-                            // // fs.rm(images[row.id].pathName, (err) => {
-                            // //   throw err;
-                            // // });
-
-                            // images.splice(row.id, 1);
-                            // console.log(row);
-                          },
-                        })
-                      );
-                      menu.append(
-                        new MenuItem({
-                          label: 'Open site',
-                          click: () => {
-                            if (props.imageData[row.id].url != '') {
-                              // console.log(props.imageData[row.id].url);
-                              shell.openExternal(props.imageData[row.id].url);
-                            }
-                            // clipboard.writeImage(images[row.id].pathName);
-                            // shell.showItemInFolder(images[row.id].pathName);
-                          },
-                        })
-                      );
-                      menu.popup();
+                      contextMenu(row);
                     }}
                     {...row.getRowProps()}
                   >
@@ -305,6 +343,15 @@ function Table(props: any) {
             </p>
           ))} */}
       </SimpleBarReact>
+
+      <ModalOwn
+        show={show}
+        close={contextClose}
+        context={response}
+        buttons={buttons}
+        title={title}
+        message={message}
+      />
     </div>
   );
 }

@@ -1,18 +1,30 @@
-import React from 'react';
+// eslint-disable-next-line no-use-before-define
+import React, { RefObject } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-class SearchButton extends React.Component {
+interface Props {
+  setSearch: (value: string) => void;
+  currentSearch: string;
+}
+
+class SearchButton extends React.Component<Props> {
+  input: RefObject<HTMLInputElement>;
+
+  button: RefObject<HTMLButtonElement>;
+
   constructor(props) {
     super(props);
     this.input = React.createRef();
     this.button = React.createRef();
   }
+
   show() {}
+
   submit(e) {
     e.preventDefault();
     // console.log(e);
-    var value = this.input.current.value;
+    const { value } = this.input.current;
     // if (value.length > 0) {
     //   console.log(value);
     this.props.setSearch(value);
@@ -21,6 +33,7 @@ class SearchButton extends React.Component {
     this.input.current.blur();
     this.button.current.blur();
   }
+
   //   componentDidUpdate(prevProps, prevState) {
   //     if (this.props.currentSearch != '') {
   //     }
@@ -29,6 +42,7 @@ class SearchButton extends React.Component {
     return (
       <div className="search element">
         <button
+          type="button"
           onClick={this.show.bind(this)}
           className={`search icon ${
             this.props.currentSearch !== '' ? 'active' : ''
@@ -38,13 +52,15 @@ class SearchButton extends React.Component {
         </button>
         <div className={`search clear `}>
           <button
+            type="button"
             ref={this.button}
             className={`icon ${
               this.props.currentSearch !== '' ? 'active' : ''
             }`}
-            onClick={(e) => {
+            onClick={() => {
               // console.log(e);
               this.props.setSearch('');
+              this.input.current.value = '';
               this.input.current.blur();
               this.button.current.blur();
             }}
@@ -68,4 +84,5 @@ class SearchButton extends React.Component {
     );
   }
 }
+
 export default SearchButton;

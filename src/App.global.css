@@ -36,8 +36,13 @@
     background-position: 83% 0%;
   }
 }
+
+::selection {
+  /* filter: invert(1); */
+  color: #ff9393;
+}
 * {
-  user-select: none;
+  /* user-select: none; */
 }
 body {
   /* position: relative; */
@@ -66,7 +71,26 @@ body {
   margin: 0px;
   background-attachment: fixed;
 }
-
+/* .tagPicker > span {
+  outline: olive;
+} */
+:focus {
+  outline: none;
+  /* filter: invert(0.2); */
+}
+:focus:hover {
+  /* background: #000; */
+  /* outline: none; */
+}
+.cursorPointer {
+  cursor: pointer;
+}
+.cursorNormal {
+  cursor: default;
+}
+.notSelectable {
+  user-select: none;
+}
 .fileName {
   font-weight: 500;
   margin-bottom: 10px;
@@ -420,10 +444,7 @@ input {
 .icon.active {
   color: #f00;
 }
-.search.clear {
-  /* background: #000; */
-  transition: 0.3s;
-}
+
 .search.element:focus-within > .search.clear,
 .search.element:hover > .search.clear {
   /* transform: translate(-10px, -50px); */
@@ -434,7 +455,8 @@ input {
 .search.clear {
   transform: translate(-10px, -10px);
   border-radius: 30px;
-  transition: 0.3s;
+  transition: padding 0.3s;
+  /* transition: 0.3s; */
 }
 .search.clear > button {
   margin: 0;
@@ -451,7 +473,7 @@ input {
 .search.element:hover > form > .searchInput,
 .search.element:focus-within > form > .searchInput {
   width: 200px;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.8);
   color: #000;
   padding: 10px;
 }
@@ -473,6 +495,7 @@ input {
   font-family: 'Google Sans', sans-serif;
   font-weight: bold;
   font-size: 1.1em;
+  /* transition: 0.3s; */
   transition: 0.3s;
   color: transparent;
 }
@@ -574,6 +597,7 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
 .checkboxText {
   margin-top: auto;
   margin-bottom: auto;
@@ -624,7 +648,8 @@ a:hover {
   margin-top: 30px;
   pointer-events: none;
 }
-.fullscreenDiv.visible {
+.fullscreenDiv {
+  transition: 0.3s;
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
@@ -633,7 +658,19 @@ a:hover {
   z-index: 8;
   margin-top: 30px;
   cursor: pointer;
+}
+.fullscreenDiv.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.fullscreenDiv.visible {
+  opacity: 1;
+  visibility: visible;
+
   /* position: relative; */
+}
+.fullscreenDiv.visible:focus {
+  outline: none;
 }
 /* simplebar because something is not loading???? */
 [data-simplebar] {

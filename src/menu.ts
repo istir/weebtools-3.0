@@ -34,7 +34,7 @@ export default class MenuBuilder {
 
     // this.setupContextMenu();
     const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+    // Menu.setApplicationMenu(menu);
 
     return menu;
   }

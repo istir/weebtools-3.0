@@ -1,41 +1,74 @@
+// eslint-disable-next-line no-use-before-define
 import React from 'react';
-import GetTags from './GetTags';
-import { useTable } from 'react-table';
-import Database from './Database';
 // import Config from './config.json';
 import settings from 'electron-settings';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import { Checkbox } from '@material-ui/core';
-import SimpleBarReact from 'simplebar-react';
-import { refresh } from 'electron-debug';
-import { clipboard } from 'electron';
+import { Checkbox, Modal } from '@material-ui/core';
 import ConfigButton from './ConfigDiv';
 import SearchButton from './Search';
-import { FixedSizeList as List } from 'react-window';
-import Table from './Table';
+import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
-// import { BrowserWindow } from 'electron/main';
-// import { shell } from 'electron/common';
-const { remote } = require('electron');
-const { Menu, MenuItem } = remote;
-const { dialog } = require('electron').remote;
-const { BrowserWindow } = require('electron').remote;
-const { shell } = require('electron');
-// import { Menu } from 'electron';
-// import 'simplebar/dist/simplebar.min.css';
-const fs = require('fs');
-const { ipcRenderer } = window.require('electron');
-const path = require('path');
-// var gettags;
-// const trash = require('trash');
-var currImage: string = '';
-var images: Object[] = [];
-var database: any;
-var workingDirectory = settings.getSync('commonSettings');
+import ModalOwn from './Modal';
+
+interface IcommonSettings {
+  key: string;
+  name: string;
+  value: string;
+}
+
+let workingDirectory = settings.getSync('commonSettings');
+
 workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
   .value;
+
+interface TagProps {
+  key: string;
+  returnValue: string;
+  fromSite: string;
+  folder: string;
+  shown: boolean;
+  checkFolder: boolean;
+}
+
+interface CheckBoxProps {
+  change: any;
+  value: string;
+  // text: string;
+  shouldCheck: boolean;
+}
+
+function CheckboxComponent(props: CheckBoxProps) {
+  function toggle() {
+    props.change(props.value, props.shouldCheck);
+  }
+  return (
+    <div
+      onKeyPress={() => {}}
+      role="button"
+      // tabIndex={0}
+      className="notSelectable cursorPointer tagPicker"
+      style={{ width: 'fit-content' }}
+      onClick={toggle}
+      tabIndex={-1}
+    >
+      <Checkbox
+        tabIndex={0}
+        onKeyPress={() => {}}
+        // onChange={props.change}
+        key="input"
+        value={props.value}
+        checked={props.shouldCheck}
+      />
+      <div className="checkboxText">{props.value}</div>
+    </div>
+  );
+}
+interface IShortTagObj {
+  fromSite: string;
+  returnValue: string;
+  shown: boolean;
+}
 interface TagPickerState {
   checked: string[];
   row: any;
@@ -43,54 +76,81 @@ interface TagPickerState {
 interface TagPickerProps {
   row: any;
   tags: string[];
+  tagsDictionary: IShortTagObj[];
+  refresh: () => void;
+  database: import('mysql2/promise').Connection;
 }
 class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   checkboxes: JSX.Element[];
+
+  handleChangingBound: (e) => void;
+
   constructor(props: TagPickerProps) {
     super(props);
+
     this.state = { checked: [''], row: this.props.row };
-    //initialize list of <Checkbox/>
+    // initialize list of <Checkbox/>
     this.checkboxes = [];
+    this.handleChangingBound = this.handleChangingNew.bind(this);
   }
+
   componentDidUpdate() {
-    //doing some weird, but ultimately it lets me change state by toggling things and other good things too
-    if (this.state.row != this.props.row) {
+    // doing some weird, but ultimately it lets me change state by toggling things and other good things too
+    if (this.state.row !== this.props.row) {
       this.setState({ row: this.props.row });
       this.setState({ checked: this.props.row.tags });
     }
   }
-  handleChanging(e: { target: { value: any; checked: any } }) {
+
+  handleChangingNew(tagToToggle: string, isChecked: boolean) {
     // console.log(e);
     if (this.props.row != null) {
-      let currTag = [];
-      for (let i = 0; i < this.props.tagsDictionary.length; i++) {
+      const currTag = [];
+      for (let i = 0; i < this.props.tagsDictionary.length; i += 1) {
         const element = this.props.tagsDictionary[i];
-        if (element.returnValue === e.target.value && element.shown) {
+
+        if (element.returnValue === tagToToggle && element.shown) {
           if (!currTag.includes(element.fromSite)) {
             currTag.push(element.fromSite);
           }
         }
       }
 
-      var foundTag = this.props.tagsDictionary.find(
-        (el) => el.returnValue === e.target.value
+      const foundTag = this.props.tagsDictionary.find(
+        (el) => el.returnValue === tagToToggle
       );
-      if (!e.target.checked) {
-        //TODO: make it so currTag is an array and newState removes that array from itself
-        for (let i = 0; i < currTag.length; i++) {
+      if (isChecked) {
+        // TODO: make it so currTag is an array and newState removes that array from itself
+        for (let i = 0; i < currTag.length; i += 1) {
           if (this.state.checked.includes(currTag[i])) {
-            let index = this.state.checked.indexOf(currTag[i]);
-            let newState = this.state.checked;
+            const index = this.state.checked.indexOf(currTag[i]);
+
+            // this.setState((state, props) => {
+            //   const newState = state.checked;
+            //   newState.splice(index, 1);
+            //   console.log(newState);
+            //   return {
+            //     checked: newState,
+            //   };
+            // });
+
+            const newState = this.state.checked;
             newState.splice(index, 1);
             // console.log(newState);
             this.setState({ checked: newState });
           }
-          //here is almost the same but if item isn't togged I add it to "checked" state
+          // here is almost the same but if item isn't togged I add it to "checked" state
         }
       }
-      if (e.target.checked) {
+      if (!isChecked) {
         if (!this.state.checked.includes(foundTag.fromSite)) {
-          let newState = this.state.checked;
+          // this.setState(function (prevState) {
+          //   const newState = prevState.checked;
+          //   newState.push(foundTag.fromSite);
+          //   console.log(newState);
+          //   return { checked: newState };
+          // });
+          const newState = this.state.checked;
 
           newState.push(foundTag.fromSite);
           // newState.push(e.target.value);
@@ -110,68 +170,35 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   }
 
   async refreshItem(fileName: string, folder: string) {
-    var query =
-      'SELECT * FROM files WHERE fileName="' +
-      fileName +
-      '" AND folder="' +
-      folder +
-      '"';
-    var [rows] = await this.props.database.query(query);
+    const query = `SELECT * FROM files WHERE fileName="${fileName}" AND folder="${folder}"`;
+    const [rows] = await this.props.database.query(query);
     return rows[0].Tags.split(', ');
   }
+
   async modifyItem(
     oldName: string,
     oldFolder: string,
     newFolder: string,
     newTags: string[]
   ) {
-    var query =
-      'UPDATE files SET folder="' +
-      newFolder +
-      '",Tags="' +
-      normalizeTags(newTags) +
-      '" where fileName="' +
-      oldName +
-      '" AND folder="' +
-      oldFolder +
-      '"';
-    await this.props.database.query(query);
     function normalizeTags(tagArr: string[]) {
       return tagArr.join(', ');
     }
-  }
-
-  deleteItemFromDatabase(fileName: string, folderName: string) {
-    //  async function deleteRecord() {
-    var queryDeleteRow =
-      'DELETE FROM files WHERE fileName = "' +
-      fileName +
-      '" AND folder ="' +
-      folderName +
-      '"';
-    this.props.database.execute(queryDeleteRow);
-    // console.log(rows);
-    //   return new Promise((resolved, rejected) => {
-    //     if (rows.affectedRows >= 1) {
-    //       // console.log('YEP');
-    //       resolved(true);
-    //     } else {
-    //       rejected(false);
-    //     }
-    //   });
-    // }
+    const query = `UPDATE files SET folder="${newFolder}",Tags="${normalizeTags(
+      newTags
+    )}" where fileName="${oldName}" AND folder="${oldFolder}"`;
+    await this.props.database.query(query);
   }
 
   render() {
-    //fill <Checkbox/> list
+    // fill <Checkbox/> list
 
     this.checkboxes = [];
-    for (let i = 0; i < this.props.tags.length; i++) {
-      let value = this.props.tags[i];
-      var check = false;
-      // console.log(value);
+    for (let i = 0; i < this.props.tags.length; i += 1) {
+      const value = this.props.tags[i];
+      let check = false;
       if (this.state.checked.length > 0) {
-        for (let j = 0; j < value[1].length; j++) {
+        for (let j = 0; j < value[1].length; j += 1) {
           // console.log(value[0] + " '" + value[1][j] + "'");
           if (this.state.checked.includes(value[1][j])) {
             check = true;
@@ -183,15 +210,9 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
       this.checkboxes.push(
         <CheckboxComponent
           key={value[1]}
-          // shouldCheck={
-          //   this.state.checked.length > 0
-          //     ? this.state.checked.includes(value[1][0])
-          //     : false
-          // }
           shouldCheck={check}
           value={value[0]}
-          text={value[1][0]}
-          change={this.handleChanging.bind(this)}
+          change={this.handleChangingBound}
         />
       );
     }
@@ -200,55 +221,48 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
   }
 }
 // var tagPicker = <TagPicker />;
-interface CheckBoxProps {
-  change: any;
-  value: string;
-  text: string;
-  shouldCheck: boolean;
-}
-interface CheckBoxState {}
 
-class CheckboxComponent extends React.Component<CheckBoxProps, CheckBoxState> {
-  constructor(props: CheckBoxProps) {
-    super(props);
-  }
-
-  render() {
-    // console.log(this.props.test);
-    return (
-      <div
-      // onClick={(e) => {
-      //   console.log(e.target.parentNode);
-      //   console.log(e);
-      // }}
-      >
-        <Checkbox
-          // onChange={this.changed.bind(this)}
-          onChange={this.props.change}
-          // onChange={(e) => {
-          //   console.log(e);
-          // }}
-          // onClick={this.ch()}
-          key="input"
-          value={this.props.value}
-          checked={this.props.shouldCheck}
-        />
-        <div className="checkboxText">{this.props.value}</div>
-      </div>
-    );
-  }
+interface IAppProps {}
+interface IAppState {
+  tags: string[];
+  currRow: {
+    fileName: string;
+    pathName: string;
+    tags: string[];
+    folder: string;
+    url: string;
+  };
+  tagDictionary: IShortTagObj[];
+  database: import('mysql2/promise').Connection;
+  showFullscreen: boolean;
+  searchFor: string;
+  progressBarPercentage: number;
+  progressShouldMinimize: boolean;
 }
 
-class App extends React.Component {
-  constructor(props: {} | Readonly<{}>) {
-    super(props);
+class App extends React.Component<IAppProps, IAppState> {
+  refreshTagsBound: () => void;
 
+  setSearchBound: (value: string) => void;
+
+  clickFullscreenImageBound: (value: boolean) => void;
+
+  handleTableClickBound: (id: number, imageData) => void;
+
+  refreshBound: () => void;
+
+  setProgressBarPercentageBound: (value: number) => void;
+
+  settingsTags;
+
+  timerID: NodeJS.Timeout;
+
+  constructor(props) {
+    super(props);
+    this.settingsTags = settings.getSync('tags');
     this.state = {
       tags: this.getTags(),
       currRow: null,
-      images: images,
-      imgCount: 0,
-      currRowID: -1,
       tagDictionary: this.getTagDictionary(),
       database: null,
       showFullscreen: false,
@@ -256,17 +270,47 @@ class App extends React.Component {
       progressBarPercentage: 0,
       progressShouldMinimize: false,
     };
+
+    this.refreshTagsBound = this.refreshTags.bind(this);
+    this.setSearchBound = this.setSearch.bind(this);
+    this.clickFullscreenImageBound = this.clickFullscreenImage.bind(this);
+    this.handleTableClickBound = this.handleTableClick.bind(this);
+    this.refreshBound = this.refresh.bind(this);
+    this.setProgressBarPercentageBound = this.setProgressBarPercentage.bind(
+      this
+    );
+  }
+
+  componentDidMount() {
+    Database()
+      .then(
+        (ful: any) => {
+          // eslint-disable-next-line no-console
+          // console.log('connected');
+          // console.log(ful);
+          this.setState({ database: ful });
+          return ful;
+        },
+        (rej: any) => {
+          // eslint-disable-next-line no-console
+          console.log('error');
+          return rej;
+        }
+      )
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
+      });
   }
 
   getTagDictionary() {
-    let tagObj = [];
-    var stt = settings.getSync('tags');
-    for (let i = 0; i < stt.length; i++) {
-      for (let j = 0; j < stt[i].fromSite.length; j++) {
+    const tagObj: IShortTagObj[] = [];
+    for (let i = 0; i < this.settingsTags.length; i += 1) {
+      for (let j = 0; j < this.settingsTags[i].fromSite.length; j += 1) {
         tagObj.push({
-          fromSite: stt[i].fromSite[j],
-          returnValue: stt[i].toReturn,
-          shown: stt[i].visible,
+          fromSite: this.settingsTags[i].fromSite[j],
+          returnValue: this.settingsTags[i].toReturn,
+          shown: this.settingsTags[i].visible,
         });
         // console.log(stt[i].fromSite[j] + ' ' + stt[i].toReturn);
       }
@@ -275,13 +319,13 @@ class App extends React.Component {
   }
 
   getTags() {
-    var tempTags = [];
-    for (let i = 0; i < settings.getSync('tags').length; i++) {
-      if (settings.getSync('tags')[i].visible) {
-        let test = [settings.getSync('tags')[i].toReturn];
-        let test1 = [];
-        for (let j = 0; j < settings.getSync('tags')[i].fromSite.length; j++) {
-          test1.push(settings.getSync('tags')[i].fromSite[j]);
+    const tempTags = [];
+    for (let i = 0; i < this.settingsTags.length; i += 1) {
+      if (this.settingsTags[i].visible) {
+        const test = [this.settingsTags[i].toReturn];
+        const test1 = [];
+        for (let j = 0; j < this.settingsTags[i].fromSite.length; j += 1) {
+          test1.push(this.settingsTags[i].fromSite[j]);
         }
         test.push(test1);
         tempTags.push(test);
@@ -289,59 +333,28 @@ class App extends React.Component {
     }
     return tempTags;
   }
-  refreshTags() {
-    this.forceUpdate();
 
-    this.setState({ tags: this.getTags() });
-    this.setState({ tagDictionary: this.getTagDictionary() });
-  }
-
-  componentDidMount() {
-    Database().then(
-      (ful: any) => {
-        console.log('connected');
-        // console.log(ful);
-        this.setState({ database: ful });
-      },
-      (rej: any) => {
-        console.log('error');
-      }
-    );
-  }
-
-  componentDidUpdate() {
-    // console.log(this.state.images);
-  }
-  handleTableClick(id, imageData) {
-    this.setState({ currRowID: id });
-    this.setState({ currRow: imageData });
-  }
-
-  refresh() {
-    this.forceUpdate();
-  }
-  clickFullscreenImage(value) {
-    this.setState({ showFullscreen: value });
-  }
-  setSearch(value) {
+  setSearch(value: string) {
     this.setState({ searchFor: value });
     // console.log(this.state.searchFor);
   }
+
   setProgressBarPercentage(value: number) {
-    if (value > 1) {
-      value = 1;
-    } else if (value < 0) {
-      value = 0;
+    let currentValue: number = value;
+    if (currentValue > 1) {
+      currentValue = 1;
+    } else if (currentValue < 0) {
+      currentValue = 0;
     }
-    let newValue = Math.round(value * 100);
+    const newValue = Math.round(currentValue * 100);
     if (this.state.progressShouldMinimize) {
       this.setState({ progressShouldMinimize: false });
     }
 
     if (
       Math.abs(newValue - this.state.progressBarPercentage) > 10 ||
-      (newValue < 1 && newValue != this.state.progressBarPercentage) ||
-      newValue == 100
+      (newValue < 1 && newValue !== this.state.progressBarPercentage) ||
+      newValue === 100
     ) {
       // console.log(newValue);
       if (this.timerID) {
@@ -349,7 +362,7 @@ class App extends React.Component {
       }
       this.setState({ progressBarPercentage: newValue });
     }
-    if (newValue == 100) {
+    if (newValue === 100) {
       this.timerID = setTimeout(() => {
         // this.setState({ currWidth: 0 });
         this.setState({ progressShouldMinimize: true });
@@ -359,60 +372,71 @@ class App extends React.Component {
     // this.state.progressBarPercentage
     // console.log(this.state.progressBarPercentage);
   }
+
+  clickFullscreenImage(value) {
+    this.setState({ showFullscreen: value });
+  }
+
+  refresh() {
+    this.forceUpdate();
+  }
+
+  handleTableClick(id: number, imageData: any) {
+    // this.setState({ currRowID: id });
+    this.setState({ currRow: imageData });
+  }
+
+  refreshTags() {
+    this.forceUpdate();
+
+    this.setState({ tags: this.getTags() });
+    this.setState({ tagDictionary: this.getTagDictionary() });
+  }
+
   render() {
     return (
       <div>
         {/* <div className="icon">
           {' '} */}
-        <ConfigButton forceUpdate={this.refreshTags.bind(this)} />
+
+        <ConfigButton
+          settings={this.settingsTags}
+          forceUpdate={this.refreshTagsBound}
+        />
         <SearchButton
           currentSearch={this.state.searchFor}
-          setSearch={this.setSearch.bind(this)}
+          setSearch={this.setSearchBound}
         />
         {/* </div> */}
         <ProgressBar
-          maxWidth={200}
           shouldStop={this.state.progressShouldMinimize}
           percentage={this.state.progressBarPercentage}
         />
-        {/* <Line
-          className="progress parent"
-          percent={this.state.progressBarPercentage}
-          strokeWidth="4"
-          strokeColor="#D3D3D3"
-        /> */}
+
         <FullscreenImage
           show={this.state.showFullscreen}
-          shouldShow={this.clickFullscreenImage.bind(this)}
-          // image={
-          //   'E:\\istir\\Drive\\Media\\reddit\\qt\\azur lane\\__z46_and_z46_azur_lane_drawn_by_semimarusemi__e4e5e92bef5190c1f8c72c61dfab5b70.png'
-          // }
+          shouldShow={this.clickFullscreenImageBound}
           image={this.state.currRow?.pathName}
         />
-        {/* <Table
-          handleClick={this.handleTableClick.bind(this)}
-          imageData={this.state.images}
-          showableTags={this.state.tags}
-          showableTags2={this.state.tagDictionary}
-        /> */}
+
         <Pages
-          handleClick={this.handleTableClick.bind(this)}
-          // imageData={this.state.images}
-          doubleClick={this.clickFullscreenImage.bind(this)}
+          handleClick={this.handleTableClickBound}
+          doubleClick={this.clickFullscreenImageBound}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
           database={this.state.database}
           workingDir={workingDirectory}
+          // deleteFromDatabase={this.deleteite}
           searchFor={this.state.searchFor}
-          refresh={this.refresh.bind(this)}
-          setProgressBarPercentage={this.setProgressBarPercentage.bind(this)}
+          refresh={this.refreshBound}
+          setProgressBarPercentage={this.setProgressBarPercentageBound}
         />
         <TagPicker
           tags={this.state.tags}
           tagsDictionary={this.state.tagDictionary}
           row={this.state.currRow}
           database={this.state.database}
-          refresh={this.refresh.bind(this)}
+          refresh={this.refreshBound}
         />
       </div>
     );

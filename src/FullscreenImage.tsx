@@ -1,41 +1,55 @@
-import React from 'react';
-class FullscreenImage extends React.Component {
+// eslint-disable-next-line no-use-before-define
+import React, { RefObject } from 'react';
+
+interface Props {
+  show: boolean;
+  shouldShow: (value: boolean) => void;
+  image: string;
+}
+
+class FullscreenImage extends React.Component<Props> {
+  reference: RefObject<HTMLDivElement>;
+
   constructor(props) {
     super(props);
-    this.state = { show: false, manual: true, render: true };
+    this.reference = React.createRef();
   }
+
   componentDidUpdate() {
-    // if (this.state.show != this.props.show && this.state.manual == true) {
-    //   this.setState({ show: this.props.show });
-    //   this.setState({ manual: false });
-    // }
+    if (this.reference.current != null) {
+      // this timeout might be a bad idea
+      setTimeout(() => {
+        this.reference.current.focus();
+      }, 100);
+    }
   }
 
   render() {
-    // if (this.state.render === false) {
-    //   return null;
-    // }
-    return this.props.show ? (
+    return (
       <div
+        ref={this.reference}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            this.props.shouldShow(false);
+          }
+        }}
         onClick={() => {
-          // this.setState({ show: false });
-          //   currImage = '';
-          // this.setState({ manual: false });
-          // this.setState({ render: false });
           this.props.shouldShow(false);
         }}
         className={`fullscreenDiv ${
-          this.props.image != '' ? 'visible' : 'hidden'
+          this.props.image !== undefined && this.props.show
+            ? 'visible'
+            : 'hidden'
         }`}
       >
         <img
+          alt="Fullscreen"
           className="fullscreenImg"
-          // src={this.state.show ? this.props.image : ''}
           src={this.props.image}
-        ></img>
+        />
       </div>
-    ) : (
-      ''
     );
   }
 }

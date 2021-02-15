@@ -3,6 +3,13 @@ module.exports = {
   rules: {
     // A temporary hack related to IDE not resolving correct package.json
     'import/no-extraneous-dependencies': 'off',
+    'react/destructuring-assignment': 'off',
+    'max-classes-per-file': 'off',
+    'class-methods-use-this': 'off',
+    'no-use-before-define': ['error', { functions: false, classes: false }],
+    'no-useless-catch': 'off',
+    '@typescript-eslint/no-useless-constructor': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,
@@ -20,7 +27,7 @@ module.exports = {
       },
     },
     'import/parsers': {
-      '@typescript-eslint/parser': ['.ts', '.tsx'],
+      '@typescript-eslint/parser': ['.ts', '.tsx', '.js', '.jsx'],
     },
   },
 };
