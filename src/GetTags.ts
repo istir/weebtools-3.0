@@ -531,7 +531,6 @@ class GetTags {
     this.folderName = folderName;
     // console.log(this.urlString);
     this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
-
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
     if (site === 'Pixiv') {
       fs.writeFile(
