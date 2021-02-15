@@ -10,6 +10,7 @@ import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
 import ModalOwn from './Modal';
+import RandomBackground from './RandomBackground';
 
 interface IcommonSettings {
   key: string;
@@ -17,9 +18,9 @@ interface IcommonSettings {
   value: string;
 }
 
-let workingDirectory = settings.getSync('commonSettings');
+const commonSettings = settings.getSync('commonSettings');
 
-workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
+const workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
   .value;
 
 interface TagProps {
@@ -289,6 +290,60 @@ class App extends React.Component<IAppProps, IAppState> {
           // console.log('connected');
           // console.log(ful);
           this.setState({ database: ful });
+          // const randomBG = new RandomBackground(
+          //   this.state.database,
+          //   workingDirectory as string,
+          //   [],
+          //   [],
+          //   'abandon all hope ye who enter here'
+          // );
+          // eslint-disable-next-line promise/no-nesting
+
+          const tags = commonSettings.find((el) => el.key === 'randomBGTags')
+            .value;
+          const NotTags = commonSettings.find(
+            (el) => el.key === 'randomBGNotTags'
+          ).value;
+          const folder = commonSettings.find(
+            (el) => el.key === 'randomBGFolder'
+          ).value;
+          const color = commonSettings.find((el) => el.key === 'randomBGColor')
+            .value;
+          const shouldUse = commonSettings.find(
+            (el) => el.key === 'randomBGUse'
+          ).value;
+
+          if (shouldUse === 'true') {
+            const randomBG = new RandomBackground();
+            // eslint-disable-next-line promise/no-nesting
+            randomBG
+              .getCorrectQueries(
+                this.state.database,
+                workingDirectory as string,
+                tags,
+                NotTags,
+                folder
+              )
+              .then(() => {
+                const random = randomBG.getRandomBackground();
+                if (random.length > 0) {
+                  document.body.classList.remove('moving');
+                  document.body.style.background = `linear-gradient( rgba(${color}), rgba(${color}) ), ${random}`;
+                  document.body.style.backgroundSize = 'cover';
+                  document.body.style.backgroundPosition = 'center';
+                }
+
+                // console.log(document.body.style.backgroundColor);
+                // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
+                //   dimming / 100
+                // });`;
+                return true;
+              })
+              .catch((error) => {
+                throw error;
+              });
+          }
+
           return ful;
         },
         (rej: any) => {
@@ -396,9 +451,6 @@ class App extends React.Component<IAppProps, IAppState> {
   render() {
     return (
       <div>
-        {/* <div className="icon">
-          {' '} */}
-
         <ConfigButton
           settings={this.settingsTags}
           forceUpdate={this.refreshTagsBound}
