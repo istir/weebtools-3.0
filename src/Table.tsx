@@ -220,7 +220,7 @@ function Table(props: any) {
       i++
     ) {
       const element = document.getElementsByClassName('tableRow')[i];
-      element.className = 'tableRow';
+      element.className = 'tableRow cursorPointer';
     }
     // console.log(e);
     document
@@ -277,7 +277,7 @@ function Table(props: any) {
             {Row}
           </List> */}
 
-        <table className="globalTable  cursorPointer" {...getTableProps()}>
+        <table className="globalTable" {...getTableProps()}>
           <tbody {...getTableBodyProps()}>
             {rows.map(
               (row: {
@@ -293,7 +293,7 @@ function Table(props: any) {
                   // Apply the row props
                   <tr
                     key={row.id}
-                    className="tableRow"
+                    className="tableRow  cursorPointer"
                     onClick={() => {
                       handleRowClick(row);
                     }}

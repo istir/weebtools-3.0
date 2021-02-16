@@ -48,6 +48,7 @@ interface SettingsItemProps {
   // valueToSetTo: string;
   keyProp;
   value: string;
+  valueShouldBeArray: boolean;
   itemChanged: (
     masterKey: string,
     key: string,
@@ -109,13 +110,20 @@ class SettingsItem extends React.Component<SettingsItemProps> {
   //   name: string,
   //   value: string[]
   // ): void {
+  checkIfArray(target) {
+    if (this.props.valueShouldBeArray) {
+      return target.split(/[ ,]+/);
+    }
+    return target;
+  }
+
   itemChange(e) {
     // console.log(this.props.keyProp);
     this.props.itemChanged(
       'commonSettings',
       this.props.keyProp,
       'value',
-      e.target.value
+      this.checkIfArray(e.target.value)
     );
   }
 
@@ -314,6 +322,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
             name={value.name}
             key={value.key}
             keyProp={value.key}
+            valueShouldBeArray={Array.isArray(value.value)}
             // value={this.state.workingPathState}
             value={value.value}
             itemChanged={this.itemChangedBound}
@@ -421,6 +430,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
     this.props.forceUpdate();
     this.props.setVisibility(false);
+    window.location.reload(); // TODO: <-find better way to do it
   }
 
   saveConfig(): void {

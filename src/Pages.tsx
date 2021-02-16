@@ -1,8 +1,10 @@
 // eslint-disable-next-line no-use-before-define
 import React from 'react';
 import settings from 'electron-settings';
+import { Grid } from '@material-ui/core';
 import Table from './Table';
 import GetTags from './GetTags';
+import GridImageComponent from './GridImageComponent';
 
 const fs = require('fs');
 const path = require('path');
@@ -15,13 +17,19 @@ interface PaginationProps {
 
 function Pagination(props: PaginationProps) {
   return (
-    <tr className="loadMore">
-      <td>
-        <button tabIndex={-1} type="button" onClick={props.loadItems}>
-          Load More
-        </button>
-      </td>
-    </tr>
+    // <tr className="loadMore">
+    //   <td>
+
+    <button
+      className="loadMore"
+      tabIndex={-1}
+      type="button"
+      onClick={props.loadItems}
+    >
+      Load More
+    </button>
+    //   </td>
+    // </tr>
   );
 }
 
@@ -40,6 +48,8 @@ interface Props {
 interface State {
   itemsPerPage: number;
   currentRowID: number;
+  display: string;
+  currentLength: number;
   // maxPages: number;
   // currentPage: number;
   pageItems: [
@@ -67,16 +77,9 @@ class Pages extends React.Component<Props, State> {
     this.deleteItemFromDatabaseBound = this.deleteItemFromDatabase.bind(this);
     this.handleTableClickBound = this.handleTableClick.bind(this);
     this.loadItemsBound = this.loadItems.bind(this);
-    // this.props.database.execute(query) <= zmiana strony
-    // this.props.database.execute("SELECT COUNT(*) from files") = maxPages = this/itemsPerPage
-    // console.log(settings.getSync('commonSettings'));
 
-    // const commonSettings = settings.getSync('commonSettings');
+    this.grids = [];
 
-    // const commonSettings: [
-    //   { key: string; name: string; value: string }
-    // ] = JSON.parse(settings.getSync('commonSettings'));
-    // console.log(commonSettings);
     const itemsToLoad: number = settings
       .getSync('commonSettings')
       .find((el) => el.key === 'itemsToLoad').value;
@@ -85,23 +88,16 @@ class Pages extends React.Component<Props, State> {
       itemsPerPage: itemsToLoad,
       // maxPages: null,
       // currentPage: 0,
+      display: 'grid',
       pageItems: null,
       currentRowID: null,
+      currentLength: 0,
     };
-  }
 
-  // async getRowCount() {
-  //   // console.log(this.props.database);
-  //   try {
-  //     const query = 'SELECT COUNT(*) AS solution from files';
-  //     const [rows] = await this.props.database.execute(query);
-  //     this.setState({
-  //       maxPages: Math.ceil(rows[0].solution / this.state.itemsPerPage),
-  //     });
-  //   } catch (ex) {
-  //     console.log(ex);
-  //   }
-  // }
+    // for (let i = 0; i < 10; i += 1) {
+    //   this.grids.push(<GridImageComponent items={this.state.pageItems} />);
+    // }
+  }
 
   componentDidMount() {
     ipcRenderer.on('clipboard', async (_event: any, arg: string) => {
@@ -146,15 +142,19 @@ class Pages extends React.Component<Props, State> {
     // this.loadItems();
   }
 
-  handleTableClick(e) {
-    this.setState({ currentRowID: e.id });
-    this.props.handleClick(e.id, this.state.pageItems[e.id]);
+  handleTableClick(id: number) {
+    // this.setState({ currentRowID: e.id });
+    // this.props.handleClick(e.id, this.state.pageItems[e.id]);
+    // this.forceUpdate();
+    this.setState({ currentRowID: id });
+    this.props.handleClick(id, this.state.pageItems[id]);
     // this.forceUpdate();
   }
 
   isDownloadedCallback(done, filePath, name, tags, folder, url) {
     if (done) {
       // console.log(this.state.pageItems);
+
       const items = this.state.pageItems;
       items.unshift({
         pathName: filePath,
@@ -287,8 +287,10 @@ class Pages extends React.Component<Props, State> {
 
   async loadItems(shouldSearch) {
     if (this.props.database !== null) {
-      let offset =
-        this.state.pageItems != null ? this.state.pageItems.length : 0;
+      // let offset =
+      //   this.state.pageItems != null ? this.state.pageItems.length : 0;
+      let offset = this.state.currentLength;
+      // this.state.currentLength != null ? this.state.currentLength : 0;
       if (shouldSearch === true) {
         // this.setState({ pageItems: null });
         this.setState({
@@ -296,6 +298,7 @@ class Pages extends React.Component<Props, State> {
         });
         offset = 0;
       }
+
       // var offset = Math.round(this.state.itemsPerPage * this.state.currentPage);
       // console.log(this.state.pageItems);
       // var offset = 0;
@@ -305,10 +308,13 @@ class Pages extends React.Component<Props, State> {
       //   }
       // }
 
-      const limit = this.state.itemsPerPage;
+      const limit = parseInt(this.state.itemsPerPage);
       if (this.state.pageItems === null) {
         this.state.pageItems = [];
       }
+      this.setState((state) => ({
+        currentLength: state.currentLength + limit,
+      }));
       // console.log(offset);
 
       // async function loadLastQueries(database: any, limit: number) {
@@ -334,7 +340,7 @@ class Pages extends React.Component<Props, State> {
       //   filesToLoad.push(rows[i].folder);
       // }
       // console.log(rows);
-      await rows.map((item: any) => {
+      await rows.map((item: any, index) => {
         // console.log(item);
         const filePath = path.join(
           this.props.workingDir,
@@ -344,7 +350,7 @@ class Pages extends React.Component<Props, State> {
         fs.access(filePath, fs.constants.R_OK, (err: Error) => {
           if (!err) {
             const items = this.state.pageItems;
-
+            // if (items[this.state.pageItems.length - 1]?.pathName !== filePath) {
             items.push({
               pathName: filePath,
               fileName: item.fileName,
@@ -352,6 +358,8 @@ class Pages extends React.Component<Props, State> {
               folder: item.folder,
               url: item.url,
             });
+            // }
+
             this.setState({ pageItems: items });
             // filesToLoad.push(filePath);
           }
@@ -365,10 +373,24 @@ class Pages extends React.Component<Props, State> {
     }
   }
 
-  deleteItemFromDatabase(fileName: string, folderName: string) {
+  deleteItemFromDatabase(
+    fileName: string,
+    folderName: string,
+    indexToDeleteFromState?: number
+  ) {
     //  async function deleteRecord() {
     const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
     this.props.database.execute(queryDeleteRow);
+    // console.log(indexToDeleteFromState);
+    if (indexToDeleteFromState !== undefined) {
+      // console.log('XD');
+      const test = this.state.pageItems;
+      test.splice(indexToDeleteFromState, 1);
+      this.setState({ pageItems: test });
+      // this.setState((state) => ({
+      //   currentLength: state.currentLength + 1,
+      // }));
+    }
     // console.log(rows);
     //   return new Promise((resolved, rejected) => {
     //     if (rows.affectedRows >= 1) {
@@ -382,28 +404,40 @@ class Pages extends React.Component<Props, State> {
   }
 
   render() {
-    return this.state.pageItems === null ? (
-      ''
-    ) : (
-      <div>
-        {/* <Pagination
-          maxPages={this.state.maxPages}
-          currentPage={this.state.currentPage}
-        /> */}
-        <Table
-          handleClick={this.handleTableClickBound}
-          // imageData={this.props.imageData}
-          imageData={this.state.pageItems}
-          showableTags={this.props.showableTags}
-          showableTags2={this.props.showableTags2}
-          doubleClick={this.props.doubleClick}
-          delete={this.deleteItemFromDatabaseBound}
-          loadMore={<Pagination loadItems={this.loadItemsBound} />}
-        >
-          {/* <Pagination /> */}
-        </Table>
-      </div>
+    return (
+      <GridImageComponent
+        display={this.props.display}
+        items={this.state.pageItems}
+        showableTags={this.props.showableTags2}
+        handleClick={this.handleTableClickBound}
+        doubleClick={this.props.doubleClick}
+        delete={this.deleteItemFromDatabaseBound}
+        loadMore={<Pagination loadItems={this.loadItemsBound} />}
+      />
     );
+
+    // return this.state.pageItems === null ? (
+    //   ''
+    // ) : (
+    //   <div>
+    //     {/* <Pagination
+    //       maxPages={this.state.maxPages}
+    //       currentPage={this.state.currentPage}
+    //     /> */}
+    //     <Table
+    //       handleClick={this.handleTableClickBound}
+    //       // imageData={this.props.imageData}
+    //       imageData={this.state.pageItems}
+    //       showableTags={this.props.showableTags}
+    //       showableTags2={this.props.showableTags2}
+    //       doubleClick={this.props.doubleClick}
+    //       delete={this.deleteItemFromDatabaseBound}
+    //       loadMore={<Pagination loadItems={this.loadItemsBound} />}
+    //     >
+    //       {/* <Pagination /> */}
+    //     </Table>
+    //   </div>
+    // );
   }
 }
 

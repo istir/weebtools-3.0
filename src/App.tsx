@@ -3,13 +3,16 @@ import React from 'react';
 // import Config from './config.json';
 import settings from 'electron-settings';
 import { Checkbox, Modal } from '@material-ui/core';
+import { PRIORITY_HIGHEST } from 'constants';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBorderAll, faTh } from '@fortawesome/free-solid-svg-icons';
 import ConfigButton from './ConfigDiv';
 import SearchButton from './Search';
 import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
-import ModalOwn from './Modal';
+import RandomBackground from './RandomBackground';
 
 interface IcommonSettings {
   key: string;
@@ -17,9 +20,9 @@ interface IcommonSettings {
   value: string;
 }
 
-let workingDirectory = settings.getSync('commonSettings');
+const commonSettings = settings.getSync('commonSettings');
 
-workingDirectory = workingDirectory.find((el) => el.key === 'workingPath')
+const workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
   .value;
 
 interface TagProps {
@@ -238,6 +241,7 @@ interface IAppState {
   searchFor: string;
   progressBarPercentage: number;
   progressShouldMinimize: boolean;
+  display: string;
 }
 
 class App extends React.Component<IAppProps, IAppState> {
@@ -269,6 +273,7 @@ class App extends React.Component<IAppProps, IAppState> {
       searchFor: '',
       progressBarPercentage: 0,
       progressShouldMinimize: false,
+      display: commonSettings.find((el) => el.key === 'displayType').value,
     };
 
     this.refreshTagsBound = this.refreshTags.bind(this);
@@ -289,6 +294,60 @@ class App extends React.Component<IAppProps, IAppState> {
           // console.log('connected');
           // console.log(ful);
           this.setState({ database: ful });
+          // const randomBG = new RandomBackground(
+          //   this.state.database,
+          //   workingDirectory as string,
+          //   [],
+          //   [],
+          //   'abandon all hope ye who enter here'
+          // );
+          // eslint-disable-next-line promise/no-nesting
+
+          const tags = commonSettings.find((el) => el.key === 'randomBGTags')
+            .value;
+          const NotTags = commonSettings.find(
+            (el) => el.key === 'randomBGNotTags'
+          ).value;
+          const folder = commonSettings.find(
+            (el) => el.key === 'randomBGFolder'
+          ).value;
+          const color = commonSettings.find((el) => el.key === 'randomBGColor')
+            .value;
+          const shouldUse = commonSettings.find(
+            (el) => el.key === 'randomBGUse'
+          ).value;
+
+          if (shouldUse === 'true') {
+            const randomBG = new RandomBackground();
+            // eslint-disable-next-line promise/no-nesting
+            randomBG
+              .getCorrectQueries(
+                this.state.database,
+                workingDirectory as string,
+                tags,
+                NotTags,
+                folder
+              )
+              .then(() => {
+                const random = randomBG.getRandomBackground();
+                if (random.length > 0) {
+                  document.body.classList.remove('moving');
+                  document.body.style.background = `linear-gradient( rgba(${color}), rgba(${color}) ), ${random}`;
+                  document.body.style.backgroundSize = 'cover';
+                  document.body.style.backgroundPosition = 'center';
+                }
+
+                // console.log(document.body.style.backgroundColor);
+                // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
+                //   dimming / 100
+                // });`;
+                return true;
+              })
+              .catch((error) => {
+                throw error;
+              });
+          }
+
           return ful;
         },
         (rej: any) => {
@@ -373,7 +432,7 @@ class App extends React.Component<IAppProps, IAppState> {
     // console.log(this.state.progressBarPercentage);
   }
 
-  clickFullscreenImage(value) {
+  clickFullscreenImage(value: boolean) {
     this.setState({ showFullscreen: value });
   }
 
@@ -396,9 +455,30 @@ class App extends React.Component<IAppProps, IAppState> {
   render() {
     return (
       <div>
-        {/* <div className="icon">
-          {' '} */}
-
+        <button
+          type="button"
+          className="display"
+          onClick={() => {
+            this.setState((prevState) => ({
+              display: prevState.display === 'grid' ? 'table' : 'grid',
+            }));
+            // TODO: change this hacky code
+            const curr = this.state.display === 'grid' ? 'table' : 'grid';
+            // commonSettings
+            const tempSettings = commonSettings;
+            tempSettings.find((value, index) => {
+              if (value.key === 'displayType') {
+                // console.log(index);
+                value.value = curr;
+                return index;
+              }
+            });
+            // commonSettings.find((el, index) => el.key === 'displayType');
+            settings.set('commonSettings', tempSettings);
+          }}
+        >
+          <FontAwesomeIcon icon={faBorderAll} />
+        </button>
         <ConfigButton
           settings={this.settingsTags}
           forceUpdate={this.refreshTagsBound}
@@ -430,6 +510,7 @@ class App extends React.Component<IAppProps, IAppState> {
           searchFor={this.state.searchFor}
           refresh={this.refreshBound}
           setProgressBarPercentage={this.setProgressBarPercentageBound}
+          display={this.state.display}
         />
         <TagPicker
           tags={this.state.tags}
