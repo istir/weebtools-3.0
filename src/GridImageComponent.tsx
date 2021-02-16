@@ -257,10 +257,12 @@ class GridImageComponent extends React.Component<Props, State> {
   }
 
   handleClass(id: number) {
-    for (let i = 0; i < this.allRows.current.children.length; i += 1) {
-      this.allRows.current.children[i].classList.remove('selectedRow');
+    if (this.allRows.current.children !== undefined) {
+      for (let i = 0; i < this.allRows.current.children.length; i += 1) {
+        this.allRows.current.children[i].classList.remove('selectedRow');
+      }
+      this.allRows.current.children[id].classList.add('selectedRow');
     }
-    this.allRows.current.children[id].classList.add('selectedRow');
   }
 
   handleRowClick(id: number) {
