@@ -430,6 +430,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
     this.props.forceUpdate();
     this.props.setVisibility(false);
+    window.location.reload(); // TODO: <-find better way to do it
   }
 
   saveConfig(): void {

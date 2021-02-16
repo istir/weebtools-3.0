@@ -3,13 +3,15 @@ import React from 'react';
 // import Config from './config.json';
 import settings from 'electron-settings';
 import { Checkbox, Modal } from '@material-ui/core';
+import { PRIORITY_HIGHEST } from 'constants';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBorderAll, faTh } from '@fortawesome/free-solid-svg-icons';
 import ConfigButton from './ConfigDiv';
 import SearchButton from './Search';
 import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
-import ModalOwn from './Modal';
 import RandomBackground from './RandomBackground';
 
 interface IcommonSettings {
@@ -239,6 +241,7 @@ interface IAppState {
   searchFor: string;
   progressBarPercentage: number;
   progressShouldMinimize: boolean;
+  display: string;
 }
 
 class App extends React.Component<IAppProps, IAppState> {
@@ -270,6 +273,7 @@ class App extends React.Component<IAppProps, IAppState> {
       searchFor: '',
       progressBarPercentage: 0,
       progressShouldMinimize: false,
+      display: commonSettings.find((el) => el.key === 'displayType').value,
     };
 
     this.refreshTagsBound = this.refreshTags.bind(this);
@@ -428,7 +432,7 @@ class App extends React.Component<IAppProps, IAppState> {
     // console.log(this.state.progressBarPercentage);
   }
 
-  clickFullscreenImage(value) {
+  clickFullscreenImage(value: boolean) {
     this.setState({ showFullscreen: value });
   }
 
@@ -451,6 +455,30 @@ class App extends React.Component<IAppProps, IAppState> {
   render() {
     return (
       <div>
+        <button
+          type="button"
+          className="display"
+          onClick={() => {
+            this.setState((prevState) => ({
+              display: prevState.display === 'grid' ? 'table' : 'grid',
+            }));
+            // TODO: change this hacky code
+            const curr = this.state.display === 'grid' ? 'table' : 'grid';
+            // commonSettings
+            const tempSettings = commonSettings;
+            tempSettings.find((value, index) => {
+              if (value.key === 'displayType') {
+                // console.log(index);
+                value.value = curr;
+                return index;
+              }
+            });
+            // commonSettings.find((el, index) => el.key === 'displayType');
+            settings.set('commonSettings', tempSettings);
+          }}
+        >
+          <FontAwesomeIcon icon={faBorderAll} />
+        </button>
         <ConfigButton
           settings={this.settingsTags}
           forceUpdate={this.refreshTagsBound}
@@ -482,6 +510,7 @@ class App extends React.Component<IAppProps, IAppState> {
           searchFor={this.state.searchFor}
           refresh={this.refreshBound}
           setProgressBarPercentage={this.setProgressBarPercentageBound}
+          display={this.state.display}
         />
         <TagPicker
           tags={this.state.tags}
