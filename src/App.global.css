@@ -139,13 +139,28 @@ body {
   margin-right: 30px;
 }
 
+.gridImg.parent.grid
+  > .gridImg.element
+  > .gridImg.description
+  > .fileName:hover {
+  overflow: visible;
+  /* height: 100%; */
+  clip-path: polygon(0 0, 100% 0, 200% 200%, 0% 200%);
+  transition: 0.3s;
+  transition-delay: 1s;
+  text-shadow: 0 0 5px black;
+}
+
 .fileName {
   font-weight: 500;
   margin-bottom: 10px;
-  max-height: 3.9em;
+  height: 3.9em;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.3em;
+  transition: 0.3s;
+  transition-delay: 0s;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
 }
 .folderName {
   opacity: 0.8;
@@ -156,6 +171,7 @@ body {
   opacity: 0.9;
   font-weight: 500;
   font-size: 0.8em;
+  line-break: auto;
 }
 /* .tagName .tableDiv {
   display: table;
@@ -963,4 +979,8 @@ a:hover {
 .loadMore > td > button {
   /* border: 1px solid #000 !important; */
   margin: 2px !important;
+}
+
+.alert-dialog {
+  font-family: 'Google Sans', sans-serif !important;
 }

@@ -89,17 +89,24 @@ class ModalOwn extends React.Component<IProps, IState> {
     return (
       <div>
         <Dialog
+          // className="alert-dialog"
+          // classes={}
           maxWidth="md"
           open={this.props.show}
           onClose={this.disagreeBound}
         >
-          <DialogTitle id="alert-dialog-title">{this.props.title}</DialogTitle>
+          <DialogTitle className="alert-dialog" id="alert-dialog-title">
+            {this.props.title}
+          </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">
+            <DialogContentText
+              className="alert-dialog"
+              id="alert-dialog-description"
+            >
               {this.props.message}
             </DialogContentText>
           </DialogContent>
-          <DialogActions>{this.buttons}</DialogActions>
+          <DialogActions className="alert-dialog">{this.buttons}</DialogActions>
         </Dialog>
       </div>
     );
