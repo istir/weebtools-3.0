@@ -6,13 +6,15 @@ import { Checkbox, Modal } from '@material-ui/core';
 import { PRIORITY_HIGHEST } from 'constants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBorderAll, faTh } from '@fortawesome/free-solid-svg-icons';
-import ConfigButton from './ConfigDiv';
+import {ConfigButton} from './ConfigDiv';
 import SearchButton from './Search';
 import Database from './Database';
 import Pages from './Pages';
 import FullscreenImage from './FullscreenImage';
 import ProgressBar from './ProgressBar';
 import RandomBackground from './RandomBackground';
+import FirstLaunch from './FirstLaunch';
+import { common } from '@material-ui/core/colors';
 
 interface IcommonSettings {
   key: string;
@@ -20,10 +22,10 @@ interface IcommonSettings {
   value: string;
 }
 
-const commonSettings = settings.getSync('commonSettings');
+let commonSettings;
 
-const workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
-  .value;
+let workingDirectory;
+
 
 interface TagProps {
   key: string;
@@ -263,18 +265,48 @@ class App extends React.Component<IAppProps, IAppState> {
 
   constructor(props) {
     super(props);
-    this.settingsTags = settings.getSync('tags');
-    this.state = {
-      tags: this.getTags(),
-      currRow: null,
-      tagDictionary: this.getTagDictionary(),
-      database: null,
-      showFullscreen: false,
-      searchFor: '',
-      progressBarPercentage: 0,
-      progressShouldMinimize: false,
-      display: commonSettings.find((el) => el.key === 'displayType').value,
-    };
+    let worked=true;
+try {
+  
+  // if (settings.hasSync("commonSettings")) {
+    commonSettings=settings.getSync('commonSettings');
+  // }
+  this.settingsTags = settings.getSync('tags');
+  
+
+ workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
+ .value; 
+} catch (err) {
+  worked=false;
+  commonSettings={"commonSettings":[],"tags":[]}
+  settings.set(commonSettings)
+  console.error(err)
+}
+if (worked) {
+  this.state = {
+    tags: this.getTags(),
+    currRow: null,
+    tagDictionary: this.getTagDictionary(),
+    database: null,
+    showFullscreen: false,
+    searchFor: '',
+    progressBarPercentage: 0,
+    progressShouldMinimize: false,
+    display: commonSettings.find((el) => el.key === 'displayType').value,
+  };
+  
+  // try {
+    
+  // } catch (error) {
+  //   console.error(error);
+    
+  // }
+     
+  
+}
+
+
+
 
     this.refreshTagsBound = this.refreshTags.bind(this);
     this.setSearchBound = this.setSearch.bind(this);
@@ -302,7 +334,7 @@ class App extends React.Component<IAppProps, IAppState> {
           //   'abandon all hope ye who enter here'
           // );
           // eslint-disable-next-line promise/no-nesting
-
+try {
           const tags = commonSettings.find((el) => el.key === 'randomBGTags')
             .value;
           const NotTags = commonSettings.find(
@@ -341,12 +373,14 @@ class App extends React.Component<IAppProps, IAppState> {
                 // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
                 //   dimming / 100
                 // });`;
+             
                 return true;
               })
+              
               .catch((error) => {
                 throw error;
               });
-          }
+          } } catch (err) {console.error(err)}
 
           return ful;
         },
@@ -449,10 +483,25 @@ class App extends React.Component<IAppProps, IAppState> {
     this.forceUpdate();
 
     this.setState({ tags: this.getTags() });
-    this.setState({ tagDictionary: this.getTagDictionary() });
+    try {
+      this.setState({ tagDictionary: this.getTagDictionary() });  
+    } catch (error) {
+      console.error(error)
+    }
+    
   }
 
   render() {
+    try {
+      if (commonSettings.find((el) => el.key === 'firstLaunch').value!=="true") {
+        return <FirstLaunch   forceUpdate={this.refreshTagsBound}/>
+      }
+    } catch (error) {
+      return<FirstLaunch   forceUpdate={this.refreshTagsBound}/> 
+    }
+    // if (commonSettings.find((el) => el.key === 'firstLaunch').value!=="false") {
+    //   return <FirstLaunch/>
+    // }
     return (
       <div>
         <button

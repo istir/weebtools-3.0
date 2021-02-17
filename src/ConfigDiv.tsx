@@ -22,6 +22,7 @@ interface ConfigPaneProps {
   setVisibility: (isVisible: boolean) => void;
   forceUpdate: () => void;
   settings;
+  commonSettings: [{ key: string; name: string; value: string | string[] }];
 }
 interface CommonConfigToSave {
   name: string;
@@ -281,7 +282,12 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
   constructor(props) {
     super(props);
-    this.commonSettings = settings.getSync('commonSettings');
+    if (this.props.commonSettings) {
+      this.commonSettings = this.props.commonSettings;
+    } else {
+      this.commonSettings = settings.getSync('commonSettings');
+    }
+
     this.state = {
       listObjects: null,
       changedListObject: null,
@@ -429,7 +435,11 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   closePane(): void {
     // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
     this.props.forceUpdate();
-    this.props.setVisibility(false);
+    if (this.props.setVisibility) {
+      this.props.setVisibility(false);
+    }
+    // console.log(this.props);
+
     window.location.reload(); // TODO: <-find better way to do it
   }
 
@@ -744,4 +754,5 @@ class ConfigButton extends React.Component<
     );
   }
 }
-export default ConfigButton;
+// export default ConfigButton;
+export { ConfigButton, ConfigPane };
