@@ -24,7 +24,7 @@ function Pagination(props: PaginationProps) {
       className="loadMore"
       tabIndex={-1}
       type="button"
-      onClick={props.loadItems}
+      onClick={()=>{props.loadItems(false)}}
     >
       Load More
     </button>
@@ -114,24 +114,48 @@ class Pages extends React.Component<Props, State> {
         this.props.setProgressBarPercentage
       );
     });
-
     this.timerID = setInterval(() => {
       // console.log(this.timerID);
       // console.log(this.props.database);
       if (this.props.database !== null) {
         clearInterval(this.timerID);
         // this.getRowCount();
-        this.loadItems(false);
+        // this.loadItems(false);
         // console.log(this.state.maxPages);
         // console.log(this.props.imageData);
         // this.props.refresh();
         this.forceUpdate();
       }
     }, 10);
+   
   }
 
-  componentDidUpdate(prevState) {
-    if (prevState.searchFor !== this.props.searchFor) {
+  componentDidUpdate(prevProps) {
+   
+    if (this.props.shouldUpdate) {
+      this.props.setShouldUpdate()
+      // setTimeout(() => {
+        
+        const itemsToLoad: number = settings
+        .getSync('commonSettings')
+        .find((el) => el.key === 'itemsToLoad').value;
+        // console.log(itemsToLoad)
+        this.setState({itemsPerPage:itemsToLoad,currentLength:parseInt(itemsToLoad)})
+        // this.setState({ itemsPerPage: 0 });
+        // this.setState({ pageItems: [] });
+        
+        this.loadItems(true,parseInt(itemsToLoad));
+        
+        // const itemsToLoad: number = settings
+        // .getSync('commonSettings')
+        // .find((el) => el.key === 'itemsToLoad').value;
+        // this.setState({ itemsPerPage: itemsToLoad });
+        // console.log("???")
+        
+      // }, 1000);
+    }
+    
+    if (prevProps.searchFor !== this.props.searchFor) {
       // this.state.pageItems=
 
       this.setState({ pageItems: [] });
@@ -292,11 +316,18 @@ class Pages extends React.Component<Props, State> {
     return query;
   }
 
-  async loadItems(shouldSearch) {
+  async loadItems(shouldSearch,overrideLength?) {
     if (this.props.database !== null) {
       // let offset =
       //   this.state.pageItems != null ? this.state.pageItems.length : 0;
-      let offset = this.state.currentLength;
+      let offset
+      // if (overrideLength) {
+        // offset = overrideLength;
+      // } else {
+        offset = this.state.currentLength;
+      // }
+      
+      // console.log(offset)
       // this.state.currentLength != null ? this.state.currentLength : 0;
       if (shouldSearch === true) {
         // this.setState({ pageItems: null });
@@ -314,14 +345,21 @@ class Pages extends React.Component<Props, State> {
       //     offset = this.state.pageItems.length;
       //   }
       // }
-
-      const limit = parseInt(this.state.itemsPerPage);
+    let limit;
+   if (overrideLength) {
+     limit = overrideLength;
+   } else {
+     limit = parseInt(this.state.itemsPerPage);
+   }
       if (this.state.pageItems === null) {
         this.state.pageItems = [];
       }
-      this.setState((state) => ({
-        currentLength: state.currentLength + limit,
-      }));
+      if (!shouldSearch) {
+        this.setState((state) => ({
+          currentLength: state.currentLength + limit,
+        }));  
+      } 
+      
       // console.log(offset);
 
       // async function loadLastQueries(database: any, limit: number) {

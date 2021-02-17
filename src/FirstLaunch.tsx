@@ -56,7 +56,7 @@ function FirstLaunch(props: IProps) {
       'Random Background rrr,ggg,bbb,0.a',
       '167, 66, 104,0.5'
     ),
-    formatCommon('firstLaunch', 'First Launch Done', 'true'),
+    // formatCommon('firstLaunch', 'First Launch Done', 'true'),
   ];
   const tags = [
     formatTag('wallpaper', 'Wallpaper', 'wallpaper', '', true, false),

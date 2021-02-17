@@ -434,19 +434,20 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
   closePane(): void {
     // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
-    this.props.forceUpdate();
+    
     if (this.props.setVisibility) {
       this.props.setVisibility(false);
     }
     // console.log(this.props);
 
-    window.location.reload(); // TODO: <-find better way to do it
+    // window.location.reload(); // TODO: <-find better way to do it
   }
 
   saveConfig(): void {
     console.log('SAVED!\nNew Config:', this.state.changedListObject);
     // console.log(settings.file());
     settings.setSync(this.state.changedListObject);
+    this.props.forceUpdate();
   }
 
   itemChanged(
