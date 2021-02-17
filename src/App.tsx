@@ -454,7 +454,7 @@ class App extends React.Component<IAppProps, IAppState> {
 
   render() {
     return (
-      <div>
+      <div id="App">
         <button
           type="button"
           className="display"
@@ -518,6 +518,8 @@ class App extends React.Component<IAppProps, IAppState> {
           row={this.state.currRow}
           database={this.state.database}
           refresh={this.refreshBound}
+        />
+        
         />
       </div>
     );
