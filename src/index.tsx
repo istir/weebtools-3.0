@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { Titlebar, Color } from 'custom-electron-titlebar';
+import { Titlebar, Color, RGBA } from 'custom-electron-titlebar';
 import App from './App';
 import './App.global.css';
 
@@ -10,6 +10,7 @@ import './App.global.css';
 <link rel="stylesheet" href="css/perfect-scrollbar.css" />;
 const titlebar = new Titlebar({
   backgroundColor: Color.TRANSPARENT,
+  // backgroundColor: new Color(new RGBA(0, 0, 0, .7)),
   menu: null,
   // backgroundColor: customTitlebar.Color.fromRgba('0,0,0,0.7'),
 });
