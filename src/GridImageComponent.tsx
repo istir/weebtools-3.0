@@ -257,7 +257,7 @@ class GridImageComponent extends React.Component<Props, State> {
   }
 
   handleClass(id: number) {
-    if (this.allRows.current.children !== undefined) {
+    if (this.allRows.current.children[id] !== undefined) {
       for (let i = 0; i < this.allRows.current.children.length; i += 1) {
         this.allRows.current.children[i].classList.remove('selectedRow');
       }

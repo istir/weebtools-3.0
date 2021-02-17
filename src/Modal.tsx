@@ -7,6 +7,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { ButtonBaseProps } from '@material-ui/core';
 // import '@material-ui/core/styles';
+import { CSSTransition } from 'react-transition-group';
+import DialogOwn from './Dialog';
 
 interface IProps {
   show: boolean;
@@ -17,7 +19,7 @@ interface IProps {
   message: string;
 }
 interface IState {
-  agreeingButton: number;
+  maxWidth: 'normal' | 'medium' | 'big';
 }
 class ModalOwn extends React.Component<IProps, IState> {
   agreeBound: () => void;
@@ -26,39 +28,41 @@ class ModalOwn extends React.Component<IProps, IState> {
 
   buttons: ButtonBaseProps[] = [];
 
+  buttonsHTML: React.ButtonHTMLAttributes<HTMLButtonElement>[] = [];
+
   constructor(props) {
     super(props);
-    // console.log(props);
-    this.state = { agreeingButton: 0 };
+    this.state = { maxWidth: 'big' };
     this.agreeBound = this.agree.bind(this);
     this.disagreeBound = this.disagree.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    // console.log(this.props.context);
-    if (prevProps.buttons !== this.props.buttons) {
-      this.buttons = [];
+  componentDidUpdate(prevProps) {
+    if (prevProps !== this.props) {
+      this.buttonsHTML = [];
       for (let i = 0; i < this.props.buttons.length; i += 1) {
         if (i === 0) {
-          this.buttons.unshift(
-            <Button
+          this.buttonsHTML.unshift(
+            <button
+              type="button"
               key={this.props.buttons[i]}
               onClick={this.agreeBound}
-              color="primary"
-              autoFocus
+              className="primary"
+              // autoFocus
             >
               {this.props.buttons[i]}
-            </Button>
+            </button>
           );
         } else {
-          this.buttons.unshift(
-            <Button
+          this.buttonsHTML.unshift(
+            <button
+              type="button"
               key={this.props.buttons[i]}
               onClick={this.disagreeBound}
-              color="secondary"
+              className="secondary"
             >
               {this.props.buttons[i]}
-            </Button>
+            </button>
           );
         }
       }
@@ -81,34 +85,30 @@ class ModalOwn extends React.Component<IProps, IState> {
   }
 
   close() {
-    // this.setState({ open: false });
     this.props.close();
   }
 
   render() {
     return (
-      <div>
-        <Dialog
-          // className="alert-dialog"
-          // classes={}
-          maxWidth="md"
-          open={this.props.show}
-          onClose={this.disagreeBound}
-        >
-          <DialogTitle className="alert-dialog" id="alert-dialog-title">
-            {this.props.title}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText
-              className="alert-dialog"
-              id="alert-dialog-description"
-            >
-              {this.props.message}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions className="alert-dialog">{this.buttons}</DialogActions>
-        </Dialog>
-      </div>
+      <CSSTransition
+        in={this.props.show}
+        timeout={200}
+        classNames="fade"
+        unmountOnExit
+      >
+        <div onClick={this.props.close} className="settingsBG dialog ">
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            className={`dialog open parent moving cursorAuto scaleFade ${this.state.maxWidth}`}
+          >
+            <div className="dialog title text">{this.props.title}</div>
+            <div className="dialog message text">{this.props.message}</div>
+            <div className="dialog buttons">{this.buttonsHTML}</div>
+          </div>
+        </div>
+      </CSSTransition>
     );
   }
 }
