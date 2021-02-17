@@ -135,6 +135,9 @@ body {
 .gridImg.description {
   display: grid;
 }
+.gridImg.parent.table {
+  grid-template-columns: 100%;
+}
 .gridImg.parent.table > .gridImg.element {
   /* display: grid; */
   padding-left: 0px;
@@ -183,7 +186,7 @@ body {
   margin-bottom: 10px;
   height: 3.9em;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   line-height: 1.3em;
   transition: 0.3s;
   transition-delay: 0s;

@@ -156,6 +156,13 @@ class Pages extends React.Component<Props, State> {
       // console.log(this.state.pageItems);
 
       const items = this.state.pageItems;
+      var indexOf=items.findIndex(index=>index.pathName===filePath)
+      if (indexOf!==-1) {
+        this.deleteItemFromDatabase("","",true,indexOf)
+      }
+      // console.log(items.indexOf({
+      //   pathName: filePath
+      // }))
       items.unshift({
         pathName: filePath,
         fileName: name,
@@ -351,6 +358,11 @@ class Pages extends React.Component<Props, State> {
           if (!err) {
             const items = this.state.pageItems;
             // if (items[this.state.pageItems.length - 1]?.pathName !== filePath) {
+              var indexOf=items.findIndex(index=>index.pathName===filePath)
+              if (indexOf!==-1) {
+                this.deleteItemFromDatabase("","",true,indexOf)
+              }
+              // var items.indexOf()
             items.push({
               pathName: filePath,
               fileName: item.fileName,
@@ -376,11 +388,15 @@ class Pages extends React.Component<Props, State> {
   deleteItemFromDatabase(
     fileName: string,
     folderName: string,
-    indexToDeleteFromState?: number
+    shouldKeepInDatabase:boolean,
+    indexToDeleteFromState?: number,
   ) {
     //  async function deleteRecord() {
-    const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-    this.props.database.execute(queryDeleteRow);
+      if (!shouldKeepInDatabase) {
+        const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
+        this.props.database.execute(queryDeleteRow);
+      }
+
     // console.log(indexToDeleteFromState);
     if (indexToDeleteFromState !== undefined) {
       // console.log('XD');

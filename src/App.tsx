@@ -503,7 +503,7 @@ try {
     //   return <FirstLaunch/>
     // }
     return (
-      <div>
+      <div id="App">
         <button
           type="button"
           className="display"
@@ -567,6 +567,8 @@ try {
           row={this.state.currRow}
           database={this.state.database}
           refresh={this.refreshBound}
+        />
+        
         />
       </div>
     );

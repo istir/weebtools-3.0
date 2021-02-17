@@ -28,7 +28,7 @@ interface Props {
   showableTags: IshowableTag[];
   handleClick: (id: number) => void;
   doubleClick: (value: boolean) => void;
-  delete: (fileName: string, folderName: string) => void;
+  delete: (fileName: string, folderName: string,shouldKeepInDatabase:boolean, indexToDeleteFromState?: number) => void;
 }
 
 interface State {
@@ -74,6 +74,7 @@ class GridImageComponent extends React.Component<Props, State> {
   componentDidUpdate(prevProps, prevState) {
     const items = [];
     if (prevProps !== this.props) {
+      // console.log(this.state.currentItems)
       if (this.state.selected != null) {
         this.handleClass(this.state.selected);
       }
@@ -126,6 +127,7 @@ class GridImageComponent extends React.Component<Props, State> {
       this.props.delete(
         this.props.items[this.state.workingElement].fileName,
         this.props.items[this.state.workingElement].folder,
+        false,
         this.state.workingElement
       );
       // this.props.items.splice(this.state.workingElement, 1);
@@ -210,6 +212,13 @@ class GridImageComponent extends React.Component<Props, State> {
   }
 
   addItem(pathname, name, tags, folder, id, url?) {
+    for (let i = 0; i < this.state.currentItems.length; i+=1) {
+      if(this.state.currentItems[i].key===pathname) {
+        // console.log(this.state.currentItems[i].key,pathname)
+        // this.props.delete("","",true,i)
+      }
+    }
+    
     const item = (
       <div
         onDoubleClick={() => {
@@ -257,12 +266,23 @@ class GridImageComponent extends React.Component<Props, State> {
   }
 
   handleClass(id: number) {
+    
+    // if (this.state.currentItems[id] !== undefined) {
+    //   console.log(this.state.currentItems[id])
+    //   for (let i = 0; i < this.state.currentItems.length; i += 1) {
+    //     // this.state.currentItems[i].classList.remove('selectedRow');
+    //     this.state.currentItems[i].className="aaa"
+    //   }
+    //   this.state.currentItems[id].classList.add('selectedRow');
+    // }
+    
+    /**OLD CODE */
     if (this.allRows.current.children[id] !== undefined) {
       for (let i = 0; i < this.allRows.current.children.length; i += 1) {
         this.allRows.current.children[i].classList.remove('selectedRow');
       }
       this.allRows.current.children[id].classList.add('selectedRow');
-    }
+    } 
   }
 
   handleRowClick(id: number) {
