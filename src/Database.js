@@ -15,6 +15,7 @@ async function Database() {
   return new Promise((resolve, reject) => {
     resolve(sqlConnection);
     reject(new Error("Couldn't resolve database connection"));
+    throw new Error("Couldn't resolve database connection");
   });
 }
 
