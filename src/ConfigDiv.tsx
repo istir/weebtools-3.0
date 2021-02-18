@@ -1,11 +1,20 @@
 // eslint-disable-next-line no-use-before-define
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faTimes } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCog,
+  faTimes,
+  faPlus,
+  faMinus,
+  faPlusSquare,
+  faMinusSquare,
+} from '@fortawesome/free-solid-svg-icons';
 import settings from 'electron-settings';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
 import { CSSTransition } from 'react-transition-group';
+import { PRIORITY_HIGHEST } from 'constants';
+import InputColor from 'react-input-color';
 
 settings.configure({ prettify: true });
 
@@ -49,13 +58,18 @@ interface SettingsItemProps {
   // valueToSetTo: string;
   keyProp;
   value: string;
+  type: string;
+  isCheckbox: boolean;
   valueShouldBeArray: boolean;
   itemChanged: (
     masterKey: string,
     key: string,
     name: string,
-    value: string[]
+    value: string[],
+    type: string,
+    hidden: boolean
   ) => void;
+  hidden?: boolean;
 }
 
 interface TagToAddProps {
@@ -98,47 +112,197 @@ interface ConfigButtonProps {
   settings;
   forceUpdate: () => void;
 }
-
+interface ISettingsItemState {
+  values: string;
+  element: JSX.Element;
+}
 /* COMPONENTS */
-class SettingsItem extends React.Component<SettingsItemProps> {
+class SettingsItem extends React.Component<
+  SettingsItemProps,
+  ISettingsItemState
+> {
   constructor(props) {
     super(props);
+    // this.state = {
+    //   valueArr: this.props.value,
+    //   arrays: [],
+    //   element: this.initializeElement(),
+    // };
+    // this.test;
+    // console.log(this.state.valueArr);
+
+    this.state = { values: this.props.value, element: null };
   }
 
-  // itemChanged(
-  //   masterKey: string,
-  //   key: string,
-  //   name: string,
-  //   value: string[]
-  // ): void {
-  checkIfArray(target) {
-    if (this.props.valueShouldBeArray) {
-      return target.split(/[ ,]+/);
-    }
-    return target;
+  componentDidMount() {
+    this.initializeElement();
   }
 
-  itemChange(e) {
-    // console.log(this.props.keyProp);
+  // componentDidUpdate(props, state) {
+  //   if (state.values !== this.state.values) {
+  //     console.log(this.state.values);
+  //   }
+  // }
+
+  setColor(e) {
     this.props.itemChanged(
       'commonSettings',
       this.props.keyProp,
       'value',
-      this.checkIfArray(e.target.value)
+      e.hex,
+      this.props.type,
+      this.props.hidden
+      // this.checkIfArray(e.target.value)
+    );
+  }
+
+  arrayChange(value, id) {
+    const toChange = this.state.values;
+    toChange[id] = value;
+    this.setState({ values: toChange });
+
+    this.props.itemChanged(
+      'commonSettings',
+      this.props.keyProp,
+      'value',
+      // this.handleValue(e.target),
+      value,
+      this.props.type,
+      this.props.hidden
+      // this.checkIfArray(e.target.value)
+    );
+  }
+
+  itemChange(e) {
+    // console.log(this.props.hidden);
+    this.props.itemChanged(
+      'commonSettings',
+      this.props.keyProp,
+      'value',
+      // this.handleValue(e.target),
+      e.target,
+      this.props.type,
+      this.props.hidden
+      // this.checkIfArray(e.target.value)
+    );
+  }
+
+  initializeElement() {
+    // console.log(this.props);
+    if (this.props.isCheckbox) {
+      this.setState({ element: this.renderCheckbox() });
+    } else if (this.props.type === 'color') {
+      this.setState({ element: this.renderColor() });
+    } else if (this.props.valueShouldBeArray) {
+      this.setState({ element: this.renderArrayField() });
+    } else {
+      this.setState({ element: this.renderTextField() });
+    }
+  }
+
+  renderArrayField() {
+    return (
+      <div style={{ display: 'grid' }}>
+        {this.state.values.map((value, index) => {
+          // console.log(value);
+          return (
+            <div key={index} className="setting array">
+              <input
+                className="settingTagInput arrays"
+                key={this.props.name}
+                name={this.props.name}
+                type={this.props.type}
+                value={value}
+                onChange={(e) => {
+                  list[index] = e.target.value;
+                  this.setState({ values: list });
+                  this.initializeElement();
+                }}
+              />
+              <span
+                className="removeFromArray cursorPointer"
+                type="button"
+                key={index}
+                name={index}
+                onClick={(e) => {
+                  this.state.values.splice(parseInt(e.target.name), 1);
+                  this.initializeElement();
+                }}
+              >
+                <FontAwesomeIcon
+                  className="fontAwesome modernButton"
+                  icon={faMinusSquare}
+                />
+              </span>
+            </div>
+          );
+        })}
+        <span
+          className="addToArray cursorPointer"
+          type="button"
+          onClick={() => {
+            this.state.values.push('');
+            this.initializeElement();
+          }}
+        >
+          <FontAwesomeIcon
+            className="fontAwesome modernButton"
+            icon={faPlusSquare}
+          />
+        </span>
+      </div>
+    );
+
+    // arrayField
+    //  arrayChild
+    //  arrayChild
+  }
+
+  renderTextField() {
+    return (
+      <input
+        className="settingTagInput "
+        key={this.props.name}
+        type={this.props.type}
+        defaultValue={this.state.values}
+        onChange={this.itemChange.bind(this)}
+      />
+    );
+  }
+
+  renderColor() {
+    return (
+      <InputColor
+        initialValue={this.state.values}
+        onChange={this.setColor.bind(this)}
+        // onChange={this.itemChange.bind(this)}
+        key={this.props.name}
+      />
+    );
+  }
+
+  renderCheckbox() {
+    return (
+      <Checkbox
+        style={{ width: '16px' }}
+        className="fontAwesome modernButton"
+        key={this.props.name}
+        defaultChecked={this.state.values}
+        onChange={this.itemChange.bind(this)}
+      />
     );
   }
 
   render() {
     return (
-      <div>
-        <div className="cursorNormal notSelectable">{this.props.name}</div>
-        <input
-          className="settingTagInput "
-          key={this.props.name}
-          type="text"
-          defaultValue={this.props.value}
-          onChange={this.itemChange.bind(this)}
-        />{' '}
+      <div
+        className={`commonSetting parent ${
+          this.props.isCheckbox ? 'checkbox' : 'textField'
+        }`}
+        style={{ display: this.props.hidden ? 'none' : '' }}
+      >
+        <div>{this.props.name}</div>
+        {this.state.element}
       </div>
     );
   }
@@ -323,17 +487,23 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
       const commonSettings = [];
 
       if (this.commonSettings) {
-        const objCommon = this.commonSettings.map((value) => (
-          <SettingsItem
-            name={value.name}
-            key={value.key}
-            keyProp={value.key}
-            valueShouldBeArray={Array.isArray(value.value)}
-            // value={this.state.workingPathState}
-            value={value.value}
-            itemChanged={this.itemChangedBound}
-          />
-        ));
+        const objCommon = this.commonSettings.map((value) => {
+          // console.log('COMMON', value);
+          return (
+            <SettingsItem
+              name={value.name}
+              key={value.key}
+              keyProp={value.key}
+              isCheckbox={typeof value.value === 'boolean'}
+              valueShouldBeArray={Array.isArray(value.value)}
+              hidden={value.hidden}
+              type={value.type}
+              // value={this.state.workingPathState}
+              value={value.value}
+              itemChanged={this.itemChangedBound}
+            />
+          );
+        });
 
         // if (settings.hasSync('commonSettings.workingPath')) {
         // } else {
@@ -434,7 +604,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
   closePane(): void {
     // ASK QUESTION IF U WANT TO CLOSE IF NOT SAVED
-    
+
     if (this.props.setVisibility) {
       this.props.setVisibility(false);
     }
@@ -454,7 +624,9 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     masterKey: string,
     key: string,
     name: string,
-    value: string[]
+    value: string[],
+    type: string,
+    hidden: boolean
   ): void {
     const found = this.state.changedListObject[masterKey].find(
       (element) => element.key === key
@@ -465,6 +637,9 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     } else {
       found[name] = value;
     }
+    found.type = type;
+
+    found.hidden = hidden;
   }
 
   addObject(value) {
@@ -523,7 +698,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
           onClick={(e) => {
             e.stopPropagation();
           }}
-          className="settingsPane"
+          className="settingsPane moving"
         >
           <CSSTransition
             in={this.state.showModal}
@@ -552,7 +727,9 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
             }}
           >
             <div className="settingsList">
-              {this.state.commonSettingItems}
+              <div className="settingsList commonSettings">
+                {this.state.commonSettingItems}
+              </div>
               <h3
                 className="cursorNormal notSelectable"
                 style={{ gridColumnStart: 1, gridColumnEnd: 2 }}

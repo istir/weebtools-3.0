@@ -312,8 +312,50 @@ class App extends React.Component<IAppProps, IAppState> {
     } catch (err) {
       worked = false;
       this.setState({ worked: false });
-      commonSettings = { commonSettings: [], tags: [] };
+
+      function formatCommon(
+        key: string,
+        name: string,
+        value: string,
+        isArray?,
+        visible?
+      ) {
+        if (isArray) {
+          const val = value.split(/[ ,]+/);
+          return { key, name, value: val };
+        }
+
+        return { key, name, value };
+      }
+      // commonSettings = { commonSettings: [], tags: [] };
+      commonSettings = [
+        formatCommon('workingPath', 'Working Directory', ''),
+        formatCommon('itemsToLoad', 'Items to load at once', '100'),
+        formatCommon('useDanbooruAPI', 'Use Danbooru API', 'true'),
+        formatCommon('displayType', 'Display Type', 'grid'),
+        formatCommon('randomBGUse', 'Use randomized background', 'false'),
+        formatCommon(
+          'randomBGTags',
+          'Random Background included tags',
+          'wallpaper',
+          true
+        ),
+        formatCommon(
+          'randomBGNotTags',
+          'Random Background disabled Tags',
+          'r18',
+          true
+        ),
+        formatCommon('randomBGFolder', 'Random Background Folder', ''),
+        formatCommon(
+          'randomBGColor',
+          'Random Background rrr,ggg,bbb,0.a',
+          '167, 66, 104,0.5'
+        ),
+        // formatCommon('firstLaunch', 'First Launch Done', 'true'),
+      ];
       settings.set(commonSettings);
+
       console.error(err);
     }
     if (worked) {
@@ -329,9 +371,9 @@ class App extends React.Component<IAppProps, IAppState> {
         display: commonSettings.find((el) => el.key === 'displayType').value,
       });
     }
-    const shouldUse1 = commonSettings.find((el) => el.key === 'randomBGUse')
+    const shouldUse = commonSettings.find((el) => el.key === 'randomBGUse')
       .value;
-      // console.log(shouldUse1)
+    // console.log(shouldUse1)
     if (this.state.database === null) {
       Database()
         .then(
@@ -348,7 +390,7 @@ class App extends React.Component<IAppProps, IAppState> {
             //   'abandon all hope ye who enter here'
             // );
             // eslint-disable-next-line promise/no-nesting
-            this.getRandomBg();
+            this.getRandomBg(true);
 
             return ful;
           },
@@ -362,11 +404,14 @@ class App extends React.Component<IAppProps, IAppState> {
           // eslint-disable-next-line no-console
           console.error(error);
         });
-    } else if (shouldUse1==="true" && document.body.classList.contains('moving')) {
+    } else if (shouldUse && document.body.classList.contains('moving')) {
       // console.log("OPCJA 1")
       // console.log("shouldUSE:",shouldUse1)
-      this.getRandomBg();
-    } else if (shouldUse1!=="true") {
+      this.getRandomBg(true);
+    } else if (shouldUse && !document.body.classList.contains('moving')) {
+      
+      this.getRandomBg(false);
+    } else if (!shouldUse) {
       // console.log("OPCJA 2")
       document.body.classList.add('moving');
       document.body.style.background = null;
@@ -393,7 +438,7 @@ class App extends React.Component<IAppProps, IAppState> {
     // }
     this.setState({ shouldUpdate: true });
   }
-  getRandomBg() {
+  getRandomBg(setRandom: boolean) {
     try {
       const tags = commonSettings.find((el) => el.key === 'randomBGTags').value;
       const NotTags = commonSettings.find((el) => el.key === 'randomBGNotTags')
@@ -404,38 +449,44 @@ class App extends React.Component<IAppProps, IAppState> {
         .value;
       const shouldUse = commonSettings.find((el) => el.key === 'randomBGUse')
         .value;
+    
+        if (shouldUse) {
+          const randomBG = new RandomBackground();
+          // eslint-disable-next-line promise/no-nesting
+          randomBG
+            .getCorrectQueries(
+              this.state.database,
+              workingDirectory as string,
+              tags,
+              NotTags,
+              folder
+            )
+            .then(() => {
+              const random = randomBG.getRandomBackground();
+              if (random.length > 0) {
+                document.body.classList.remove('moving');
+                if (setRandom) {
+                document.body.style.background = `linear-gradient( ${color}, ${color} ), ${random}`;
+                } else {
+                  let oldImage= document.body.style.backgroundImage.substring(document.body.style.backgroundImage.indexOf("url"))
+                  document.body.style.background = `linear-gradient( ${color}, ${color} ), ${oldImage}`;
+                }
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+              }
 
-      if (shouldUse === 'true') {
-        const randomBG = new RandomBackground();
-        // eslint-disable-next-line promise/no-nesting
-        randomBG
-          .getCorrectQueries(
-            this.state.database,
-            workingDirectory as string,
-            tags,
-            NotTags,
-            folder
-          )
-          .then(() => {
-            const random = randomBG.getRandomBackground();
-            if (random.length > 0) {
-              document.body.classList.remove('moving');
-              document.body.style.background = `linear-gradient( rgba(${color}), rgba(${color}) ), ${random}`;
-              document.body.style.backgroundSize = 'cover';
-              document.body.style.backgroundPosition = 'center';
-            }
+              // console.log(document.body.style.backgroundColor);
+              // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
+              //   dimming / 100
+              // });`;
 
-            // console.log(document.body.style.backgroundColor);
-            // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
-            //   dimming / 100
-            // });`;
+              return true;
+            })
 
-            return true;
-          })
-
-          .catch((error) => {
-            throw error;
-          });
+            .catch((error) => {
+              throw error;
+            });
+        
       }
     } catch (err) {
       console.error(err);

@@ -1,9 +1,13 @@
 import React from 'react';
 import { ConfigPane } from './ConfigDiv';
 
+
+
+
 interface IProps {
   forceUpdate: () => void;
 }
+
 function FirstLaunch(props: IProps) {
   function formatCommon(
     key: string,
