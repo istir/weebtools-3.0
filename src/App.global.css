@@ -495,11 +495,19 @@ input {
   border-radius: 5px;
   border: 1px solid transparent;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.5);
-  width: 20vw;
+  width: -webkit-fill-available;
   height: 20px;
 }
-.settingTagInput.arrays {
-  /* height: 30px; */
+
+.filePicker {
+  display: grid;
+  grid-template-columns: auto min-content;
+}
+.filePicker > button {
+  margin: 0;
+  font-size: 1em;
+  height: inherit;
+  margin-left: 10px;
 }
 .addToArray,
 .removeFromArray {
@@ -1094,6 +1102,7 @@ a:hover {
   background: var(--modalOpenBackground);
   display: flex;
   margin-top: 0;
+  z-index: 100;
   cursor: pointer;
 }
 /* .settingsBG.dialog::before {

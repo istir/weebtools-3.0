@@ -1,0 +1,152 @@
+// ==UserScript==
+// @name         Twitter weebTools Download
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       istir
+// @match        https://twitter.com/*
+// @require      https://code.jquery.com/jquery-3.4.1.min.js
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  function createCheck(text) {
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = text;
+    input.value = text;
+    input.id = text;
+    //    input.innerText = "<span style=\"color:#fff\">" + text + "</span>";
+    const span = document.createElement('span');
+    span.innerText = `${text}\n`;
+    span.style = 'user-select:none;';
+    span.classList.add('text-class');
+    span.addEventListener('click', (e) => {
+      // document.getElementById("tag").click();
+      if (!document.getElementById(text).checked) {
+        document.getElementById(text).checked = true;
+      } else {
+        document.getElementById(text).checked = false;
+      }
+      e.preventDefault();
+      //    document.getElementById(text).checked = true;
+    });
+
+    return {
+      input,
+      span,
+    };
+  }
+
+  function createDiv(number) {
+    const div = document.createElement('div');
+    div.id = 'div-tw';
+    div.style =
+      'width:auto;height:auto;left:0;top:0;display:block;background:#15202B;position:fixed';
+
+    const tab = document.createElement('table');
+    let button = document.createElement('button');
+    //    button.style=
+    button.innerText = '✖';
+    button.classList.add('btn-class');
+    div.append(button);
+    button.addEventListener('click', (e) => {
+      div.remove();
+    });
+    tab.id = 'table';
+    // tab.appendChild(form);
+    for (let i = 0; i < tags.length; i++) {
+      // const element = tags[i];
+      tab.appendChild(createCheck(tags[i]).input);
+      tab.appendChild(createCheck(tags[i]).span);
+    }
+
+    div.appendChild(tab);
+
+    let button = document.createElement('button');
+    button.id = 'save';
+    button.innerText = 'Save';
+    button.classList.add('btn-class');
+    // save button
+    button.addEventListener('click', (e) => {
+      let url;
+      const elements = document.getElementsByClassName(
+        'css-1dbjc4n r-1p0dtai r-1mlwlqe r-1d2f490 r-ywje51 r-dnmrzs r-1udh08x r-u8s1d r-zchlnj r-ipm5af r-417010'
+      );
+      const regexnumber = new RegExp('[0-9]$');
+
+      if (elements.length > 1) {
+        const number = regexnumber.exec(window.location.href);
+        if (number == elements.length) {
+          url = elements[elements.length - 1].children[1].currentSrc;
+        } else {
+          url = elements[elements.length - 2].children[1].currentSrc;
+        }
+      } else {
+        // console.log()
+        url = elements[elements.length - 1].children[1].currentSrc;
+      }
+
+      const tab = document
+        .getElementById('table')
+        .getElementsByTagName('input');
+      let output = 'Tags: ';
+      for (let i = 0; i < tab.length; i++) {
+        if (tab[i].checked) {
+          if (output != 'Tags: ') {
+            output += ', ';
+          }
+          output += tab[i].name;
+        }
+      }
+      // output = output.substring(0, output.length - 1);
+      //    output -= ", ";
+      if (output == 'Tags: ') {
+        output += 'other';
+      }
+      const Url = document.createElement('textarea');
+      document.getElementById('div-tw').append(Url);
+      Url.innerHTML = `${window.location.href}|${url}|${output}`;
+      Url.select();
+      document.execCommand('copy');
+      //    Url.remove();
+
+      //    console.log();
+      deleteDiv();
+    });
+    div.append(button);
+    document.getElementsByTagName('body')[0].appendChild(div);
+  }
+
+  function deleteDiv() {
+    const div = document.getElementById('div-tw');
+    div.remove();
+  }
+
+  var tags = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'];
+
+  const button = document.createElement('button');
+  button.id = 'btn';
+  button.innerText = '▼';
+  button.classList.add('btn-class');
+  button.style = 'position: fixed;    display: block;    top: 0;';
+  document.getElementsByTagName('body')[0].appendChild(button);
+  button.addEventListener('click', (e) => {
+    const re = new RegExp(
+      '^(ht|f)tp(s?)://twitter.com/[0-z]+/status/[0-9]+/photo.+'
+    );
+    const regexnumber = new RegExp('[0-9]$');
+    if (re.test(window.location.href)) {
+      if (regexnumber.test(window.location.href)) {
+        var number = regexnumber.exec(window.location.href);
+      } else {
+        var number = 1;
+      }
+      createDiv(number);
+    }
+  });
+
+  $(
+    '<style>.btn-class{padding-bottom:0px;padding-top:0px;border:2px solid rgb(136, 153, 166);border-radius:999px;transition: 0.2s;line-height:1.5;color:rgb(136, 153, 166);background:#15202B;text-align:center;padding-left: 5px;padding-right: 5px;}.btn-class:hover{color:rgb(224, 36, 94);box-shadow: inset 0 0 0px 20px rgba(224, 36, 94, 0.1);}.text-class{font-size:18px;transition: 0.2s;color:rgb(136, 153, 166);}.text-class:hover{color:rgb(224, 36, 94);}</style>'
+  ).appendTo('body');
+})();

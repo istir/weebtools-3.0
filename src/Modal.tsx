@@ -43,30 +43,42 @@ class ModalOwn extends React.Component<IProps, IState> {
       for (let i = 0; i < this.props.buttons.length; i += 1) {
         if (i === 0) {
           this.buttonsHTML.unshift(
-            <button
-              type="button"
-              key={this.props.buttons[i]}
-              onClick={this.agreeBound}
-              className="primary"
-              // autoFocus
-            >
-              {this.props.buttons[i]}
-            </button>
+            this.createPrimaryButton(this.props.buttons[i])
           );
         } else {
           this.buttonsHTML.unshift(
-            <button
-              type="button"
-              key={this.props.buttons[i]}
-              onClick={this.disagreeBound}
-              className="secondary"
-            >
-              {this.props.buttons[i]}
-            </button>
+            this.createSecondaryButton(this.props.buttons[i])
           );
         }
       }
     }
+  }
+
+  createPrimaryButton(text: string) {
+    return (
+      <button
+        type="button"
+        key={text}
+        onClick={this.agreeBound}
+        className="primary"
+        // autoFocus
+      >
+        {text}
+      </button>
+    );
+  }
+
+  createSecondaryButton(text: string) {
+    return (
+      <button
+        type="button"
+        key={text}
+        onClick={this.disagreeBound}
+        className="secondary"
+      >
+        {text}
+      </button>
+    );
   }
 
   agree() {
@@ -105,7 +117,12 @@ class ModalOwn extends React.Component<IProps, IState> {
           >
             <div className="dialog title text">{this.props.title}</div>
             <div className="dialog message text">{this.props.message}</div>
-            <div className="dialog buttons">{this.buttonsHTML}</div>
+            {/* {console.log(this.buttonsHTML)} */}
+            <div className="dialog buttons">
+              {this.buttonsHTML.length > 0
+                ? this.buttonsHTML
+                : this.createPrimaryButton('OK')}
+            </div>
           </div>
         </div>
       </CSSTransition>

@@ -11,7 +11,7 @@ import './App.global.css';
 const titlebar = new Titlebar({
   backgroundColor: Color.TRANSPARENT,
   // backgroundColor: new Color(new RGBA(0, 0, 0, .7)),
-  menu: null,
+  // menu: null,
   // backgroundColor: customTitlebar.Color.fromRgba('0,0,0,0.7'),
 });
 // titlebar.updateItemBGColor(Color.TRANSPARENT);

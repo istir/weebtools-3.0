@@ -16,6 +16,8 @@ import RandomBackground from './RandomBackground';
 import FirstLaunch from './FirstLaunch';
 import { common } from '@material-ui/core/colors';
 import { resolve } from 'path';
+import { ipcRenderer } from 'electron';
+import sendAsync from './DatabaseSQLite';
 
 interface IcommonSettings {
   key: string;
@@ -176,7 +178,8 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
 
   async refreshItem(fileName: string, folder: string) {
     const query = `SELECT * FROM files WHERE fileName="${fileName}" AND folder="${folder}"`;
-    const [rows] = await this.props.database.query(query);
+    const rows = await sendAsync(query)
+    // const [rows] = await this.props.database.query(query);
     return rows[0].Tags.split(', ');
   }
 
@@ -192,7 +195,8 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     const query = `UPDATE files SET folder="${newFolder}",Tags="${normalizeTags(
       newTags
     )}" where fileName="${oldName}" AND folder="${oldFolder}"`;
-    await this.props.database.query(query);
+    await sendAsync(query)
+    // await this.props.database.query(query);
   }
 
   render() {
@@ -374,37 +378,38 @@ class App extends React.Component<IAppProps, IAppState> {
     const shouldUse = commonSettings.find((el) => el.key === 'randomBGUse')
       .value;
     // console.log(shouldUse1)
-    if (this.state.database === null) {
-      Database()
-        .then(
-          (ful: any) => {
-            // eslint-disable-next-line no-console
-            // console.log('connected');
-            // console.log(ful);
-            this.setState({ database: ful });
-            // const randomBG = new RandomBackground(
-            //   this.state.database,
-            //   workingDirectory as string,
-            //   [],
-            //   [],
-            //   'abandon all hope ye who enter here'
-            // );
-            // eslint-disable-next-line promise/no-nesting
-            this.getRandomBg(true);
+    // if (this.state.database === null) {
+    //   Database()
+    //     .then(
+    //       (ful: any) => {
+    //         // eslint-disable-next-line no-console
+    //         // console.log('connected');
+    //         // console.log(ful);
+    //         this.setState({ database: ful });
+    //         // const randomBG = new RandomBackground(
+    //         //   this.state.database,
+    //         //   workingDirectory as string,
+    //         //   [],
+    //         //   [],
+    //         //   'abandon all hope ye who enter here'
+    //         // );
+    //         // eslint-disable-next-line promise/no-nesting
+    //         this.getRandomBg(true);
 
-            return ful;
-          },
-          (rej: any) => {
-            // eslint-disable-next-line no-console
-            console.log('error');
-            return rej;
-          }
-        )
-        .catch((error) => {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        });
-    } else if (shouldUse && document.body.classList.contains('moving')) {
+    //         return ful;
+    //       },
+    //       (rej: any) => {
+    //         // eslint-disable-next-line no-console
+    //         console.log('error');
+    //         return rej;
+    //       }
+    //     )
+    //     .catch((error) => {
+    //       // eslint-disable-next-line no-console
+    //       console.error(error);
+    //     });
+    // } else 
+    if (shouldUse && document.body.classList.contains('moving')) {
       // console.log("OPCJA 1")
       // console.log("shouldUSE:",shouldUse1)
       this.getRandomBg(true);
@@ -437,6 +442,7 @@ class App extends React.Component<IAppProps, IAppState> {
 
     // }
     this.setState({ shouldUpdate: true });
+    // console.log(this.state.shouldUpdate)
   }
   getRandomBg(setRandom: boolean) {
     try {
@@ -595,7 +601,18 @@ class App extends React.Component<IAppProps, IAppState> {
   setShouldUpdate() {
     this.setState({ shouldUpdate: false });
   }
+  
+  
+
+  async send(sql) {
+    let test = await sendAsync(sql)
+    
+    // let test = sendAsync(sql).then((result) => {return result});
+    console.log(test)
+}
+  
   render() {
+    // return <button onClick={()=>this.send("SELECT * FROM files")}></button>
     try {
       // if (commonSettings.find((el) => el.key === 'firstLaunch').value!=="true") {
       if (!this.state.worked) {
@@ -656,7 +673,7 @@ class App extends React.Component<IAppProps, IAppState> {
           doubleClick={this.clickFullscreenImageBound}
           showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
-          database={this.state.database}
+          // database={this.state.database}
           workingDir={workingDirectory}
           shouldUpdate={this.state.shouldUpdate}
           setShouldUpdate={this.setShouldUpdate.bind(this)}

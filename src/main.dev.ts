@@ -15,22 +15,47 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-// const contextMenu = require('electron-context-menu');
-// const customTitlebar = require('custom-electron-titlebar');
-// import PerfectScrollbar from 'perfect-scrollbar';
-// const clipboardListener = require('clipboard-event');
-// const ClipboardListener = require('clipboard-listener');
-const clipboardy = require('clipboardy');
+import HandleBackups from './HandleBackups';
+
 const clipboard = require('electron-clipboard-extended');
-// const ClipboardListener = require('clipboard-listener');
-
-// const navigator = require('Navigator');
+const fs = require('fs');
 const { ipcMain } = require('electron');
+const sqlite3 = require('sqlite3');
 
-// const listener = new ClipboardListener({
-//   timeInterval: 100, // Default to 250
-//   immediate: true, // Default to false
-// });
+let defaultDB;
+if (app.isPackaged) {
+  console.log('PACKAGED!');
+  defaultDB = path.join(process.resourcesPath, 'assets', 'public.db');
+} else {
+  console.log('not packaged');
+  defaultDB = path.join(__dirname, '../assets', 'public.db');
+}
+
+const userDB = path.join(app.getPath('userData'), 'database.db');
+
+if (!fs.existsSync(userDB)) {
+  // console.log('NOT FOUND !');
+  fs.copyFile(defaultDB, userDB, (err) => {
+    if (err) throw err;
+    console.log('Copied default database to user data');
+  });
+}
+
+const database = new sqlite3.Database(userDB, (err) => {
+  // const RESOURCES_PATH = app.isPackaged
+  // ? path.join(process.resourcesPath, 'resources')
+  // : path.join(__dirname, '../resources');
+
+  // console.log('DIR:', __dirname);
+  if (err) console.error('Database opening error: ', err);
+});
+
+ipcMain.on('asynchronous-message', (event, arg) => {
+  const sql = arg;
+  database.all(sql, (err, rows) => {
+    event.reply('asynchronous-reply', (err && err.message) || rows);
+  });
+});
 
 export default class AppUpdater {
   constructor() {
@@ -132,22 +157,25 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
+
+  mainWindow.on('close', () => {
+    HandleBackups(userDB);
+  });
+
   // const listener = new ClipboardListener();
   clipboard.startWatching();
   console.log('startListening');
-  var lastClip = '';
+  let lastClip = '';
   clipboard.on('text-changed', () => {
     console.log('clipboardChanged');
     try {
       if (
-        mainWindow != null &&
-        typeof clipboard.readText() == 'string' &&
-        lastClip != clipboard.readText()
+        mainWindow !== null &&
+        typeof clipboard.readText() === 'string' &&
+        lastClip !== clipboard.readText()
       ) {
         mainWindow.webContents.send('clipboard', clipboard.readText());
         lastClip = clipboard.readText();
-      } else {
-        console.log('lastClip=' + lastClip);
       }
     } catch (err) {
       console.log(err);
@@ -193,8 +221,8 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  // const menuBuilder = new MenuBuilder(mainWindow);
-  // menuBuilder.buildMenu();
+  const menuBuilder = new MenuBuilder(mainWindow);
+  menuBuilder.buildMenu();
 
   // Open urls in the user's browser
   mainWindow.webContents.on('new-window', (event, url) => {

@@ -14,7 +14,11 @@
     "postinstall": "yarn electron-rebuild"
   },
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.0",
+    "node-gyp": "^7.1.2",
+    "sqlite3": "^5.0.2"
+  },
   "devDependencies": {
     "@types/react": "^17.0.0",
     "@types/react-lazy-load-image-component": "^1.5.1",

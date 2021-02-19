@@ -1,4 +1,5 @@
 import settings from 'electron-settings';
+import sendAsync from './DatabaseSQLite';
 
 const fs = require('fs');
 const download = require('download');
@@ -43,7 +44,7 @@ class GetTags {
   setProgressBarPercentage: any | undefined;
 
   async init(
-    database: any,
+    // database: any,
     urlString: string,
     downloadedCallback: any,
     setProgressBarPercentage: any
@@ -52,7 +53,7 @@ class GetTags {
     // settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value = settings      .getSync('commonSettings')      .find((el) => el.key === 'workingPath').value;
     this.settingsTags = settings.getSync('tags');
     this.commonSettings = settings.getSync('commonSettings');
-    this.sqlConnection = database;
+    // this.sqlConnection = database;
     this.downloadedCallback = downloadedCallback;
     this.setProgressBarPercentage = setProgressBarPercentage;
     const patternBooru = new RegExp(
@@ -72,16 +73,17 @@ class GetTags {
       // var test = await this.readBooruTags(urlString, this.generateFolderName);
       if (
         this.commonSettings.find((el) => el.key === 'useDanbooruAPI').value ===
-        'true'
+        true
       ) {
         // console.log('YEP');
+
         await this.readBooruTagsAPI(
           urlString,
           this.generateFolderName.bind(this),
           true
         );
       } else {
-        await this.readBooruTags(urlString, this.generateFolderName);
+        await this.readBooruTags(urlString, this.generateFolderName.bind(this));
       }
 
       // this.urlString = urlString;
@@ -120,7 +122,10 @@ class GetTags {
   //     }
   //   );
   // }
-  async downloadAsync(url, filePath) {
+  async downloadAsync(url, filePath, relPath: string) {
+    if (!fs.existsSync(relPath)) {
+      fs.mkdirSync(relPath);
+    }
     fs.writeFile(
       filePath,
       await download(url)
@@ -286,7 +291,13 @@ class GetTags {
                 this.fileName,
                 this.tags
               );
-              this.downloadAsync(this.downloadLink, this.filePath);
+              let relPath = path.join(
+                this.commonSettings.find((el) => el.key === 'workingPath')
+                  .value,
+                folderName
+              );
+
+              this.downloadAsync(this.downloadLink, this.filePath, relPath);
               return ful;
             },
             (rej) => {
@@ -468,7 +479,11 @@ class GetTags {
           // console.log(this.filePath);
           this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
           // console.log(new Downloader(this.downloadLink, this.filePath));
-          await this.downloadAsync(this.downloadLink, this.filePath);
+          let relPath = path.join(
+            this.commonSettings.find((el) => el.key === 'workingPath').value,
+            folderName
+          );
+          await this.downloadAsync(this.downloadLink, this.filePath, relPath);
           // console.log(test);
           // return this.dl;
           return true;
@@ -530,6 +545,16 @@ class GetTags {
     // console.log(this.urlString);
     this.urlString = this.urlString.substring(0, this.urlString.indexOf('|'));
     this.insertIntoDatabase(this.folderName, this.fileName, this.tags);
+
+    let relPath = path.join(
+      this.commonSettings.find((el) => el.key === 'workingPath').value,
+      folderName
+    );
+
+    if (!fs.existsSync(relPath)) {
+      fs.mkdirSync(relPath);
+    }
+
     if (site === 'Pixiv') {
       fs.writeFile(
         filePath,
@@ -629,16 +654,20 @@ class GetTags {
       const query = `INSERT INTO files(folder, fileName, tags, url) VALUES("${folder}","${file}","${arrToString(
         tagsToInsert
       )}","${url}")`;
-      await sqlConnection.query(query);
+      await sendAsync(query);
+      // await sqlConnection.query(query);
     }
     async function checkIfExists(keyFile: string, keyFolder: string) {
       const query = `SELECT COUNT(*) as solution FROM files WHERE ${keyFile}="${file}" and ${keyFolder}="${folder}"`;
-
-      const [rows] = await sqlConnection.execute(query);
+      const rows = await sendAsync(query);
+      // const [rows] = await sqlConnection.execute(query);
       // var asd = await sqlConnection.query(query);
-
+      // console.log(rows[0].solution);
       // length = asd;
       // console.log(sqlConnection.solution);
+      if (rows[0].solution === undefined) {
+        return 0;
+      }
       return rows[0].solution;
     }
 
@@ -649,7 +678,9 @@ class GetTags {
     ) {
       async function getRecord() {
         const queryGetTags = `SELECT * FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        const [rows] = await sqlConnection.execute(queryGetTags);
+        const rows = await sendAsync(queryGetTags);
+
+        // const [rows] = await sqlConnection.execute(queryGetTags);
         // return stringToArr(rows[0].Tags);
         return new Promise((resolve, reject) => {
           if (rows.length > 0) {
@@ -661,15 +692,18 @@ class GetTags {
       }
       async function deleteRecord() {
         const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        const [rows] = await sqlConnection.execute(queryDeleteRow);
+        const rows = await sendAsync(queryDeleteRow);
+        console.log(rows);
+        // const [rows] = await sqlConnection.execute(queryDeleteRow);
         // console.log(rows);
         return new Promise((resolve, reject) => {
-          if (rows.affectedRows >= 1) {
-            // console.log('YEP');
-            resolve('Record Deleted');
-          } else {
-            reject(new Error("Couldn't delete record"));
-          }
+          //TODO: somehow brind back this check!!
+          // if (rows.affectedRows >= 1) {
+          //   // console.log('YEP');
+          resolve('Record Deleted');
+          // } else {
+          //   reject(new Error("Couldn't delete record"));
+          // }
         });
       }
       // var newTags = [];

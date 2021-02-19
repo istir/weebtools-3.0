@@ -1,5 +1,6 @@
 import path from 'path';
 import url from 'file-url';
+import sendAsync from './DatabaseSQLite';
 
 class RandomBackground {
   database: import('mysql2/promise').Connection;
@@ -42,12 +43,16 @@ class RandomBackground {
     folderToShow?: string
   ) {
     this.workingDirectory = workingDirectory;
-    await database
-      .execute(this.getSearchQuery(tagsToShow, tagsToIgnore, folderToShow))
-      .then((ful) => {
-        this.fileArray = ful;
-        return true;
-      });
+    this.fileArray = await sendAsync(
+      this.getSearchQuery(tagsToShow, tagsToIgnore, folderToShow)
+    );
+
+    // await database
+    //   .execute(this.getSearchQuery(tagsToShow, tagsToIgnore, folderToShow))
+    //   .then((ful) => {
+    //     this.fileArray = ful;
+    //     return true;
+    //   });
     // return rows;
   }
 
