@@ -53,7 +53,7 @@ function FirstLaunch(props: IProps) {
     formatCommon('randomBGFolder', 'Random Background Folder', ''),
     formatCommon(
       'randomBGColor',
-      'Random Background rrr,ggg,bbb,0.a',
+      'Random Background color',
       '#c2273480',
       'color'
     ),

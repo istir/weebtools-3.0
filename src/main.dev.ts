@@ -23,7 +23,7 @@ import MenuBuilder from './menu';
 const clipboardy = require('clipboardy');
 const clipboard = require('electron-clipboard-extended');
 // const ClipboardListener = require('clipboard-listener');
-
+const fs = require('fs');
 // const navigator = require('Navigator');
 const { ipcMain } = require('electron');
 const sqlite3 = require('sqlite3');
@@ -31,16 +31,26 @@ const sqlite3 = require('sqlite3');
 //   timeInterval: 100, // Default to 250
 //   immediate: true, // Default to false
 // });
-let dbPath;
+let defaultDB;
 if (app.isPackaged) {
   console.log('PACKAGED!');
-  dbPath = path.join(process.resourcesPath, 'assets', 'public.db');
+  defaultDB = path.join(process.resourcesPath, 'assets', 'public.db');
 } else {
   console.log('not packaged');
-  dbPath = path.join(__dirname, '../assets', 'public.db');
+  defaultDB = path.join(__dirname, '../assets', 'public.db');
 }
-console.log(dbPath);
-const database = new sqlite3.Database(dbPath, (err) => {
+
+let userDB = path.join(app.getPath('userData'), 'database.db');
+
+if (!fs.existsSync(userDB)) {
+  // console.log('NOT FOUND !');
+  fs.copyFile(defaultDB, userDB, (err) => {
+    if (err) throw err;
+    console.log('Copied default database to user data');
+  });
+}
+
+const database = new sqlite3.Database(userDB, (err) => {
   // const RESOURCES_PATH = app.isPackaged
   // ? path.join(process.resourcesPath, 'resources')
   // : path.join(__dirname, '../resources');
@@ -161,7 +171,7 @@ const createWindow = async () => {
   console.log('startListening');
   var lastClip = '';
   clipboard.on('text-changed', () => {
-    // console.log('clipboardChanged');
+    console.log('clipboardChanged');
     try {
       if (
         mainWindow != null &&

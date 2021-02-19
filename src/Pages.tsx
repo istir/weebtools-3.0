@@ -115,6 +115,13 @@ class Pages extends React.Component<Props, State> {
         this.props.setProgressBarPercentage
       );
     });
+    this.timerID=setInterval(()=>{
+      if (this.props.shouldUpdate) {
+          clearInterval(this.timerID)
+          this.forceUpdate()
+      }
+    })
+    
     // this.timerID = setInterval(() => {
     //   // console.log(this.timerID);
     //   // console.log(this.props.database);
@@ -128,16 +135,20 @@ class Pages extends React.Component<Props, State> {
     //     this.forceUpdate();
     //   }
     // }, 10);
-    this.loadItems(false,0);
-    const itemsToLoad: number = settings
-    .getSync('commonSettings')
-    .find((el) => el.key === 'itemsToLoad').value;
-    this.setState({itemsPerPage:itemsToLoad,currentLength:parseInt(itemsToLoad)})
+    // this.loadItems(false,0);
+    
+    // const itemsToLoad: number = settings
+    // .getSync('commonSettings')
+    // .find((el) => el.key === 'itemsToLoad').value;
+    // this.setState({itemsPerPage:itemsToLoad,currentLength:parseInt(itemsToLoad)})
 
   }
+// shouldComponentUpdate() {
+//   console.log(this.props.shouldUpdate) 
+// }
+
 
   componentDidUpdate(prevProps) {
-   
     if (this.props.shouldUpdate) {
       this.props.setShouldUpdate()
       // setTimeout(() => {
@@ -398,7 +409,12 @@ class Pages extends React.Component<Props, State> {
       // console.log(query)
       
       const rows = await sendAsync(query)
-      // console.log(rows)
+      if (rows.length==0) {
+        setTimeout(() => {
+          this.loadItems(shouldSearch,overrideLength)
+        }, 300);
+        return 0
+      }
       // const [rows] = await this.props.database.execute(query);
       // console.log("rows:",rows,"reply:",reply)
       // for (let i = 0; i < rows.length; i+=1) {
