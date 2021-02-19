@@ -15,6 +15,10 @@ import SimpleBarReact from 'simplebar-react';
 import { CSSTransition } from 'react-transition-group';
 import { PRIORITY_HIGHEST } from 'constants';
 import InputColor from 'react-input-color';
+import  fs  from 'fs';
+import ModalOwn from './Modal';
+
+const { dialog, app } = require('electron').remote;
 
 settings.configure({ prettify: true });
 
@@ -121,6 +125,8 @@ class SettingsItem extends React.Component<
   SettingsItemProps,
   ISettingsItemState
 > {
+  filePathInput;
+
   constructor(props) {
     super(props);
     // this.state = {
@@ -132,6 +138,7 @@ class SettingsItem extends React.Component<
     // console.log(this.state.valueArr);
 
     this.state = { values: this.props.value, element: null };
+    this.filePathInput = React.createRef();
   }
 
   componentDidMount() {
@@ -193,7 +200,7 @@ class SettingsItem extends React.Component<
       this.props.keyProp,
       'value',
       // this.handleValue(e.target),
-      e.target,
+      e.target.checked,
       this.props.type,
       this.props.hidden
       // this.checkIfArray(e.target.value)
@@ -208,6 +215,8 @@ class SettingsItem extends React.Component<
       this.setState({ element: this.renderColor() });
     } else if (this.props.valueShouldBeArray) {
       this.setState({ element: this.renderArrayField() });
+    } else if (this.props.type === 'filePicker') {
+      this.setState({ element: this.renderFilePicker() });
     } else {
       this.setState({ element: this.renderTextField() });
     }
@@ -269,6 +278,58 @@ class SettingsItem extends React.Component<
     // arrayField
     //  arrayChild
     //  arrayChild
+  }
+
+  renderFilePicker() {
+    return (
+      <div className="filePicker">
+        {/* {this.renderTextField()} */}
+        <input
+          ref={this.filePathInput}
+          className="settingTagInput"
+          key={this.props.name}
+          type={this.props.type}
+          defaultValue={this.state.values}
+          onChange={this.textChange.bind(this)}
+        />
+        <button
+          type="button"
+          onClick={async () => {
+            // console.log(
+            try {
+              const file = await dialog.showOpenDialog({
+                defaultPath: this.filePathInput.current.value,
+                properties: ['openDirectory'],
+              });
+              // );
+              // console.log('dialog', file);
+              if (!file.canceled) {
+                this.filePathInput.current.value = file.filePaths[0];
+
+                // console.log(file.filePaths[0]); // this.initializeElement(); // this.setState({ values: file.filePaths[0] });
+                this.props.itemChanged(
+                  'commonSettings',
+                  this.props.keyProp,
+                  'value',
+                  // this.handleValue(e.target),
+                  file.filePaths[0],
+                  this.props.type,
+                  this.props.hidden
+                  // this.checkIfArray(e.target.value)
+                );
+              }
+            } catch (err) {
+              throw err;
+            }
+          }}
+        >
+          ...
+        </button>
+      </div>
+    );
+    // console.log(
+    //   dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
+    // );
   }
 
   renderTextField() {
@@ -546,6 +607,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
               key: value.key,
               name: value.name,
               value: value.value,
+              type:value.type
             });
           }
           for (let i = 0; i < this.props.settings.length; i += 1) {
@@ -625,7 +687,29 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
     // window.location.reload(); // TODO: <-find better way to do it
   }
 
+  closeModal() {
+    this.setState({ showError: false });
+  }
+
   saveConfig(): void {
+    const found = this.state.changedListObject.commonSettings.find(
+      (el) => el.key === 'workingPath'
+    ).value;
+
+    console.log(this.state.changedListObject.commonSettings);
+    console.log(found)
+    if (!fs.existsSync(found)) {
+      console.log("????")
+      this.setState({
+        showError: true,
+        buttons: ['OK'],
+        title: 'Directory not found',
+        message: `Directory ${found} does not exists`,
+      });
+      return;
+      // fs.mkdirSync();
+    }
+
     console.log('SAVED!\nNew Config:', this.state.changedListObject);
     // console.log(settings.file());
     settings.setSync(this.state.changedListObject);
@@ -696,12 +780,20 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
   render() {
     return (
+      
       <div
         // className={`settingsBG ${this.props.shown ? '' : 'hidden'}`}
         className="settingsBG"
         // onClick={this.closePane.bind(this)}
         // onClick={this.closePane.bind(this)}
       >
+               {this.state.buttons!==undefined? <ModalOwn
+          show={this.state.showError}
+          close={this.closeModal.bind(this)}
+          buttons={this.state.buttons}
+          title={this.state.title}
+          message={this.state.message}
+        />:""}
         <div
           onKeyDown={(e) => {
             e.stopPropagation();
@@ -712,6 +804,7 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
           }}
           className="settingsPane moving"
         >
+
           <CSSTransition
             in={this.state.showModal}
             timeout={200}
@@ -831,6 +924,7 @@ class TagToAdd extends React.Component<TagToAddProps, TagToAddState> {
 
   onChangeCheckbox(e) {
     const obj = this.state.value;
+    
     // console.log(obj[e.target.name]);
     obj[e.target.name] = e.target.checked;
     this.setState({ value: obj });

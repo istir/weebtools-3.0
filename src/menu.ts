@@ -6,6 +6,9 @@ import {
   MenuItemConstructorOptions,
   dialog,
 } from 'electron';
+import settings from 'electron-settings';
+import path from 'path';
+import sendAsync from './DatabaseSQLite';
 
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
   selector?: string;
@@ -24,7 +27,7 @@ export default class MenuBuilder {
       process.env.NODE_ENV === 'development' ||
       process.env.DEBUG_PROD === 'true'
     ) {
-      // this.setupDevelopmentEnvironment();
+      this.setupDevelopmentEnvironment();
     }
 
     const template =
@@ -34,7 +37,7 @@ export default class MenuBuilder {
 
     // this.setupContextMenu();
     const menu = Menu.buildFromTemplate(template);
-    // Menu.setApplicationMenu(menu);
+    Menu.setApplicationMenu(menu);
 
     return menu;
   }
@@ -210,134 +213,121 @@ export default class MenuBuilder {
 
   buildDefaultTemplate() {
     const templateDefault = [
+      // {
+      //   label: '&File',
+      //   submenu: [
+      //     {
+      //       label: '&Config',
+      //       click: () => {
+      //         // console.log(config.get('tags'));
+      //         // let configWindow: BrowserWindow | null = null;
+      //         // configWindow = new BrowserWindow({
+      //         //   show: false,
+      //         //   width: 1024,
+      //         //   height: 768,
+      //         //   // titleBarStyle: 'hidden',
+      //         //   // frame: false,
+      //         //   webPreferences: {
+      //         //     nodeIntegration: true,
+      //         //     enableRemoteModule: true,
+      //         //   },
+      //         // });
+      //         // configWindow.loadURL(`file://${__dirname}/indexConfig.html`);
+      //         // configWindow.webContents.on('did-finish-load', () => {
+      //         //   if (!configWindow) {
+      //         //     throw new Error('"mainWindow" is not defined');
+      //         //   }
+      //         //   if (process.env.START_MINIMIZED) {
+      //         //     configWindow.minimize();
+      //         //   } else {
+      //         //     configWindow.show();
+      //         //     configWindow.focus();
+      //         //   }
+      //         // });
+      //         // configWindow.show();
+      //         // dialog.showMessageBox(this.mainWindow, {
+      //         //   buttons: ['OK'],
+      //         //   title: 'Config',
+      //         //   message: 'WIP',
+      //         //   type: 'info',
+      //         // });
+      //       },
+      //     },
+      //     {
+      //       label: '&Close',
+      //       accelerator: 'Ctrl+W',
+      //       click: () => {
+      //         this.mainWindow.close();
+      //       },
+      //     },
+      //   ],
+      // },
       {
-        label: '&File',
+        label: 'Debug',
         submenu: [
           {
-            label: '&Config',
+            label: 'Open Dev Tools',
             click: () => {
-              // console.log(config.get('tags'));
-              // let configWindow: BrowserWindow | null = null;
-              // configWindow = new BrowserWindow({
-              //   show: false,
-              //   width: 1024,
-              //   height: 768,
-              //   // titleBarStyle: 'hidden',
-              //   // frame: false,
-              //   webPreferences: {
-              //     nodeIntegration: true,
-              //     enableRemoteModule: true,
-              //   },
-              // });
-              // configWindow.loadURL(`file://${__dirname}/indexConfig.html`);
-              // configWindow.webContents.on('did-finish-load', () => {
-              //   if (!configWindow) {
-              //     throw new Error('"mainWindow" is not defined');
-              //   }
-              //   if (process.env.START_MINIMIZED) {
-              //     configWindow.minimize();
-              //   } else {
-              //     configWindow.show();
-              //     configWindow.focus();
-              //   }
-              // });
-              // configWindow.show();
-              // dialog.showMessageBox(this.mainWindow, {
-              //   buttons: ['OK'],
-              //   title: 'Config',
-              //   message: 'WIP',
-              //   type: 'info',
-              // });
+              this.mainWindow.webContents.openDevTools();
             },
           },
           {
-            label: '&Close',
-            accelerator: 'Ctrl+W',
-            click: () => {
-              this.mainWindow.close();
-            },
-          },
-        ],
-      },
-      {
-        label: '&View',
-        submenu:
-          process.env.NODE_ENV === 'development' ||
-          process.env.DEBUG_PROD === 'true'
-            ? [
-                {
-                  label: '&Reload',
-                  accelerator: 'Ctrl+R',
-                  click: () => {
-                    this.mainWindow.webContents.reload();
-                  },
-                },
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  },
-                },
-                {
-                  label: 'Toggle &Developer Tools',
-                  accelerator: 'Alt+Ctrl+I',
-                  click: () => {
-                    this.mainWindow.webContents.toggleDevTools();
-                  },
-                },
-              ]
-            : [
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  },
-                },
-                {
-                  label: 'test',
-                  click: () => {
-                    this.mainWindow.webContents.openDevTools();
-                  },
-                },
-              ],
-      },
-      {
-        label: 'Help',
-        submenu: [
-          {
-            label: 'Learn More',
-            click() {
-              shell.openExternal('https://electronjs.org');
+            label: 'Open installation directory',
+            click: async () => {
+              shell.showItemInFolder(process.execPath);
+
+              // const response = await sendAsync('SELECT * FROM files');
+              // console.log(response);
+              // this.mainWindow.webContents.openDevTools();
             },
           },
           {
-            label: 'Documentation',
-            click() {
-              shell.openExternal(
-                'https://github.com/electron/electron/tree/master/docs#readme'
+            label: 'Open assets directory',
+            click: async () => {
+              shell.showItemInFolder(
+                path.join(process.resourcesPath, 'assets', 'public.db')
               );
             },
           },
           {
-            label: 'Community Discussions',
-            click() {
-              shell.openExternal('https://www.electronjs.org/community');
-            },
-          },
-          {
-            label: 'Search Issues',
-            click() {
-              shell.openExternal('https://github.com/electron/electron/issues');
+            label: 'Open settings directory',
+            click: async () => {
+              shell.showItemInFolder(settings.file());
             },
           },
         ],
       },
+      // {
+      //   label: 'Help',
+      //   submenu: [
+      //     {
+      //       label: 'Learn More',
+      //       click() {
+      //         shell.openExternal('https://electronjs.org');
+      //       },
+      //     },
+      //     {
+      //       label: 'Documentation',
+      //       click() {
+      //         shell.openExternal(
+      //           'https://github.com/electron/electron/tree/master/docs#readme'
+      //         );
+      //       },
+      //     },
+      //     {
+      //       label: 'Community Discussions',
+      //       click() {
+      //         shell.openExternal('https://www.electronjs.org/community');
+      //       },
+      //     },
+      //     {
+      //       label: 'Search Issues',
+      //       click() {
+      //         shell.openExternal('https://github.com/electron/electron/issues');
+      //       },
+      //     },
+      //   ],
+      // },
     ];
 
     return templateDefault;

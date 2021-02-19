@@ -1,0 +1,45 @@
+// ==UserScript==
+// @name         Danbooru Downloader
+
+// @version      0.1
+// @description  try to take over the world!
+// @author       You
+// @match        https://danbooru.donmai.us/posts
+// @match        https://danbooru.donmai.us/posts?*
+// @match        https://danbooru.donmai.us/
+// @match        https://danbooru.donmai.us
+// @match        https://safebooru.donmai.us/posts
+// @match        https://safebooru.donmai.us/posts?*
+// @match        https://safebooru.donmai.us/
+// @match        https://safebooru.donmai.us
+
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  function copy(xd) {
+    console.log('?');
+    const Url = document.createElement('TEXTAREA');
+    Url.id = 'test123';
+
+    document.getElementsByTagName('body')[0].appendChild(Url);
+    // Url.id="copythis";
+    //     var Url= document.getElementById("copythis");
+    Url.innerHTML = xd;
+    Url.select();
+    document.execCommand('copy');
+    Url.remove();
+  }
+
+  const posts = document.getElementById('posts-container');
+  for (let i = 0; i < posts.children.length; i++) {
+    // console.log(posts.children[i])
+
+    noContext = posts.children[i];
+
+    noContext.addEventListener('contextmenu', (e) => {
+      copy(posts.children[i].children[0].href);
+      e.preventDefault();
+    });
+  }
+})();

@@ -51,3 +51,5 @@ npm-debug.log.*
 src/config.json
 working-dir/
 assets/icons/512x512.psd
+assets/DB.Browser.for.SQLite-3.12.1-win64-v2.msi
+assets/Debugtron-0.5.0.Setup.exe
