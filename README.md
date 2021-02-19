@@ -9,7 +9,7 @@ weebTools is a tool written in <a href="https://electron.atom.io/">Electron</a> 
 
 ## How does it work
 
-weebTools works by downloading image from url copied to clipboard and saving it's tags to a local database.
+weebTools works by downloading an image from url copied to clipboard and saving it's tags to a local database.
 
 ## Supported sites
 
