@@ -1,9 +1,6 @@
 import React from 'react';
 import { ConfigPane } from './ConfigDiv';
 
-
-
-
 interface IProps {
   forceUpdate: () => void;
 }
@@ -12,16 +9,16 @@ function FirstLaunch(props: IProps) {
   function formatCommon(
     key: string,
     name: string,
-    value: string,
-    isArray?,
+    value: string | boolean | string[],
+    type: string,
     visible?
   ) {
-    if (isArray) {
-      const val = value.split(/[ ,]+/);
-      return { key, name, value: val };
-    }
+    // if (isArray) {
+    //   const val = value.split(/[ ,]+/);
+    //   return { key, name, value: val };
+    // }
 
-    return { key, name, value };
+    return { key, name, value, type };
   }
 
   function formatTag(
@@ -39,9 +36,9 @@ function FirstLaunch(props: IProps) {
   const neededCommon = [
     formatCommon('workingPath', 'Working Directory', ''),
     formatCommon('itemsToLoad', 'Items to load at once', '100'),
-    formatCommon('useDanbooruAPI', 'Use Danbooru API', 'true'),
+    formatCommon('useDanbooruAPI', 'Use Danbooru API', true),
     formatCommon('displayType', 'Display Type', 'grid'),
-    formatCommon('randomBGUse', 'Use randomized background', 'false'),
+    formatCommon('randomBGUse', 'Use randomized background', false),
     formatCommon(
       'randomBGTags',
       'Random Background included tags',
@@ -58,7 +55,8 @@ function FirstLaunch(props: IProps) {
     formatCommon(
       'randomBGColor',
       'Random Background rrr,ggg,bbb,0.a',
-      '167, 66, 104,0.5'
+      '#c2273480',
+      'color'
     ),
     // formatCommon('firstLaunch', 'First Launch Done', 'true'),
   ];

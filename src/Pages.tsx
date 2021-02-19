@@ -5,6 +5,7 @@ import { Grid } from '@material-ui/core';
 import Table from './Table';
 import GetTags from './GetTags';
 import GridImageComponent from './GridImageComponent';
+import sendAsync from './DatabaseSQLite';
 
 const fs = require('fs');
 const path = require('path');
@@ -38,7 +39,7 @@ interface Props {
   imageData: any;
   showableTags: any;
   showableTags2: any;
-  database: any;
+  // database: any;
   workingDir: string;
   setProgressBarPercentage: (value: number) => void;
   searchFor: string;
@@ -108,26 +109,31 @@ class Pages extends React.Component<Props, State> {
       // tables.push(<TableRow pathName="TEST" />);
       /// /////////////////////////////////////////////////////////////////////////////
       await getTags.init(
-        this.props.database,
+        // this.props.database,
         arg,
         this.isDownloadedCallback.bind(this),
         this.props.setProgressBarPercentage
       );
     });
-    this.timerID = setInterval(() => {
-      // console.log(this.timerID);
-      // console.log(this.props.database);
-      if (this.props.database !== null) {
-        clearInterval(this.timerID);
-        // this.getRowCount();
-        // this.loadItems(false);
-        // console.log(this.state.maxPages);
-        // console.log(this.props.imageData);
-        // this.props.refresh();
-        this.forceUpdate();
-      }
-    }, 10);
-   
+    // this.timerID = setInterval(() => {
+    //   // console.log(this.timerID);
+    //   // console.log(this.props.database);
+    //   if (this.props.database !== null) {
+    //     clearInterval(this.timerID);
+    //     // this.getRowCount();
+    //     // this.loadItems(false);
+    //     // console.log(this.state.maxPages);
+    //     // console.log(this.props.imageData);
+    //     // this.props.refresh();
+    //     this.forceUpdate();
+    //   }
+    // }, 10);
+    this.loadItems(false,0);
+    const itemsToLoad: number = settings
+    .getSync('commonSettings')
+    .find((el) => el.key === 'itemsToLoad').value;
+    this.setState({itemsPerPage:itemsToLoad,currentLength:parseInt(itemsToLoad)})
+
   }
 
   componentDidUpdate(prevProps) {
@@ -143,7 +149,7 @@ class Pages extends React.Component<Props, State> {
         this.setState({itemsPerPage:itemsToLoad,currentLength:parseInt(itemsToLoad)})
         // this.setState({ itemsPerPage: 0 });
         // this.setState({ pageItems: [] });
-        
+      
         this.loadItems(true,parseInt(itemsToLoad));
         
         // const itemsToLoad: number = settings
@@ -157,7 +163,12 @@ class Pages extends React.Component<Props, State> {
     
     if (prevProps.searchFor !== this.props.searchFor) {
       // this.state.pageItems=
+      const itemsToLoad: number = settings
+      .getSync('commonSettings')
+      .find((el) => el.key === 'itemsToLoad').value;
+      this.setState({currentLength:parseInt(itemsToLoad)})
 
+// console.log("?????")
       this.setState({ pageItems: [] });
       this.loadItems(true);
     }
@@ -177,9 +188,13 @@ class Pages extends React.Component<Props, State> {
 
   isDownloadedCallback(done, filePath, name, tags, folder, url) {
     if (done) {
+      if (this.state.pageItems===null) {
+        this.state.pageItems=[]
+      }
       // console.log(this.state.pageItems);
-
       const items = this.state.pageItems;
+      // console.log("Pages 182 ITEMS")
+      // console.log(items)
       var indexOf=items.findIndex(index=>index.pathName===filePath)
       if (indexOf!==-1) {
         this.deleteItemFromDatabase("","",true,indexOf)
@@ -317,7 +332,7 @@ class Pages extends React.Component<Props, State> {
   }
 
   async loadItems(shouldSearch,overrideLength?) {
-    if (this.props.database !== null) {
+    // if (this.props.database !== null) {
       // let offset =
       //   this.state.pageItems != null ? this.state.pageItems.length : 0;
       let offset
@@ -379,22 +394,30 @@ class Pages extends React.Component<Props, State> {
       //   offset +
       //   ',' +
       //   limit;
-
-      const [rows] = await this.props.database.execute(query);
+      // console.log("PAGES 387")
+      // console.log(query)
+      
+      const rows = await sendAsync(query)
+      // console.log(rows)
+      // const [rows] = await this.props.database.execute(query);
+      // console.log("rows:",rows,"reply:",reply)
       // for (let i = 0; i < rows.length; i+=1) {
       //   filesToLoad.push(rows[i].folder);
       // }
       // console.log(rows);
-      await rows.map((item: any, index) => {
+      rows.map((item: any, index) => {
         // console.log(item);
         const filePath = path.join(
           this.props.workingDir,
           item.folder,
           item.fileName
         );
+        // console.log(this.state.pageItems)
         fs.access(filePath, fs.constants.R_OK, (err: Error) => {
           if (!err) {
             const items = this.state.pageItems;
+            // console.log("Pages 402 ITEMS")
+            // console.log(items)
             // if (items[this.state.pageItems.length - 1]?.pathName !== filePath) {
               var indexOf=items.findIndex(index=>index.pathName===filePath)
               if (indexOf!==-1) {
@@ -420,7 +443,7 @@ class Pages extends React.Component<Props, State> {
       // return rows;
       // }
       this.props.refresh();
-    }
+    // }
   }
 
   deleteItemFromDatabase(
@@ -432,7 +455,9 @@ class Pages extends React.Component<Props, State> {
     //  async function deleteRecord() {
       if (!shouldKeepInDatabase) {
         const queryDeleteRow = `DELETE FROM files WHERE fileName = "${fileName}" AND folder ="${folderName}"`;
-        this.props.database.execute(queryDeleteRow);
+       sendAsync(queryDeleteRow)
+
+        // this.props.database.execute(queryDeleteRow);
       }
 
     // console.log(indexToDeleteFromState);

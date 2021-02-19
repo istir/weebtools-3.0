@@ -173,6 +173,19 @@ class SettingsItem extends React.Component<
     );
   }
 
+  textChange(e) {
+    this.props.itemChanged(
+      'commonSettings',
+      this.props.keyProp,
+      'value',
+      // this.handleValue(e.target),
+      e.target.value,
+      this.props.type,
+      this.props.hidden
+      // this.checkIfArray(e.target.value)
+    );
+  }
+
   itemChange(e) {
     // console.log(this.props.hidden);
     this.props.itemChanged(
@@ -265,7 +278,7 @@ class SettingsItem extends React.Component<
         key={this.props.name}
         type={this.props.type}
         defaultValue={this.state.values}
-        onChange={this.itemChange.bind(this)}
+        onChange={this.textChange.bind(this)}
       />
     );
   }
@@ -485,7 +498,6 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
 
       const changedTags: ConfigToSaveList = [];
       const commonSettings = [];
-
       if (this.commonSettings) {
         const objCommon = this.commonSettings.map((value) => {
           // console.log('COMMON', value);

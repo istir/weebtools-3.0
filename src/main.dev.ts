@@ -26,11 +26,35 @@ const clipboard = require('electron-clipboard-extended');
 
 // const navigator = require('Navigator');
 const { ipcMain } = require('electron');
-
+const sqlite3 = require('sqlite3');
 // const listener = new ClipboardListener({
 //   timeInterval: 100, // Default to 250
 //   immediate: true, // Default to false
 // });
+let dbPath;
+if (app.isPackaged) {
+  console.log('PACKAGED!');
+  dbPath = path.join(process.resourcesPath, 'assets', 'public.db');
+} else {
+  console.log('not packaged');
+  dbPath = path.join(__dirname, '../assets', 'public.db');
+}
+console.log(dbPath);
+const database = new sqlite3.Database(dbPath, (err) => {
+  // const RESOURCES_PATH = app.isPackaged
+  // ? path.join(process.resourcesPath, 'resources')
+  // : path.join(__dirname, '../resources');
+
+  // console.log('DIR:', __dirname);
+  if (err) console.error('Database opening error: ', err);
+});
+
+ipcMain.on('asynchronous-message', (event, arg) => {
+  const sql = arg;
+  database.all(sql, (err, rows) => {
+    event.reply('asynchronous-reply', (err && err.message) || rows);
+  });
+});
 
 export default class AppUpdater {
   constructor() {
@@ -137,7 +161,7 @@ const createWindow = async () => {
   console.log('startListening');
   var lastClip = '';
   clipboard.on('text-changed', () => {
-    console.log('clipboardChanged');
+    // console.log('clipboardChanged');
     try {
       if (
         mainWindow != null &&
