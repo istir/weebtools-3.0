@@ -60,12 +60,12 @@
 }
 
 .moving {
-  background: linear-gradient(
+  /* background: linear-gradient(
     200.96deg,
     rgb(254, 220, 42) -29.09%,
     #dd5789 51.77%,
     #7a2c9e 129.35%
-  );
+  ); */
   background: linear-gradient(
     321deg,
     rgb(201, 174, 34),
