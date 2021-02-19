@@ -10,13 +10,12 @@ weebTools is a tool written in <a href="https://electron.atom.io/">Electron</a> 
 ## How does it work
 
 weebTools works by downloading image from url copied to clipboard and saving it's tags to a local database.
-<br>
 
 ## Supported sites
 
-- [Safebooru](safebooru.donmai.us) (danbooru too!)
-- [Twitter](twitter.com) (only with bundled Tampermonkey script)
-- [Pixiv](pixiv.net) (only with bundled Tampermonkey script)
+- [Safebooru](https://safebooru.donmai.us) (danbooru too!)
+- [Twitter](https://twitter.com) (only with bundled Tampermonkey script)
+- [Pixiv](https://pixiv.net) (only with bundled Tampermonkey script)
 
 ## Why do I need scripts?
 
@@ -26,8 +25,6 @@ My scripts work by letting the user select from a list of tags and copies in thi
 ```
 http://path/to/post|http://direct/path/to/image|Tags: tag1, tag2
 ```
-
-<br>
 
 ## Install
 
