@@ -13,12 +13,10 @@ import settings from 'electron-settings';
 import { Checkbox } from '@material-ui/core';
 import SimpleBarReact from 'simplebar-react';
 import { CSSTransition } from 'react-transition-group';
+import { PRIORITY_HIGHEST } from 'constants';
 import InputColor from 'react-input-color';
 import  fs  from 'fs';
 import ModalOwn from './Modal';
-import SettingForm from './SettingForm';
-import FindTag from './FindTag';
-import { TouchBarSegmentedControl } from 'electron';
 
 const { dialog, app } = require('electron').remote;
 
@@ -32,14 +30,12 @@ interface ConfigPaneState {
   commonSettingItems: any;
   showModal: boolean;
 }
-interface Settings { key: string; name: string; value: string | string[]|boolean,type:string,hidden:boolean }
 interface ConfigPaneProps {
   // shown: boolean;
   setVisibility: (isVisible: boolean) => void;
   forceUpdate: () => void;
   settings;
-  commonSettings: Settings[];
-  setCommonSettings:(settings?:Settings[],setting?:Settings)=>void
+  commonSettings: [{ key: string; name: string; value: string | string[] }];
 }
 interface CommonConfigToSave {
   name: string;
@@ -431,6 +427,7 @@ componentDidMount() {
   renderArrayField() {
     return (
       <div style={{ display: 'grid' }}>
+
         {this.props.fromSite.map((value, index) => {
           // console.log(value);
           return (
@@ -596,13 +593,9 @@ class ConfigPane extends React.Component<ConfigPaneProps, ConfigPaneState> {
   addObjectBound: (value) => void;
 
   hideAddBound: () => void;
-tagsRef;
+
   constructor(props) {
-    
     super(props);
-    
-    this.tagsRef=React.createRef()
-    
     if (this.props.commonSettings) {
       this.commonSettings = this.props.commonSettings;
     } else {
@@ -785,31 +778,28 @@ tagsRef;
   }
 
   saveConfig(): void {
-    const found = FindTag(this.props.commonSettings,"key","workingPath","value")
-    
+    const found = this.state.changedListObject.commonSettings.find(
+      (el) => el.key === 'workingPath'
+    ).value;
+
+    console.log(this.state.changedListObject.commonSettings);
+    console.log(found)
     if (!fs.existsSync(found)) {
-        console.log("????")
-        this.setState({
-          showError: true,
-          buttons: ['OK'],
-          title: 'Directory not found',
-          message: `Directory ${found} does not exists`,
-        });
-        return;
-      }
-    
-      let commonSettings=this.props.commonSettings
-      let tags=[]
-      this.props.tagsSettings.map(val=>{
-        if (val!==null) {
-          tags.push(val)
-        }
-      })
-      // let tags=this.props.tagsSettings
-      let newConfig={commonSettings,tags}
-      console.log('SAVED!\nNew Config:', newConfig);
-    settings.setSync(newConfig);
-    this.props.forceUpdate()
+      console.log("????")
+      this.setState({
+        showError: true,
+        buttons: ['OK'],
+        title: 'Directory not found',
+        message: `Directory ${found} does not exists`,
+      });
+      return;
+      // fs.mkdirSync();
+    }
+
+    console.log('SAVED!\nNew Config:', this.state.changedListObject);
+    // console.log(settings.file());
+    settings.setSync(this.state.changedListObject);
+    this.props.forceUpdate();
   }
 
   itemChanged(
@@ -933,8 +923,7 @@ console.log(found,name,value)
           >
             <div className="settingsList">
               <div className="settingsList commonSettings">
-                {/* {this.state.commonSettingItems} */}
-                <SettingForm settings={this.props.commonSettings} setSettings={this.props.setCommonSettings}/>
+                {this.state.commonSettingItems}
               </div>
               <h3
                 className="cursorNormal notSelectable"
@@ -942,11 +931,7 @@ console.log(found,name,value)
               >
                 Tags
               </h3>
-              <div className="tagObj">
-              {/* {this.state.listObjects} */}
-              <SettingForm  removeTag={this.props.removeTag} settings={this.props.tagsSettings} setSettings={this.props.setTagsSettings} />
-             
-              </div>
+              <div className="tagObj">{this.state.listObjects}</div>
               <button
                 type="button"
                 className="saveButton"
@@ -966,9 +951,9 @@ console.log(found,name,value)
               {/* <TagToAdd onSave={this.addObject.bind(this)} /> */}
 
               {/* <button onClick={this.setState({ showModal: true })}>Add</button> */}
-              {/* <button type="button" onClick={this.showAdd.bind(this)}>
+              <button type="button" onClick={this.showAdd.bind(this)}>
                 Add
-              </button> */}
+              </button>
 
               {/* <Popup trigger={<button> Add </button>} modal> */}
 
@@ -1196,18 +1181,10 @@ class ConfigButton extends React.Component<
           classNames="settingPane"
           unmountOnExit
         >
-        
-      
-        
           <ConfigPane
             settings={this.props.settings}
             setVisibility={this.setVisibilityBound}
             forceUpdate={this.props.forceUpdate}
-            commonSettings={this.props.commonSettings}
-            setCommonSettings={this.props.setCommonSettings}
-            tagsSettings={this.props.tagsSettings}
-            setTagsSettings={this.props.setTagsSettings}
-            removeTag={this.props.removeTag}
           />
         </CSSTransition>
       </div>

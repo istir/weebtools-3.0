@@ -152,7 +152,6 @@ class Pages extends React.Component<Props, State> {
     if (this.props.shouldUpdate) {
       this.props.setShouldUpdate()
       // setTimeout(() => {
-        
         const itemsToLoad: number = settings
         .getSync('commonSettings')
         .find((el) => el.key === 'itemsToLoad').value;
@@ -338,7 +337,7 @@ class Pages extends React.Component<Props, State> {
     if (i === 0) {
       query += `WHERE Tags LIKE "%${toTrim}%" or fileName LIKE "%${toTrim}%" or folder LIKE "%${toTrim}%" `;
     }
-    // console.log(query);
+    
     return query;
   }
 
@@ -392,6 +391,7 @@ class Pages extends React.Component<Props, State> {
       // this.handleSearchQuery();
       // return 0;
       const query = `${this.handleSearchQuery()} ORDER BY ID DESC LIMIT ${offset},${limit}`;
+      // console.log(query)
       // console.log(query);
       // return 0;
       // var query =
@@ -407,7 +407,6 @@ class Pages extends React.Component<Props, State> {
       //   limit;
       // console.log("PAGES 387")
       // console.log(query)
-      
       const rows = await sendAsync(query)
       if (rows.length==0) {
         setTimeout(() => {
@@ -420,7 +419,6 @@ class Pages extends React.Component<Props, State> {
       // for (let i = 0; i < rows.length; i+=1) {
       //   filesToLoad.push(rows[i].folder);
       // }
-      // console.log(rows);
       rows.map((item: any, index) => {
         // console.log(item);
         const filePath = path.join(
@@ -440,10 +438,11 @@ class Pages extends React.Component<Props, State> {
                 this.deleteItemFromDatabase("","",true,indexOf)
               }
               // var items.indexOf()
+              // console.log(item)
             items.push({
               pathName: filePath,
               fileName: item.fileName,
-              tags: item.Tags.split(', '),
+              tags:item.Tags.split(', '),
               folder: item.folder,
               url: item.url,
             });

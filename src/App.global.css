@@ -60,12 +60,6 @@
 }
 
 .moving {
-  /* background: linear-gradient(
-    200.96deg,
-    rgb(254, 220, 42) -29.09%,
-    #dd5789 51.77%,
-    #7a2c9e 129.35%
-  ); */
   background: linear-gradient(
     321deg,
     rgb(201, 174, 34),
@@ -482,15 +476,31 @@ h2 {
   -webkit-animation: anvil 0.3s cubic-bezier(0.38, 0.1, 0.36, 0.9) forwards;
 }
 
-.tagObj {
-  display: grid;
-  grid-template-columns: 25% 25% 25% 25%;
+.settings.tags.button {
+  grid-column: 1;
+  grid-row: 9999999;
 }
 
+.settings.tags.parent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 250px);
+  gap: 0 10px;
+}
+.setting.title {
+  margin-top: 5px;
+}
 input {
   outline: none;
 }
-
+.settings.tags:not(.parent):not(.button) {
+  margin-bottom: 10px;
+  background: var(--selectionColor);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-rows: min-content min-content min-content minmax(auto, 1fr) min-content min-content;
+  gap: 3px;
+}
 .settingTagInput {
   border-radius: 5px;
   border: 1px solid transparent;
@@ -509,6 +519,15 @@ input {
   height: inherit;
   margin-left: 10px;
 }
+.settingTagInput.arrays.tag {
+  width: auto;
+}
+.removeTag {
+  margin: 0;
+  /* height: 100%; */
+  color: var(--modernButtonColor);
+}
+
 .addToArray,
 .removeFromArray {
   margin: 0;

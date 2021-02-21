@@ -18,6 +18,7 @@ import { common } from '@material-ui/core/colors';
 import { resolve } from 'path';
 import { ipcRenderer } from 'electron';
 import sendAsync from './DatabaseSQLite';
+import FindTag from './FindTag';
 
 interface IcommonSettings {
   key: string;
@@ -178,7 +179,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
 
   async refreshItem(fileName: string, folder: string) {
     const query = `SELECT * FROM files WHERE fileName="${fileName}" AND folder="${folder}"`;
-    const rows = await sendAsync(query)
+    const rows = await sendAsync(query);
     // const [rows] = await this.props.database.query(query);
     return rows[0].Tags.split(', ');
   }
@@ -195,7 +196,7 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
     const query = `UPDATE files SET folder="${newFolder}",Tags="${normalizeTags(
       newTags
     )}" where fileName="${oldName}" AND folder="${oldFolder}"`;
-    await sendAsync(query)
+    await sendAsync(query);
     // await this.props.database.query(query);
   }
 
@@ -248,6 +249,25 @@ interface IAppState {
   progressBarPercentage: number;
   progressShouldMinimize: boolean;
   display: string;
+  commonSettings: [
+    {
+      key: string;
+      name: string;
+      value: string | string[] | boolean;
+      type: string;
+      hidden: boolean;
+    }
+  ],
+  tagsSettings:[
+    {
+      key: string;
+      toReturn: string;
+      fromSite: string[];
+      folder: string;
+      visible: boolean;
+      checkFolder: boolean;
+    }
+  ];
 }
 
 class App extends React.Component<IAppProps, IAppState> {
@@ -283,6 +303,7 @@ class App extends React.Component<IAppProps, IAppState> {
       progressShouldMinimize: false,
       display: 'grid',
       shouldUpdate: false,
+      commonSettings: [],
     };
 
     this.refreshTagsBound = this.refreshTags.bind(this);
@@ -301,15 +322,18 @@ class App extends React.Component<IAppProps, IAppState> {
 
   performStartup() {
     let worked = false;
+    console.log("STARTUP")
     try {
       // if (settings.hasSync("commonSettings")) {
       commonSettings = settings.getSync('commonSettings');
       // }
       this.settingsTags = settings.getSync('tags');
       // console.log(this.settingsTags);
-
-      workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
-        .value;
+      this.setState({ commonSettings: settings.getSync('commonSettings') });
+      this.setState({ tagsSettings: settings.getSync('tags') });
+      workingDirectory = FindTag(commonSettings, 'key', 'workingPath', 'value');
+      // workingDirectory = commonSettings.find((el) => el.key === 'workingPath')
+      // .value;
       worked = true;
       //  this.worked=true;
       this.setState({ worked: true });
@@ -335,9 +359,9 @@ class App extends React.Component<IAppProps, IAppState> {
       commonSettings = [
         formatCommon('workingPath', 'Working Directory', ''),
         formatCommon('itemsToLoad', 'Items to load at once', '100'),
-        formatCommon('useDanbooruAPI', 'Use Danbooru API', 'true'),
+        formatCommon('useDanbooruAPI', 'Use Danbooru API', true),
         formatCommon('displayType', 'Display Type', 'grid'),
-        formatCommon('randomBGUse', 'Use randomized background', 'false'),
+        formatCommon('randomBGUse', 'Use randomized background', false),
         formatCommon(
           'randomBGTags',
           'Random Background included tags',
@@ -353,7 +377,7 @@ class App extends React.Component<IAppProps, IAppState> {
         formatCommon('randomBGFolder', 'Random Background Folder', ''),
         formatCommon(
           'randomBGColor',
-          'Random Background rrr,ggg,bbb,0.a',
+          'Random Background Color',
           '167, 66, 104,0.5'
         ),
         // formatCommon('firstLaunch', 'First Launch Done', 'true'),
@@ -408,13 +432,12 @@ class App extends React.Component<IAppProps, IAppState> {
     //       // eslint-disable-next-line no-console
     //       console.error(error);
     //     });
-    // } else 
+    // } else
     if (shouldUse && document.body.classList.contains('moving')) {
       // console.log("OPCJA 1")
       // console.log("shouldUSE:",shouldUse1)
       this.getRandomBg(true);
     } else if (shouldUse && !document.body.classList.contains('moving')) {
-      
       this.getRandomBg(false);
     } else if (!shouldUse) {
       // console.log("OPCJA 2")
@@ -455,45 +478,58 @@ class App extends React.Component<IAppProps, IAppState> {
         .value;
       const shouldUse = commonSettings.find((el) => el.key === 'randomBGUse')
         .value;
-    
-        if (shouldUse) {
-          const randomBG = new RandomBackground();
-          // eslint-disable-next-line promise/no-nesting
-          randomBG
-            .getCorrectQueries(
-              this.state.database,
-              workingDirectory as string,
-              tags,
-              NotTags,
-              folder
-            )
-            .then(() => {
-              const random = randomBG.getRandomBackground();
-              if (random.length > 0) {
-                document.body.classList.remove('moving');
-                if (setRandom) {
-                document.body.style.background = `linear-gradient( ${color}, ${color} ), ${random}`;
-                } else {
-                  let oldImage= document.body.style.backgroundImage.substring(document.body.style.backgroundImage.indexOf("url"))
-                  document.body.style.background = `linear-gradient( ${color}, ${color} ), ${oldImage}`;
-                }
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-              }
 
-              // console.log(document.body.style.backgroundColor);
-              // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
-              //   dimming / 100
-              // });`;
-
-              return true;
-            })
-
-            .catch((error) => {
-              throw error;
-            });
+      if (shouldUse) {
+        if (setRandom) {
+        const randomBG = new RandomBackground();
+        // eslint-disable-next-line promise/no-nesting
         
+        randomBG
+          .getCorrectQueries(
+            this.state.database,
+            workingDirectory as string,
+            tags,
+            NotTags,
+            folder
+          )
+          .then(() => {
+          
+              // console.log("??????")
+              const random = randomBG.getRandomBackground();
+            if (random.length > 0) {
+              document.body.classList.remove('moving');
+              
+                document.body.style.background = `linear-gradient( ${color}, ${color} ), ${random}`;
+            
+            }
+            
+            
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+
+            // console.log(document.body.style.backgroundColor);
+            // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
+            //   dimming / 100
+            // });`;
+
+            return true;
+          })
+
+          .catch((error) => {
+            throw error;
+          });
+      } else {
+      
+        document.body.classList.remove('moving');
+        let oldImage = document.body.style.backgroundImage.substring(
+          document.body.style.backgroundImage.indexOf('url')
+        );
+        document.body.style.background = `linear-gradient( ${color}, ${color} ), ${oldImage}`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
       }
+     
+    }
     } catch (err) {
       console.error(err);
     }
@@ -601,16 +637,134 @@ class App extends React.Component<IAppProps, IAppState> {
   setShouldUpdate() {
     this.setState({ shouldUpdate: false });
   }
+
+
+  setTagsSettings(
+    
+    tags?: [
+      {
+        key: string;
+        toReturn: string;
+        fromSite: string[];
+        folder: string;
+        visible: boolean;
+        checkFolder:boolean
+      }
+    ],
+    tag?: {
+      key: string;
+      toReturn: string;
+      fromSite: string[];
+      folder: string;
+      visible: boolean;
+      checkFolder:boolean
+    },oldKey?:string
+  ) {
+    if (tag) {
+      this.setState(function (prevState) {
+        let settings = prevState.tagsSettings;
+        let tags =[]
+        settings.map((val) => {
+          if (val !== null) tags.push(val);
+        });
+        let index = tags.findIndex(
+          (el) => el.key === oldKey
+          );
+        settings[index] = tag;
+        return {
+          tagSettings: settings,
+        };
+        
+      });
+    } else if(tags) {
+        this.setState({tagsSettings:tags})
+      
+    }
+   
+  }
+
+removeTag(oldKey:string,index:{
+  key: string;
+  toReturn: string;
+  fromSite: string[];
+  folder: string;
+  visible: boolean;
+  checkFolder:boolean
+}) {
   
+  this.setState(function (prevState) {
+    let settings = prevState.tagsSettings;
+    // console.log(prevState.tagsSettings)
+    let tags =[]
+    settings.map((val) => {
+      if (val !== null) tags.push(val);
+    });
+    let index =tags.findIndex(
+      (el) => el.key ===oldKey
+    );
+      console.log(oldKey,index)
+    settings[index] = null;
+
+    return {
+      tagSettings: settings,
+    };
+  });
   
+  // let obj = this.state.tagsSettings;
+  // console.log("INDEX REM:",index)
+  // console.log("LENGTH:",this.state.tagsSettings.length)
+  // // obj.splice(index,1)
+  // obj.splice(obj.indexOf(index),1)
+  // this.setState({tagsSettings:obj})
+  
+  console.log("NEW TAGS")
+  // console.table(obj)
+  console.table(this.state.tagsSettings)
+}
+
+  setCommonSettings(
+    settings?: [
+      {
+        key: string;
+        name: string;
+        value: string | string[] | boolean;
+        type: string;
+        hidden: boolean;
+      }
+    ],
+    setting?: {
+      key: string;
+      name: string;
+      value: string | string[] | boolean;
+      type: string;
+      hidden: boolean;
+    }
+  ) {
+    if (setting) {
+      this.setState(function (prevState) {
+        let settings = prevState.commonSettings;
+        let index = prevState.commonSettings.findIndex(
+          (el) => el.key === setting.key
+        );
+
+        settings[index] = setting;
+
+        return {
+          commonSettings: settings,
+        };
+      });
+    } else if (settings) {
+      this.setState({ commonSettings: settings });
+    }
+  }
 
   async send(sql) {
-    let test = await sendAsync(sql)
-    
+    let test = await sendAsync(sql);
+
     // let test = sendAsync(sql).then((result) => {return result});
-    console.log(test)
-}
-  
+    console.log(test);
+  }
+
   render() {
     // return <button onClick={()=>this.send("SELECT * FROM files")}></button>
     try {
@@ -651,7 +805,12 @@ class App extends React.Component<IAppProps, IAppState> {
           <FontAwesomeIcon icon={faBorderAll} />
         </button>
         <ConfigButton
+          commonSettings={this.state.commonSettings}
+          tagsSettings={this.state.tagsSettings}
+          setCommonSettings={this.setCommonSettings.bind(this)}
+          setTagsSettings={this.setTagsSettings.bind(this)}
           settings={this.settingsTags}
+          removeTag={this.removeTag.bind(this)}
           forceUpdate={this.refreshTagsBound}
         />
         <SearchButton
@@ -671,7 +830,7 @@ class App extends React.Component<IAppProps, IAppState> {
         <Pages
           handleClick={this.handleTableClickBound}
           doubleClick={this.clickFullscreenImageBound}
-          showableTags={this.state.tags}
+          // showableTags={this.state.tags}
           showableTags2={this.state.tagDictionary}
           // database={this.state.database}
           workingDir={workingDirectory}

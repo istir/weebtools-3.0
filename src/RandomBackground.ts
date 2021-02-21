@@ -22,7 +22,9 @@ class RandomBackground {
     if (tagsToIgnore) {
       let queryTags = '';
       for (let i = 0; i < tagsToIgnore.length; i += 1) {
-        queryTags += `Tags NOT LIKE "%${tagsToIgnore[i]}%" AND `;
+        if (tagsToIgnore[i].length > 0) {
+          queryTags += `Tags NOT LIKE "%${tagsToIgnore[i]}%" AND `;
+        }
       }
       query += queryTags;
     }
@@ -46,7 +48,6 @@ class RandomBackground {
     this.fileArray = await sendAsync(
       this.getSearchQuery(tagsToShow, tagsToIgnore, folderToShow)
     );
-
     // await database
     //   .execute(this.getSearchQuery(tagsToShow, tagsToIgnore, folderToShow))
     //   .then((ful) => {
@@ -61,15 +62,15 @@ class RandomBackground {
       return path.join(rootDir, folder, name);
     }
     try {
-      const random = Math.round(Math.random() * this.fileArray[0].length);
+      const random = Math.round(Math.random() * this.fileArray.length);
       // console.log(array[random]);
       //   console.log(
 
       return `url("${url(
         combineName(
           this.workingDirectory,
-          this.fileArray[0][random].folder,
-          this.fileArray[0][random].fileName
+          this.fileArray[random].folder,
+          this.fileArray[random].fileName
         )
       )}")`;
       //   );
