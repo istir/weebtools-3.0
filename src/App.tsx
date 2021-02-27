@@ -19,6 +19,7 @@ import { resolve } from 'path';
 import { ipcRenderer } from 'electron';
 import sendAsync from './DatabaseSQLite';
 import FindTag from './FindTag';
+import ImageViewer from './ImageViewer';
 
 interface IcommonSettings {
   key: string;
@@ -104,9 +105,11 @@ class TagPicker extends React.Component<TagPickerProps, TagPickerState> {
 
   componentDidUpdate() {
     // doing some weird, but ultimately it lets me change state by toggling things and other good things too
-    if (this.state.row !== this.props.row) {
-      this.setState({ row: this.props.row });
-      this.setState({ checked: this.props.row.tags });
+    if (this.props.row) {
+      if (this.state.row !== this.props.row) {
+        this.setState({ row: this.props.row });
+        this.setState({ checked: this.props.row.tags });
+      }
     }
   }
 
@@ -257,8 +260,8 @@ interface IAppState {
       type: string;
       hidden: boolean;
     }
-  ],
-  tagsSettings:[
+  ];
+  tagsSettings: [
     {
       key: string;
       toReturn: string;
@@ -322,7 +325,7 @@ class App extends React.Component<IAppProps, IAppState> {
 
   performStartup() {
     let worked = false;
-    console.log("STARTUP")
+    console.log('STARTUP');
     try {
       // if (settings.hasSync("commonSettings")) {
       commonSettings = settings.getSync('commonSettings');
@@ -481,55 +484,50 @@ class App extends React.Component<IAppProps, IAppState> {
 
       if (shouldUse) {
         if (setRandom) {
-        const randomBG = new RandomBackground();
-        // eslint-disable-next-line promise/no-nesting
-        
-        randomBG
-          .getCorrectQueries(
-            this.state.database,
-            workingDirectory as string,
-            tags,
-            NotTags,
-            folder
-          )
-          .then(() => {
-          
+          const randomBG = new RandomBackground();
+          // eslint-disable-next-line promise/no-nesting
+
+          randomBG
+            .getCorrectQueries(
+              this.state.database,
+              workingDirectory as string,
+              tags,
+              NotTags,
+              folder
+            )
+            .then(() => {
               // console.log("??????")
               const random = randomBG.getRandomBackground();
-            if (random.length > 0) {
-              document.body.classList.remove('moving');
-              
+              if (random.length > 0) {
+                document.body.classList.remove('moving');
+
                 document.body.style.background = `linear-gradient( ${color}, ${color} ), ${random}`;
-            
-            }
-            
-            
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundPosition = 'center';
+              }
 
-            // console.log(document.body.style.backgroundColor);
-            // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
-            //   dimming / 100
-            // });`;
+              document.body.style.backgroundSize = 'cover';
+              document.body.style.backgroundPosition = 'center';
 
-            return true;
-          })
+              // console.log(document.body.style.backgroundColor);
+              // document.body.style.boxShadow = `inset 0 0 100vw rgba(0,0,0,${
+              //   dimming / 100
+              // });`;
 
-          .catch((error) => {
-            throw error;
-          });
-      } else {
-      
-        document.body.classList.remove('moving');
-        let oldImage = document.body.style.backgroundImage.substring(
-          document.body.style.backgroundImage.indexOf('url')
-        );
-        document.body.style.background = `linear-gradient( ${color}, ${color} ), ${oldImage}`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
+              return true;
+            })
+
+            .catch((error) => {
+              throw error;
+            });
+        } else {
+          document.body.classList.remove('moving');
+          let oldImage = document.body.style.backgroundImage.substring(
+            document.body.style.backgroundImage.indexOf('url')
+          );
+          document.body.style.background = `linear-gradient( ${color}, ${color} ), ${oldImage}`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundPosition = 'center';
+        }
       }
-     
-    }
     } catch (err) {
       console.error(err);
     }
@@ -638,9 +636,7 @@ class App extends React.Component<IAppProps, IAppState> {
     this.setState({ shouldUpdate: false });
   }
 
-
   setTagsSettings(
-    
     tags?: [
       {
         key: string;
@@ -648,7 +644,7 @@ class App extends React.Component<IAppProps, IAppState> {
         fromSite: string[];
         folder: string;
         visible: boolean;
-        checkFolder:boolean
+        checkFolder: boolean;
       }
     ],
     tag?: {
@@ -657,70 +653,66 @@ class App extends React.Component<IAppProps, IAppState> {
       fromSite: string[];
       folder: string;
       visible: boolean;
-      checkFolder:boolean
-    },oldKey?:string
+      checkFolder: boolean;
+    },
+    oldKey?: string
   ) {
     if (tag) {
       this.setState(function (prevState) {
         let settings = prevState.tagsSettings;
-        let tags =[]
+        let tags = [];
         settings.map((val) => {
           if (val !== null) tags.push(val);
         });
-        let index = tags.findIndex(
-          (el) => el.key === oldKey
-          );
+        let index = tags.findIndex((el) => el.key === oldKey);
         settings[index] = tag;
         return {
           tagSettings: settings,
         };
-        
       });
-    } else if(tags) {
-        this.setState({tagsSettings:tags})
-      
+    } else if (tags) {
+      this.setState({ tagsSettings: tags });
     }
-   
   }
 
-removeTag(oldKey:string,index:{
-  key: string;
-  toReturn: string;
-  fromSite: string[];
-  folder: string;
-  visible: boolean;
-  checkFolder:boolean
-}) {
-  
-  this.setState(function (prevState) {
-    let settings = prevState.tagsSettings;
-    // console.log(prevState.tagsSettings)
-    let tags =[]
-    settings.map((val) => {
-      if (val !== null) tags.push(val);
-    });
-    let index =tags.findIndex(
-      (el) => el.key ===oldKey
-    );
-      console.log(oldKey,index)
-    settings[index] = null;
+  removeTag(
+    oldKey: string,
+    index: {
+      key: string;
+      toReturn: string;
+      fromSite: string[];
+      folder: string;
+      visible: boolean;
+      checkFolder: boolean;
+    }
+  ) {
+    this.setState(function (prevState) {
+      let settings = prevState.tagsSettings;
+      // console.log(prevState.tagsSettings)
+      let tags = [];
+      settings.map((val) => {
+        if (val !== null) tags.push(val);
+      });
+      let index = tags.findIndex((el) => el.key === oldKey);
+      console.log(oldKey, index);
+      settings[index] = null;
 
-    return {
-      tagSettings: settings,
-    };
-  });
-  
-  // let obj = this.state.tagsSettings;
-  // console.log("INDEX REM:",index)
-  // console.log("LENGTH:",this.state.tagsSettings.length)
-  // // obj.splice(index,1)
-  // obj.splice(obj.indexOf(index),1)
-  // this.setState({tagsSettings:obj})
-  
-  console.log("NEW TAGS")
-  // console.table(obj)
-  console.table(this.state.tagsSettings)
-}
+      return {
+        tagSettings: settings,
+      };
+    });
+
+    // let obj = this.state.tagsSettings;
+    // console.log("INDEX REM:",index)
+    // console.log("LENGTH:",this.state.tagsSettings.length)
+    // // obj.splice(index,1)
+    // obj.splice(obj.indexOf(index),1)
+    // this.setState({tagsSettings:obj})
+
+    console.log('NEW TAGS');
+    // console.table(obj)
+    console.table(this.state.tagsSettings);
+  }
 
   setCommonSettings(
     settings?: [
@@ -822,11 +814,17 @@ removeTag(oldKey:string,index:{
           shouldStop={this.state.progressShouldMinimize}
           percentage={this.state.progressBarPercentage}
         />
-        <FullscreenImage
+        {/* <FullscreenImage
           show={this.state.showFullscreen}
           shouldShow={this.clickFullscreenImageBound}
           image={this.state.currRow?.pathName}
+        /> */}
+        <ImageViewer
+          visible={this.state.showFullscreen}
+          src={this.state.currRow?.pathName}
+          setVisibility={this.clickFullscreenImageBound}
         />
+
         <Pages
           handleClick={this.handleTableClickBound}
           doubleClick={this.clickFullscreenImageBound}
